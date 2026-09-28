@@ -3,9 +3,11 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PERMISSION_KEYS } from "@/lib/permissions";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
+import { getRulesConfig } from "@/lib/rules";
 import { RolePermissionEditor } from "@/components/RolePermissionEditor";
 import { AppealQuestionEditor } from "@/components/AppealQuestionEditor";
 import { IntegrationsEditor } from "@/components/IntegrationsEditor";
+import { RulesEditor } from "@/components/RulesEditor";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -15,13 +17,14 @@ export default async function SettingsPage() {
   // to bootstrap that.
   if (!principal?.isOwner) redirect("/staff");
 
-  const [roles, questions, vulcanEnabled] = await Promise.all([
+  const [roles, questions, vulcanEnabled, rulesConfig] = await Promise.all([
     prisma.staffRole.findMany({
       include: { permissions: true },
       orderBy: { displayName: "asc" },
     }),
     prisma.appealQuestion.findMany({ orderBy: { sortOrder: "asc" } }),
     isVulcanIntegrationEnabled(),
+    getRulesConfig(),
   ]);
 
   return (
@@ -74,6 +77,17 @@ export default async function SettingsPage() {
           its UI everywhere without deleting anything already recorded.
         </p>
         <IntegrationsEditor vulcanEnabled={vulcanEnabled} />
+      </div>
+
+      <div className="vb-section">
+        <div className="vb-section-label">Server rules</div>
+        <div className="vb-panel" style={{ padding: 18 }}>
+          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
+            Written in Markdown. When enabled, a &quot;Rules&quot; button appears on the public homepage
+            next to the ban lookup box, linking to a dedicated <code>/rules</code> page.
+          </p>
+          <RulesEditor enabled={rulesConfig.enabled} markdown={rulesConfig.markdown} />
+        </div>
       </div>
     </div>
   );

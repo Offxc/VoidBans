@@ -283,3 +283,140 @@ a.vb-card:hover, button.vb-card:hover {
 [hidden] {
   display: none !important;
 }
+
+/* ── Rendered Markdown (rules page, settings preview) ────────────────── */
+.vb-markdown {
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.vb-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.vb-markdown h1,
+.vb-markdown h2,
+.vb-markdown h3 {
+  font-family: var(--font-sora), var(--font-inter), sans-serif;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.vb-markdown h1 {
+  font-size: 24px;
+  margin: 32px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.vb-markdown h2 {
+  font-size: 18px;
+  margin: 30px 0 12px;
+  color: var(--accent-2);
+}
+
+.vb-markdown h3 {
+  font-size: 14.5px;
+  margin: 20px 0 8px;
+  font-weight: 600;
+}
+
+.vb-markdown p {
+  margin: 0 0 12px;
+  color: var(--text);
+}
+
+.vb-markdown strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.vb-markdown a {
+  color: var(--accent-2);
+}
+
+.vb-markdown ul,
+.vb-markdown ol {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+
+.vb-markdown li {
+  margin-bottom: 5px;
+  color: var(--text);
+}
+
+.vb-markdown li::marker {
+  color: var(--accent);
+}
+
+.vb-markdown li > ul,
+.vb-markdown li > ol {
+  margin-top: 5px;
+  margin-bottom: 0;
+}
+
+.vb-markdown blockquote {
+  margin: 0 0 14px;
+  padding: 10px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-dim);
+}
+
+.vb-markdown hr {
+  border: none;
+  height: 1px;
+  background: var(--glass-border);
+  margin: 24px 0;
+}
+
+.vb-markdown code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--surface-solid);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.vb-markdown pre {
+  background: var(--surface-solid);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 14px;
+}
+
+.vb-markdown pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.vb-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px;
+  font-size: 13.5px;
+}
+
+.vb-markdown th,
+.vb-markdown td {
+  text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.vb-markdown th {
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.vb-markdown img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+}

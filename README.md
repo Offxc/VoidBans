@@ -44,6 +44,8 @@ boundaries — not "op or not."
 - Direct `/<ban-id>` URLs, so the in-game message can link straight to the result
 - Owner-configurable appeal questions, one appeal per ban, staff accept/deny with a written
   response and optional auto-revoke on accept
+- Optional `/rules` page, owner-written in Markdown from Settings, with a homepage button —
+  off by default until the owner enables it
 
 **Staff dashboard**
 - Discord OAuth sign-in; the first account to ever log in becomes the owner

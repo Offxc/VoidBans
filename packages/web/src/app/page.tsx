@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { BanLookupForm } from "@/components/BanLookup";
+import { getRulesConfig } from "@/lib/rules";
 
-export default function HomePage() {
+// Reads site_settings at request time (whether the Rules button should
+// show) — force dynamic so this never gets baked into a static page at
+// build time with no DATABASE_URL available, the same class of bug fixed
+// earlier for /api/dev-login and /api/appeal-questions.
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const { enabled: rulesEnabled } = await getRulesConfig();
+
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <header style={{ display: "flex", justifyContent: "flex-end", padding: "20px 24px" }}>
@@ -39,6 +48,11 @@ export default function HomePage() {
             Enter the ban ID from your in-game message to view punishment details or submit an appeal.
           </p>
           <BanLookupForm />
+          {rulesEnabled && (
+            <Link href="/rules" className="vb-btn vb-btn-ghost" style={{ textDecoration: "none" }}>
+              Server Rules
+            </Link>
+          )}
         </div>
       </section>
 
