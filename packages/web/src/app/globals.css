@@ -181,6 +181,18 @@ input, button, textarea, select {
   border-color: rgba(74, 222, 128, 0.3);
 }
 
+.vb-btn-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.vb-btn-muted {
+  background: var(--glass);
+  color: var(--text-dim);
+  border-color: var(--glass-border-strong);
+}
+
 /* ── Inputs ───────────────────────────────────────────────────────────── */
 .vb-input,
 .vb-textarea,

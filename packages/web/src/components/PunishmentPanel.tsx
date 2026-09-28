@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { MuteIcon, TempMuteIcon, KickIcon, HammerIcon, TempHammerIcon } from "@/components/PunishmentIcons";
 
 interface Template {
   id: string;
@@ -18,16 +19,21 @@ type Action = {
   type: Template["type"];
   hasDuration: boolean;
   hasIpBan: boolean;
+  icon: React.ComponentType<{ size?: number }>;
+  buttonClass: string;
 };
 
 type Mode = "choose" | "template" | "manual";
 
+// Ordered by severity, least to most: colour and icon both track it, so
+// the buttons read as an escalation at a glance rather than five
+// identical options.
 const ACTIONS: Action[] = [
-  { key: "mute", label: "Mute", type: "MUTE", hasDuration: false, hasIpBan: false },
-  { key: "temp_mute", label: "Temp mute", type: "MUTE", hasDuration: true, hasIpBan: false },
-  { key: "kick", label: "Kick", type: "KICK", hasDuration: false, hasIpBan: false },
-  { key: "temp_ban", label: "Temp ban", type: "BAN", hasDuration: true, hasIpBan: true },
-  { key: "ban", label: "Ban", type: "BAN", hasDuration: false, hasIpBan: true },
+  { key: "mute", label: "Mute", type: "MUTE", hasDuration: false, hasIpBan: false, icon: MuteIcon, buttonClass: "vb-btn-muted" },
+  { key: "temp_mute", label: "Temp mute", type: "MUTE", hasDuration: true, hasIpBan: false, icon: TempMuteIcon, buttonClass: "vb-btn-muted" },
+  { key: "kick", label: "Kick", type: "KICK", hasDuration: false, hasIpBan: false, icon: KickIcon, buttonClass: "vb-btn-warn" },
+  { key: "temp_ban", label: "Temp ban", type: "BAN", hasDuration: true, hasIpBan: true, icon: TempHammerIcon, buttonClass: "vb-btn-warn" },
+  { key: "ban", label: "Ban", type: "BAN", hasDuration: false, hasIpBan: true, icon: HammerIcon, buttonClass: "vb-btn-danger" },
 ];
 
 export function PunishmentPanel({
@@ -118,11 +124,15 @@ export function PunishmentPanel({
   if (!active) {
     return (
       <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {ACTIONS.map((action) => (
-          <button key={action.key} onClick={() => openAction(action)} className="vb-btn vb-btn-primary">
-            {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
-          </button>
-        ))}
+        {ACTIONS.map((action) => {
+          const Icon = action.icon;
+          return (
+            <button key={action.key} onClick={() => openAction(action)} className={`vb-btn ${action.buttonClass}`}>
+              <Icon size={15} />
+              {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
+            </button>
+          );
+        })}
       </div>
     );
   }
