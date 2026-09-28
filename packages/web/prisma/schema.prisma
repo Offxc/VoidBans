@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Players & sessions ──────────────────────────────────────────────
+
+model Player {
+  uuid               String   @id @db.Char(36)
+  username           String   @db.VarChar(16)
+  lastSeenUsername   String   @db.VarChar(16)
+  firstJoined        DateTime
+  lastLogin          DateTime?
+  lastLogout         DateTime?
+  isOnline           Boolean  @default(false)
+
+  sessions       Session[]
+  punishments    Punishment[]
+  usernameHistory UsernameHistory[]
+  notes          PlayerNote[]
+  violations     ViolationEvent[]
+
+  @@index([username])
+  @@index([isOnline])
+  @@map("players")
+}
+
+// Append-only — a new row whenever a login's reported username differs
+// from players.lastSeenUsername, so staff can recognize a renamed player.
+model UsernameHistory {
+  id         BigInt   @id @default(autoincrement())
+  playerUuid String   @db.Char(36)
+  username   String   @db.VarChar(16)
+  observedAt DateTime @default(now())
+
+  player Player @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+
+  @@index([playerUuid])
+  @@map("username_history")
+}
+
+// Freeform, non-punishment staff notes on a player — e.g. "suspected alt
+// of X, watching" — distinct from a punishment: it's not an action taken
+// against the player, just context for other staff.
+model PlayerNote {
+  id             BigInt   @id @default(autoincrement())
+  playerUuid     String   @db.Char(36)
+  body           String   @db.Text
+  authorDiscordId String  @db.VarChar(32)
+  authorUsername String   @db.VarChar(64)
+  createdAt      DateTime @default(now())
+
+  player Player @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+
+  @@index([playerUuid])
+  @@map("player_notes")
+}
+
+model Session {
+  id              BigInt    @id @default(autoincrement())
+  playerUuid      String    @db.Char(36)
+  loginAt         DateTime
+  logoutAt        DateTime?
+  durationSeconds Int?
+  serverId        String    @db.VarChar(64)
+  ipAddress       String?   @db.VarChar(45)
+  // Reported client brand at login (e.g. "vanilla", "lunarclient",
+  // "feather"). Sourced from Vulcan's IPlayerData.getClientBrand() when
+  // the Vulcan integration is enabled — null if Vulcan isn't installed
+  // or the integration is turned off in Settings.
+  clientBrand     String?   @db.VarChar(64)
+
+  player Player @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+
+  @@index([playerUuid])
+  @@index([loginAt])
+  @@index([ipAddress])
+  @@map("sessions")
+}
+
+// One row per Vulcan flag (a detected, possibly-not-yet-punishable
+// violation) or punish action, populated by the plugin's VulcanIntegration
+// listener. Exists independently of Vulcan being currently installed —
+// history already recorded stays visible even if the integration is later
+// disabled, only new rows stop being written.
+model ViolationEvent {
+  id          BigInt   @id @default(autoincrement())
+  playerUuid  String   @db.Char(36)
+  checkName   String   @db.VarChar(64)
+  category    String   @db.VarChar(64)
+  violationLevel Int
+  info        String?  @db.Text
+  punished    Boolean  @default(false)
+  occurredAt  DateTime @default(now())
+
+  player Player @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+
+  @@index([playerUuid])
+  @@index([occurredAt])
+  @@map("violation_events")
+}
+
+// ── Punishments & appeals ───────────────────────────────────────────
+
+enum PunishmentType {
+  BAN
+  MUTE
+  KICK
+  WARN
+}
+
+enum AppealStatus {
+  PENDING
+  ACCEPTED
+  DENIED
+}
+
+model Punishment {
+  id             BigInt         @id @default(autoincrement())
+  publicBanId    String         @unique @db.VarChar(16)
+  playerUuid     String         @db.Char(36)
+  type           PunishmentType
+  reason         String         @db.Text
+  templateId     BigInt?
+  staffDiscordId String?        @db.VarChar(32)
+  staffUsername  String?        @db.VarChar(64)
+  issuedAt       DateTime       @default(now())
+  expiresAt      DateTime?
+  active         Boolean        @default(true)
+  revokedBy      String?        @db.VarChar(32)
+  revokedAt      DateTime?
+  revokeReason   String?        @db.Text
+  appealable     Boolean        @default(false)
+  ipAddress      String?        @db.VarChar(45)
+  ipBanned       Boolean        @default(false)
+
+  player   Player                @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+  template PunishmentTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  appeal   Appeal?
+
+  @@index([playerUuid])
+  @@index([active])
+  @@index([ipAddress])
+  @@map("punishments")
+}
+
+model Appeal {
+  id               BigInt       @id @default(autoincrement())
+  punishmentId     BigInt       @unique
+  submittedAt      DateTime     @default(now())
+  answers          Json
+  status           AppealStatus @default(PENDING)
+  staffResponse    String?      @db.Text
+  resolvedByDiscordId String?   @db.VarChar(32)
+  resolvedAt       DateTime?
+  autoRevoked      Boolean      @default(false)
+
+  punishment Punishment @relation(fields: [punishmentId], references: [id], onDelete: Cascade)
+
+  @@map("appeals")
+}
+
+model AppealQuestion {
+  id        BigInt  @id @default(autoincrement())
+  prompt    String  @db.VarChar(280)
+  sortOrder Int     @default(0)
+  required  Boolean @default(true)
+  active    Boolean @default(true)
+
+  @@map("appeal_questions")
+}
+
+model PunishmentTemplate {
+  id                BigInt         @id @default(autoincrement())
+  name              String         @db.VarChar(64)
+  type              PunishmentType
+  defaultReason     String         @db.Text
+  defaultDuration   Int?
+  defaultAppealable Boolean        @default(false)
+  createdByDiscordId String        @db.VarChar(32)
+  createdAt         DateTime       @default(now())
+
+  punishments Punishment[]
+
+  @@map("punishment_templates")
+}
+
+// ── Staff, roles & permissions ──────────────────────────────────────
+
+model StaffRole {
+  id             BigInt  @id @default(autoincrement())
+  discordRoleId  String  @unique @db.VarChar(32)
+  discordRoleName String @db.VarChar(100)
+  displayName    String  @db.VarChar(100)
+  color          String? @db.VarChar(7)
+  isOwnerRole    Boolean @default(false)
+
+  permissions StaffPermission[]
+
+  @@map("staff_roles")
+}
+
+model StaffPermission {
+  roleId         BigInt
+  permissionKey  String @db.VarChar(64)
+
+  role StaffRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionKey])
+  @@map("staff_permissions")
+}
+
+model StaffUser {
+  discordId     String   @id @db.VarChar(32)
+  username      String   @db.VarChar(64)
+  avatarHash    String?  @db.VarChar(64)
+  discordRoles  Json
+  isOwner       Boolean  @default(false)
+  lastLoginAt   DateTime?
+
+  @@map("staff_users")
+}
+
+model AuditLog {
+  id             BigInt   @id @default(autoincrement())
+  actorDiscordId String   @db.VarChar(32)
+  action         String   @db.VarChar(64)
+  targetType     String   @db.VarChar(64)
+  targetId       String   @db.VarChar(64)
+  details        Json?
+  createdAt      DateTime @default(now())
+
+  @@index([actorDiscordId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ── Server-wide settings (owner-editable singletons) ────────────────
+
+model SiteSetting {
+  key   String @id @db.VarChar(64)
+  value Json
+
+  @@map("site_settings")
+}

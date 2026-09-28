@@ -1,0 +1,27 @@
+name: VoidBans
+version: '${project.version}'
+main: com.voidsmp.voidbans.VoidBansPlugin
+api-version: '1.20'
+author: VoidSMP
+description: Punishment tracking, session logging, and ban-message integration for your-domain.example
+
+commands:
+  vban:
+    description: Issue a ban.
+    usage: /vban <player> <reason>
+    permission: voidbans.staff
+  vunban:
+    description: Revoke a ban.
+    usage: /vunban <player>
+    permission: voidbans.staff
+
+permissions:
+  voidbans.staff:
+    description: Allows issuing/revoking punishments in-game.
+    default: op
+  voidbans.alerts.punishments:
+    description: >
+      Receive an in-game chat alert whenever a punishment is issued, from
+      /vban or the web dashboard. Intended to be granted per-rank via
+      LuckPerms rather than left at its Bukkit default — see the README.
+    default: op

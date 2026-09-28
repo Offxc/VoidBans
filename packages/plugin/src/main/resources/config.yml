@@ -1,0 +1,58 @@
+# VoidBans plugin configuration.
+# This connects to the SAME MySQL database as the web app — see
+# packages/web/.env's DATABASE_URL for the connection this must match.
+
+database:
+  host: localhost
+  port: 3306
+  name: voidbans
+  user: voidbans
+  password: ""
+
+# Must match SITE_URL in the web app's .env. Used only for the {site_url}
+# placeholder below — changing where the site is deployed is a one-line
+# edit here and in the web app's .env, never a plugin rebuild.
+site-url: "https://your-domain.example"
+
+server-id: "survival"
+
+# Configurable prefix shown before every message this plugin sends in
+# chat (staff alerts below, and any future broadcast). Colors use '&'
+# Minecraft color codes.
+chat-prefix: "&8[&cVoidBans&8] &r"
+
+# Staff alert broadcast whenever a punishment is issued — from an in-game
+# command OR the web dashboard. Only sent to players holding
+# staff-alert-permission (set this up as a LuckPerms permission and grant
+# it to whichever ranks should see it — see the README for the exact
+# LuckPerms command).
+staff-alerts:
+  enabled: true
+  permission: "voidbans.alerts.punishments"
+  # How often (in seconds) the plugin checks for new punishments issued
+  # via the web dashboard. In-game /vban alerts are instant regardless.
+  poll-interval-seconds: 5
+  # Placeholders: {reason} {ban_id} {type} {player} {staff} {duration}
+  message: "&e{staff} &7{type_verb} &e{player}&7: &f{reason}"
+
+# Placeholders: {reason} {ban_id} {site_url} {duration} {expires_at}
+# Colors use '&' Minecraft color codes.
+messages:
+  ban: |
+    &cYou are banned from this server.
+    &7Reason: &f{reason}
+    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Ban ID: &f{ban_id}
+  temp-ban: |
+    &cYou are temporarily banned from this server.
+    &7Reason: &f{reason}
+    &7Expires: &f{expires_at}
+    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Ban ID: &f{ban_id}
+  kick: |
+    &cYou were kicked from this server.
+    &7Reason: &f{reason}
+  ip-ban: |
+    &cThis network is banned from this server.
+    &7Reason: &f{reason}
+    &7If you believe this is a mistake, contact staff via Discord.

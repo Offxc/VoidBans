@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.next
+**/.next
+.git
+.devdb
+**/.env
+**/.env.local
+*.log
+.DS_Store
+packages/plugin/target

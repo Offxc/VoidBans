@@ -1,0 +1,9 @@
+{
+  "name": "voidbans",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @voidbans/web dev",
+    "build": "pnpm --filter @voidbans/web build",
+    "start": "pnpm --filter @voidbans/web start"
+  }
+}

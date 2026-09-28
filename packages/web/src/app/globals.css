@@ -1,0 +1,285 @@
+:root {
+  /* Base surfaces — deep purple-black, not neutral grey */
+  --bg: #0a0714;
+  --bg-elevated: #0e0a1c;
+
+  /* Glass panel: semi-transparent purple, always paired with backdrop-blur */
+  --glass: rgba(35, 22, 62, 0.46);
+  --glass-strong: rgba(42, 27, 74, 0.62);
+  --glass-border: rgba(168, 130, 255, 0.16);
+  --glass-border-strong: rgba(168, 130, 255, 0.3);
+
+  /* Solid fallback surface for things blur would hurt (dropdown menus, inputs) */
+  --surface-solid: #150f28;
+
+  --text: #ede9f7;
+  --text-dim: #9a90b8;
+  --text-faint: #6b6389;
+
+  --accent: #a855f7;
+  --accent-2: #c084fc;
+  --accent-soft: rgba(168, 85, 247, 0.14);
+  --accent-glow: 0 0 0 1px rgba(168, 85, 247, 0.4), 0 0 24px rgba(168, 85, 247, 0.25);
+  --accent-glow-lg: 0 0 0 1px rgba(168, 85, 247, 0.45), 0 0 48px rgba(168, 85, 247, 0.35);
+
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.14);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(168, 85, 247, 0.16), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 20%, rgba(96, 52, 200, 0.14), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-sora), var(--font-inter), sans-serif;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--accent-2);
+}
+
+input, button, textarea, select {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* ── Glass panel: the core "section" building block ─────────────────── */
+.vb-panel {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.vb-panel-strong {
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--accent-glow), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* A page section: label + panel, with consistent breathing room so
+   sections are visually distinct from each other, not just stacked text. */
+.vb-section {
+  margin-block: 28px;
+}
+
+.vb-section-label {
+  font-family: "Sora", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 0 10px 2px;
+}
+
+.vb-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--glass-border), transparent);
+  margin-block: 28px;
+  border: none;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.vb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.vb-btn:active {
+  transform: scale(0.98);
+}
+
+.vb-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
+.vb-btn-primary {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: #fff;
+  box-shadow: var(--accent-glow);
+}
+
+.vb-btn-primary:hover:not(:disabled) {
+  box-shadow: var(--accent-glow-lg);
+}
+
+.vb-btn-ghost {
+  background: transparent;
+  border-color: var(--glass-border);
+  color: var(--text);
+}
+
+.vb-btn-ghost:hover:not(:disabled) {
+  border-color: var(--glass-border-strong);
+  background: var(--accent-soft);
+}
+
+.vb-btn-quiet {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.vb-btn-quiet:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.vb-btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.vb-btn-success {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* ── Inputs ───────────────────────────────────────────────────────────── */
+.vb-input,
+.vb-textarea,
+.vb-select {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface-solid);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.vb-input:focus,
+.vb-textarea:focus,
+.vb-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.vb-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.vb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+/* ── Pills / badges ───────────────────────────────────────────────────── */
+.vb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.vb-pill-success { background: var(--success-soft); color: var(--success); border-color: rgba(74, 222, 128, 0.25); }
+.vb-pill-warn { background: var(--warn-soft); color: var(--warn); border-color: rgba(251, 191, 36, 0.25); }
+.vb-pill-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(248, 113, 113, 0.25); }
+.vb-pill-neutral { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border-color: var(--glass-border); }
+
+/* ── Table ────────────────────────────────────────────────────────────── */
+.vb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.vb-table th {
+  text-align: left;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.vb-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(168, 130, 255, 0.08);
+}
+
+.vb-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Cards in a grid (players, templates) ────────────────────────────── */
+.vb-card {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+a.vb-card:hover, button.vb-card:hover {
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+[hidden] {
+  display: none !important;
+}

@@ -1,0 +1,64 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: voidbans
+      MYSQL_USER: voidbans
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - voidbans-db:/var/lib/mysql
+    # Exposed on localhost only, so the VoidBans Paper plugin (running on
+    # the same host, outside Docker, under AMP) can connect to it — never
+    # exposed to the public internet.
+    ports:
+      - "127.0.0.1:3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off: applies pending Prisma migrations, then exits. Run explicitly
+  # before (re)starting `web` — see the deployment guide — rather than on
+  # every `docker compose up`, so a migration failure is visible on its
+  # own instead of silently blocking web's restart loop.
+  migrate:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      target: migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://voidbans:${MYSQL_PASSWORD}@db:3306/voidbans
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://voidbans:${MYSQL_PASSWORD}@db:3306/voidbans
+      SESSION_SECRET: ${SESSION_SECRET}
+      SITE_URL: ${SITE_URL}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      BLUEMAP_URL: ${BLUEMAP_URL:-}
+      NODE_ENV: production
+    # Bound to localhost only — Caddy on the host reverse-proxies to this
+    # port. Never publish this on 0.0.0.0; that would expose it directly,
+    # bypassing Caddy's TLS and any host-level protections.
+    ports:
+      - "127.0.0.1:3300:3300"
+
+volumes:
+  voidbans-db:
