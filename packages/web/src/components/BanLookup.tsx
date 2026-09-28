@@ -21,7 +21,7 @@ export function BanLookupForm() {
         className="vb-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Enter ban ID"
+        placeholder="Enter Ban ID"
         aria-label="Ban ID"
         style={{ padding: "12px 14px", fontSize: 15 }}
       />
