@@ -1,5 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local dev on whatever platform that happens to be;
+  // the linux-musl targets are required for the node:20-alpine Docker
+  // image (Alpine uses musl libc, not glibc — Prisma's engine binaries
+  // are platform+libc specific and won't run across that boundary).
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

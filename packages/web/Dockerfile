@@ -2,6 +2,11 @@
 # output plus the Prisma client, not the full node_modules tree or source.
 
 FROM node:20-alpine AS base
+# Prisma's query/schema engines need OpenSSL and Alpine's node image
+# doesn't ship it — without this, prisma generate/migrate fail with an
+# unhelpful "Could not parse schema engine response" instead of an
+# actual libssl error.
+RUN apk add --no-cache openssl
 RUN corepack enable
 
 # ---- deps: install once, reused by the build stage ----
@@ -33,6 +38,9 @@ CMD ["pnpm", "--filter", "@voidbans/web", "exec", "prisma", "migrate", "deploy"]
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+# Prisma Client's query engine (used on every DB call the running app
+# makes, not just migrations) needs this at runtime too.
+RUN apk add --no-cache openssl
 RUN addgroup -S voidbans && adduser -S voidbans -G voidbans
 
 # .next/standalone already contains a pruned node_modules with exactly
