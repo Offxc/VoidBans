@@ -19,6 +19,7 @@ interface Rule {
   categoryName: string;
   code: string;
   title: string;
+  description: string | null;
 }
 
 type Action = {
@@ -70,6 +71,7 @@ export function PunishmentPanel({
   const [ipBan, setIpBan] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [expandedRuleId, setExpandedRuleId] = useState<string | null>(null);
 
   const rulesByCategory = rules.reduce<Map<string, Rule[]>>((map, r) => {
     const list = map.get(r.categoryName) ?? [];
@@ -241,23 +243,49 @@ export function PunishmentPanel({
             <div key={category}>
               <div style={{ fontSize: 12, color: "var(--text-dim)", marginBottom: 6, fontWeight: 600 }}>{category}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {catRules.map((r) => (
-                  <label
-                    key={r.id}
-                    className="vb-card"
-                    style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={ruleIds.includes(r.id)}
-                      onChange={() => toggleRule(r.id)}
-                      style={{ marginTop: 3 }}
-                    />
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>
-                      {r.code} — {r.title}
-                    </span>
-                  </label>
-                ))}
+                {catRules.map((r) => {
+                  const expanded = expandedRuleId === r.id;
+                  return (
+                    <div key={r.id} className="vb-card" style={{ padding: 10 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, flex: 1, cursor: "pointer", minWidth: 0 }}>
+                          <input
+                            type="checkbox"
+                            checked={ruleIds.includes(r.id)}
+                            onChange={() => toggleRule(r.id)}
+                            style={{ marginTop: 3, flexShrink: 0, width: 18, height: 18 }}
+                          />
+                          <span style={{ fontWeight: 600, fontSize: 13 }}>
+                            {r.code} — {r.title}
+                          </span>
+                        </label>
+                        {r.description && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedRuleId(expanded ? null : r.id)}
+                            className="vb-btn vb-btn-quiet"
+                            style={{ fontSize: 11, padding: "4px 8px", flexShrink: 0 }}
+                          >
+                            {expanded ? "Hide" : "Details"}
+                          </button>
+                        )}
+                      </div>
+                      {expanded && r.description && (
+                        <p
+                          style={{
+                            fontSize: 12.5,
+                            color: "var(--text-dim)",
+                            margin: "8px 0 0",
+                            paddingLeft: 28,
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {r.description}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

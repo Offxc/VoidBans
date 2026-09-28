@@ -207,6 +207,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
             categoryName: r.category.name,
             code: r.code,
             title: r.title,
+            description: r.description,
           }))}
           templatesEnabled={punishmentModes.templatesEnabled}
           rulesEnabled={punishmentModes.rulesEnabled}

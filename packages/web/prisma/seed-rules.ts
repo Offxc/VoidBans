@@ -7,11 +7,6 @@
  *
  * Safe to re-run — categories are matched by name and rules by code, so
  * re-running updates existing rows instead of duplicating them.
- *
- * Note: the source rulebook had two rules both labeled "S4" (Personal
- * Information and Chargebacks) — that's preserved here as S4 and S4B
- * since punishment_rules.code must be unique; rename S4B in the Rules
- * page if you'd rather renumber the whole Severe Rules section.
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -209,7 +204,7 @@ const CATEGORIES: CategorySeed[] = [
           "Do not share information about others (names, addresses, socials, etc.). Malicious sharing is treated as doxxing and results in a permanent ban.",
       },
       {
-        code: "S4B",
+        code: "S5",
         title: "Chargebacks",
         description:
           "Any chargeback will result in a permanent ban, and will be formally disputed through Tebex with your payment provider/card issuer using purchase and delivery evidence.",
