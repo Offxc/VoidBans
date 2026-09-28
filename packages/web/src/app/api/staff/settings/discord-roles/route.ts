@@ -21,7 +21,16 @@ export async function GET() {
     headers: { Authorization: `Bot ${botToken}` },
   });
   if (!res.ok) {
-    return NextResponse.json({ error: "Failed to fetch guild roles" }, { status: 502 });
+    // Surface Discord's actual response (e.g. "50001 Missing Access" if the
+    // bot was never invited to this guild, "401 Unauthorized" for a bad
+    // token) instead of a generic message — this is exactly the kind of
+    // credential mixup that's already bitten OAuth login twice.
+    const detail = await res.text().catch(() => "");
+    console.error(`Discord guild roles fetch failed: ${res.status} ${detail}`);
+    return NextResponse.json(
+      { error: `Discord API error ${res.status}`, detail },
+      { status: 502 },
+    );
   }
 
   const roles: DiscordRole[] = await res.json();

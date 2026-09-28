@@ -25,15 +25,20 @@ export function RolePermissionEditor({
 }) {
   const router = useRouter();
   const [discordRoles, setDiscordRoles] = useState<DiscordRole[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedDiscordRoleId, setSelectedDiscordRoleId] = useState("");
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch("/api/staff/settings/discord-roles")
-      .then((r) => (r.ok ? r.json() : []))
+      .then(async (r) => {
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(body.detail || body.error || `HTTP ${r.status}`);
+        return body as DiscordRole[];
+      })
       .then(setDiscordRoles)
-      .catch(() => setDiscordRoles([]));
+      .catch((err) => setLoadError(String(err.message || err)));
   }, []);
 
   function selectRole(discordRoleId: string) {
@@ -79,10 +84,15 @@ export function RolePermissionEditor({
           className="vb-select"
           value={selectedDiscordRoleId}
           onChange={(e) => selectRole(e.target.value)}
+          disabled={!!loadError}
           style={{ minWidth: 240 }}
         >
           <option value="">
-            {discordRoles === null ? "Loading Discord roles…" : "Select a Discord role"}
+            {loadError
+              ? "Failed to load Discord roles"
+              : discordRoles === null
+                ? "Loading Discord roles…"
+                : "Select a Discord role"}
           </option>
           {discordRoles?.map((r) => {
             const mapped = roles.find((role) => role.discordRoleId === r.id);
@@ -94,6 +104,13 @@ export function RolePermissionEditor({
           })}
         </select>
       </div>
+
+      {loadError && (
+        <p style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>
+          Couldn&apos;t load Discord roles: {loadError}. Check <code>DISCORD_BOT_TOKEN</code> and{" "}
+          <code>DISCORD_GUILD_ID</code>, and that the bot is actually a member of the server.
+        </p>
+      )}
 
       {selectedDiscordRoleId && (
         <div>

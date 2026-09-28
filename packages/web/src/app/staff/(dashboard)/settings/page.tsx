@@ -53,10 +53,6 @@ export default async function SettingsPage() {
       <div className="vb-section">
         <div className="vb-section-label">Appeal questions</div>
         <div className="vb-panel" style={{ padding: 18 }}>
-          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-            Shown to players submitting an appeal, in order. Editing this doesn&apos;t change answers already
-            submitted — only what&apos;s asked going forward.
-          </p>
           <AppealQuestionEditor
             questions={questions.map((q) => ({
               id: q.id.toString(),
