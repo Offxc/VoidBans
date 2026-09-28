@@ -66,13 +66,22 @@ export async function fetchDiscordUser(accessToken: string): Promise<DiscordUser
   return res.json();
 }
 
+export interface GuildMember {
+  roles: string[];
+  // Per-server nickname, if the member has set one — null otherwise.
+  // This is what staff actually recognize each other by in the server,
+  // as opposed to a global Discord username, which can be a handle
+  // nobody in the server context would recognize.
+  nick: string | null;
+}
+
 /**
- * Role IDs for this user within the configured guild. A bare `identify`
- * scope token cannot see guild roles, so this calls the guild member
- * endpoint with the bot token instead — the bot must be a member of
- * DISCORD_GUILD_ID with permission to view members.
+ * Role IDs (and server nickname) for this user within the configured
+ * guild. A bare `identify` scope token cannot see this, so it calls the
+ * guild member endpoint with the bot token instead — the bot must be a
+ * member of DISCORD_GUILD_ID with permission to view members.
  */
-export async function fetchGuildMemberRoles(discordUserId: string): Promise<string[]> {
+export async function fetchGuildMember(discordUserId: string): Promise<GuildMember> {
   const botToken = requiredEnv("DISCORD_BOT_TOKEN");
   const guildId = requiredEnv("DISCORD_GUILD_ID");
 
@@ -80,11 +89,12 @@ export async function fetchGuildMemberRoles(discordUserId: string): Promise<stri
     headers: { Authorization: `Bot ${botToken}` },
   });
 
-  if (res.status === 404) return []; // not a member of the guild -> no staff roles
+  if (res.status === 404) return { roles: [], nick: null }; // not a member -> no staff roles
+
   if (!res.ok) {
     throw new Error(`Failed to fetch guild member: ${res.status} ${await res.text()}`);
   }
 
-  const member: { roles: string[] } = await res.json();
-  return member.roles;
+  const member: { roles: string[]; nick: string | null } = await res.json();
+  return { roles: member.roles, nick: member.nick };
 }
