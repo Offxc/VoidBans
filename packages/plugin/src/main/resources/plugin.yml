@@ -3,7 +3,7 @@ version: '${project.version}'
 main: com.voidsmp.voidbans.VoidBansPlugin
 api-version: '1.20'
 author: VoidSMP
-description: Punishment tracking, session logging, and ban-message integration for your-domain.example
+description: Punishment tracking, session logging, and ban-message integration with the VoidBans web dashboard
 
 commands:
   vban:
