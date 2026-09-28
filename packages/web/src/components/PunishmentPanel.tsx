@@ -57,7 +57,15 @@ export function PunishmentPanel({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  const relevantTemplates = active ? templates.filter((t) => t.type === active.type) : [];
+  // Match on whether the template itself is permanent/temporary, not just
+  // punishment type — a BAN template with no defaultDuration is meant for
+  // the permanent "Ban" action, one with a defaultDuration for "Temp ban".
+  // Without this, e.g. a permanent ban template showed up under "Temp
+  // ban" too, and picking it there left duration blank with nothing to
+  // fill it in from, since a permanent template legitimately has none.
+  const relevantTemplates = active
+    ? templates.filter((t) => t.type === active.type && Boolean(t.defaultDuration) === active.hasDuration)
+    : [];
 
   function openAction(action: Action) {
     setActive(action);
