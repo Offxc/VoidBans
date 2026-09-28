@@ -15,10 +15,12 @@ export function PlayerNotes({
   playerUuid,
   notes,
   canWrite,
+  canDelete,
 }: {
   playerUuid: string;
   notes: Note[];
   canWrite: boolean;
+  canDelete: boolean;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -41,15 +43,41 @@ export function PlayerNotes({
     }
   }
 
+  async function remove(id: string) {
+    await fetch(`/api/staff/notes/${id}`, { method: "DELETE" });
+    router.refresh();
+  }
+
   return (
     <div>
       {notes.length === 0 && <p style={{ color: "var(--text-dim)", fontSize: 14 }}>No notes.</p>}
       {notes.map((n) => (
-        <div key={n.id} style={{ padding: "10px 0", borderTop: "1px solid rgba(168, 130, 255, 0.08)", fontSize: 14 }}>
-          <div>{n.body}</div>
-          <div style={{ color: "var(--text-dim)", fontSize: 12, marginTop: 4 }}>
-            {n.authorUsername} · <LocalTime iso={n.createdAt} relative />
+        <div
+          key={n.id}
+          style={{
+            padding: "10px 0",
+            borderTop: "1px solid rgba(168, 130, 255, 0.08)",
+            fontSize: 14,
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div>{n.body}</div>
+            <div style={{ color: "var(--text-dim)", fontSize: 12, marginTop: 4 }}>
+              {n.authorUsername} · <LocalTime iso={n.createdAt} relative />
+            </div>
           </div>
+          {canDelete && (
+            <button
+              onClick={() => remove(n.id)}
+              className="vb-btn vb-btn-quiet"
+              style={{ fontSize: 11, padding: "3px 8px", alignSelf: "flex-start", flexShrink: 0 }}
+            >
+              Remove
+            </button>
+          )}
         </div>
       ))}
 

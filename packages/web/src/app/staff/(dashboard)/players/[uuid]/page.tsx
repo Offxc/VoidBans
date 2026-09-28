@@ -27,6 +27,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const canViewSessions = hasPermission(principal, "players.view_sessions");
   const canViewIp = hasPermission(principal, "players.view_ip");
   const canViewNotes = hasPermission(principal, "players.notes");
+  const canDeleteNotes = hasPermission(principal, "players.delete_notes");
   const canViewAttachments = hasPermission(principal, "players.view_attachments");
   const canAddAttachments = hasPermission(principal, "players.add_attachments");
   const canViewViolations = hasPermission(principal, "players.view_violations");
@@ -210,6 +211,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                 createdAt: n.createdAt.toISOString(),
               }))}
               canWrite={canViewNotes}
+              canDelete={canDeleteNotes}
             />
           </div>
         </div>

@@ -15,6 +15,7 @@ export const PERMISSION_KEYS = [
   "players.view_sessions",
   "players.view_ip",
   "players.notes",
+  "players.delete_notes",
   "players.view_violations",
   "players.view_attachments",
   "players.add_attachments",
