@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { prisma } from "@/lib/prisma";
 import { StaffNav } from "@/components/StaffNav";
 import { StaffHeader } from "@/components/StaffHeader";
 
@@ -9,6 +10,17 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
 
   if (!principal) {
     redirect("/staff/login");
+  }
+
+  // Enforced for every staff member, including one who logged in before
+  // this requirement existed — there is no minecraftUuid backfill, so the
+  // gate is "does this row have one yet", checked on every dashboard load.
+  const staffUser = await prisma.staffUser.findUnique({
+    where: { discordId: principal.discordId },
+    select: { minecraftUuid: true },
+  });
+  if (!staffUser?.minecraftUuid) {
+    redirect("/staff/link-account");
   }
 
   const nav = [

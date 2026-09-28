@@ -226,6 +226,12 @@ model StaffUser {
   discordRoles  Json
   isOwner       Boolean  @default(false)
   lastLoginAt   DateTime?
+  // Self-linked Minecraft account, required before the dashboard is
+  // usable (enforced at /staff/link-account) — this is what lets the
+  // punishment API refuse to let staff action another staff member's
+  // Player row. Nullable only because it doesn't exist until the staff
+  // member completes that one-time step; every login re-checks for null.
+  minecraftUuid String?  @unique @db.Char(36)
 
   @@map("staff_users")
 }

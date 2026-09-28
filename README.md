@@ -195,6 +195,16 @@ Every other staff member's access comes entirely from the owner mapping a Discor
 permissions in Settings — nobody else gets access just by having a role in the server until the
 owner grants that role permissions there.
 
+**Every staff member, including the owner, must link their own Minecraft account** (at
+`/staff/link-account`) before the dashboard is usable — enforced on every dashboard load, not just
+first login, so it also catches accounts that logged in before this existed. They enter their own
+Minecraft username, which must belong to a player who has actually joined the server at least once
+(it resolves to a real `Player` row, not an arbitrary typed name). This link is what lets the
+punishment API recognize "this target is staff" and refuse the action — without it, there'd be no
+way to know a given Minecraft account belongs to a logged-in staff member at all. Non-owner staff
+can't punish another linked staff account through the dashboard; the owner is exempt, since they're
+the ultimate authority on the panel and may need to act against a compromised or rogue account.
+
 ## IP logging and IP bans
 
 The plugin records the IP address of every login session, for every player — not just those who

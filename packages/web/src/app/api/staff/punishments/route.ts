@@ -34,6 +34,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  // Staff can't punish another staff member's linked Minecraft account —
+  // the owner is exempt, since they're the ultimate authority on the
+  // panel and may genuinely need to act against a compromised or rogue
+  // staff account.
+  if (!principal.isOwner) {
+    const targetIsStaff = await prisma.staffUser.findFirst({
+      where: { minecraftUuid: input.playerUuid },
+      select: { discordId: true },
+    });
+    if (targetIsStaff) {
+      return NextResponse.json({ error: "This player is a staff member and cannot be punished here." }, { status: 403 });
+    }
+  }
+
   const expiresAt = input.durationSeconds
     ? new Date(Date.now() + input.durationSeconds * 1000)
     : null;

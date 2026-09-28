@@ -17,6 +17,12 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const player = await prisma.player.findUnique({ where: { uuid: params.uuid } });
   if (!player) notFound();
 
+  const targetStaffUser = await prisma.staffUser.findFirst({
+    where: { minecraftUuid: player.uuid },
+    select: { username: true },
+  });
+  const canPunishThisPlayer = !targetStaffUser || principal.isOwner;
+
   const canViewSessions = hasPermission(principal, "players.view_sessions");
   const canViewIp = hasPermission(principal, "players.view_ip");
   const canViewNotes = hasPermission(principal, "players.notes");
@@ -124,9 +130,12 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
             </div>
           )}
         </div>
-        <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`} style={{ marginLeft: "auto" }}>
-          {player.isOnline ? "Online" : "Offline"}
-        </span>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          {targetStaffUser && <span className="vb-pill">Staff</span>}
+          <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
+            {player.isOnline ? "Online" : "Offline"}
+          </span>
+        </div>
       </div>
 
       <div className="vb-panel" style={{ padding: 18, marginTop: 14 }}>
@@ -150,7 +159,13 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         </dl>
       </div>
 
-      {(canIssue || canRequest) && (
+      {(canIssue || canRequest) && !canPunishThisPlayer && (
+        <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 18 }}>
+          {targetStaffUser?.username} is a staff member and can&apos;t be punished from here.
+        </p>
+      )}
+
+      {(canIssue || canRequest) && canPunishThisPlayer && (
         <PunishmentPanel
           playerUuid={player.uuid}
           templates={templates.map((t) => ({
