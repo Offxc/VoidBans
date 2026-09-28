@@ -12,7 +12,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
   }
 
   const nav = [
-    { href: "/staff/bans", label: "Bans", show: hasPermission(principal, "bans.view") },
+    { href: "/staff/bans", label: "Punishments", show: hasPermission(principal, "bans.view") },
     { href: "/staff/appeals", label: "Appeals", show: hasPermission(principal, "appeals.view") },
     { href: "/staff/players", label: "Players", show: hasPermission(principal, "players.view_roster") },
     { href: "/staff/bluemap", label: "BlueMap", show: hasPermission(principal, "bluemap.view") },

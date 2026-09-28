@@ -35,9 +35,6 @@ export default function StaffLoginPage({
         }}
       >
         <h1 style={{ fontSize: 22, margin: 0 }}>Staff Login</h1>
-        <p style={{ color: "var(--text-dim)", fontSize: 14, margin: 0 }}>
-          Sign in with the Discord account tied to your staff role.
-        </p>
         {error && <p style={{ color: "var(--danger)", fontSize: 13.5 }}>{error}</p>}
 
         {isDev ? (

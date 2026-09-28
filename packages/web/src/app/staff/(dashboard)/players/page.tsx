@@ -21,8 +21,7 @@ export default async function PlayersPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>Players</h1>
-      <p style={{ color: "var(--text-dim)", fontSize: 14, marginTop: 0 }}>{online.length} online now.</p>
+      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Players</h1>
 
       <div className="vb-section">
         <div className="vb-section-label">Online</div>

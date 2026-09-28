@@ -29,8 +29,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>Settings</h1>
-      <p style={{ color: "var(--text-dim)", fontSize: 14, marginTop: 0 }}>Owner-only.</p>
+      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Settings</h1>
 
       <div className="vb-section">
         <div className="vb-section-label">Roles &amp; permissions</div>
@@ -82,10 +81,6 @@ export default async function SettingsPage() {
       <div className="vb-section">
         <div className="vb-section-label">Server rules</div>
         <div className="vb-panel" style={{ padding: 18 }}>
-          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-            Written in Markdown. When enabled, a &quot;Rules&quot; button appears on the public homepage
-            next to the ban lookup box, linking to a dedicated <code>/rules</code> page.
-          </p>
           <RulesEditor enabled={rulesConfig.enabled} markdown={rulesConfig.markdown} />
         </div>
       </div>

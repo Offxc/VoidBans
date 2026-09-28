@@ -21,12 +21,12 @@ export function BanLookupForm() {
         className="vb-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Enter your ban ID (e.g. VB-8F2K9Q)"
+        placeholder="Enter ban ID"
         aria-label="Ban ID"
         style={{ padding: "12px 14px", fontSize: 15 }}
       />
       <button type="submit" className="vb-btn vb-btn-primary" style={{ padding: "12px 22px", fontSize: 15 }}>
-        Look up
+        View
       </button>
     </form>
   );

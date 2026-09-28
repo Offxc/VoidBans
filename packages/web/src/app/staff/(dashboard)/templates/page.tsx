@@ -13,10 +13,7 @@ export default async function TemplatesPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>Templates</h1>
-      <p style={{ color: "var(--text-dim)", fontSize: 14, marginTop: 0 }}>
-        Reusable punishment presets, available when issuing a punishment from a player&apos;s profile.
-      </p>
+      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Templates</h1>
 
       <TemplateEditor
         canEdit={canEdit}

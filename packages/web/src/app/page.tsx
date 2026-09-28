@@ -44,9 +44,6 @@ export default async function HomePage() {
           }}
         >
           <h1 style={{ fontSize: 30, margin: 0, textWrap: "balance" }}>VoidSMP Bans</h1>
-          <p style={{ color: "var(--text-dim)", margin: 0, fontSize: 14.5 }}>
-            Enter the ban ID from your in-game message to view punishment details or submit an appeal.
-          </p>
           <BanLookupForm />
           {rulesEnabled && (
             <Link href="/rules" className="vb-btn vb-btn-ghost" style={{ textDecoration: "none" }}>
