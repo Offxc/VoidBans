@@ -34,10 +34,6 @@ export default async function LinkAccountPage() {
         }}
       >
         <h1 style={{ fontSize: 22, margin: 0 }}>Link your Minecraft account</h1>
-        <p style={{ color: "var(--text-dim)", fontSize: 14, margin: 0 }}>
-          One-time step before you can use the dashboard. This is how the site knows not to let staff
-          punish each other. Join the server at least once, then enter your username below.
-        </p>
         <LinkAccountForm />
       </div>
     </main>

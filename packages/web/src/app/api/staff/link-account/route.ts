@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const parsed = linkSchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Enter a Minecraft username." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Invalid username." }, { status: 400 });
 
   // Must be a player who has actually joined the server at least once —
   // this can't be an arbitrary typed username, since the whole point is
@@ -24,20 +24,14 @@ export async function POST(req: NextRequest) {
   });
 
   if (!player) {
-    return NextResponse.json(
-      { error: "No player with that username has joined the server. Join once, then link your account." },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: "Player not found." }, { status: 404 });
   }
 
   const alreadyLinkedToOther = await prisma.staffUser.findFirst({
     where: { minecraftUuid: player.uuid, discordId: { not: principal.discordId } },
   });
   if (alreadyLinkedToOther) {
-    return NextResponse.json(
-      { error: "That Minecraft account is already linked to a different staff member." },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: "That account is already linked." }, { status: 409 });
   }
 
   await prisma.staffUser.update({
