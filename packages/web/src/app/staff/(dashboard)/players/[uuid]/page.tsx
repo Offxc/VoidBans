@@ -3,6 +3,7 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
+import { getPunishmentModes } from "@/lib/punishment-modes";
 import { PlayerHead } from "@/components/PlayerHead";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentPanel } from "@/components/PunishmentPanel";
@@ -37,8 +38,9 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const vulcanEnabled = await isVulcanIntegrationEnabled();
   const showViolations = vulcanEnabled && canViewViolations;
+  const punishmentModes = await getPunishmentModes();
 
-  const [sessions, last30DaysAgg, last30DaysSessionCount, punishments, templates, usernameHistory, notes, violations, attachments] =
+  const [sessions, last30DaysAgg, last30DaysSessionCount, punishments, templates, rules, usernameHistory, notes, violations, attachments] =
     await Promise.all([
       canViewSessions
         ? prisma.session.findMany({
@@ -65,6 +67,9 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
       }),
       canIssue || canRequest
         ? prisma.punishmentTemplate.findMany({ orderBy: { name: "asc" } })
+        : Promise.resolve([]),
+      canIssue || canRequest
+        ? prisma.punishmentRule.findMany({ where: { active: true }, orderBy: [{ sortOrder: "asc" }, { code: "asc" }] })
         : Promise.resolve([]),
       prisma.usernameHistory.findMany({
         where: { playerUuid: player.uuid },
@@ -202,6 +207,16 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
             defaultDuration: t.defaultDuration,
             defaultAppealable: t.defaultAppealable,
           }))}
+          rules={rules.map((r) => ({
+            id: r.id.toString(),
+            code: r.code,
+            title: r.title,
+            type: r.type,
+            defaultDuration: r.defaultDuration,
+            defaultAppealable: r.defaultAppealable,
+          }))}
+          templatesEnabled={punishmentModes.templatesEnabled}
+          rulesEnabled={punishmentModes.rulesEnabled}
           canIssueDirectly={canIssue}
         />
       )}

@@ -5,11 +5,13 @@ import { PERMISSION_KEYS } from "@/lib/permissions";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getRulesConfig } from "@/lib/rules";
 import { getSiteIconUrl } from "@/lib/site-icon";
+import { getPunishmentModes } from "@/lib/punishment-modes";
 import { RolePermissionEditor } from "@/components/RolePermissionEditor";
 import { AppealQuestionEditor } from "@/components/AppealQuestionEditor";
 import { IntegrationsEditor } from "@/components/IntegrationsEditor";
 import { RulesEditor } from "@/components/RulesEditor";
 import { SiteIconEditor } from "@/components/SiteIconEditor";
+import { PunishmentModesEditor } from "@/components/PunishmentModesEditor";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -18,7 +20,7 @@ export default async function SettingsPage() {
   // (tied to a Discord ID, not a reassignable role) is trusted with that.
   if (!principal?.isOwner) redirect("/staff");
 
-  const [roles, questions, vulcanEnabled, rulesConfig, iconUrl] = await Promise.all([
+  const [roles, questions, vulcanEnabled, rulesConfig, iconUrl, punishmentModes] = await Promise.all([
     prisma.staffRole.findMany({
       include: { permissions: true },
       orderBy: { displayName: "asc" },
@@ -27,6 +29,7 @@ export default async function SettingsPage() {
     isVulcanIntegrationEnabled(),
     getRulesConfig(),
     getSiteIconUrl(),
+    getPunishmentModes(),
   ]);
 
   return (
@@ -74,6 +77,16 @@ export default async function SettingsPage() {
           its UI everywhere without deleting anything already recorded.
         </p>
         <IntegrationsEditor vulcanEnabled={vulcanEnabled} />
+      </div>
+
+      <div className="vb-section">
+        <div className="vb-section-label">Punishing</div>
+        <div className="vb-panel" style={{ padding: 18 }}>
+          <PunishmentModesEditor
+            templatesEnabled={punishmentModes.templatesEnabled}
+            rulesEnabled={punishmentModes.rulesEnabled}
+          />
+        </div>
       </div>
 
       <div className="vb-section">

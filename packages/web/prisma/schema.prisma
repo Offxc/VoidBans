@@ -178,6 +178,7 @@ model Punishment {
   template    PunishmentTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
   appeal      Appeal?
   attachments PlayerAttachment[]
+  ruleLinks   PunishmentRuleLink[]
 
   @@index([playerUuid])
   @@index([active])
@@ -224,6 +225,49 @@ model PunishmentTemplate {
   punishments Punishment[]
 
   @@map("punishment_templates")
+}
+
+// A rule from the server's rulebook, selectable when issuing a punishment
+// (staff pick which rule(s) were broken instead of, or alongside, a
+// template). Deliberately separate from the free-text Markdown rules
+// page (see lib/rules.ts / SiteSetting "rules.markdown") — that page is
+// public-facing prose for players, this is structured data for punishing.
+// Carries the same default-punishment fields as PunishmentTemplate by
+// design: the owner can enable templates, rules, or both, and a rule
+// picked here works the same way a template does — it's fine for them to
+// overlap.
+model PunishmentRule {
+  id                BigInt         @id @default(autoincrement())
+  code              String         @db.VarChar(16)
+  title             String         @db.VarChar(120)
+  description       String?        @db.Text
+  type              PunishmentType
+  defaultDuration   Int?
+  defaultAppealable Boolean        @default(false)
+  active            Boolean        @default(true)
+  sortOrder         Int            @default(0)
+  createdByDiscordId String        @db.VarChar(32)
+  createdAt         DateTime       @default(now())
+
+  punishmentLinks PunishmentRuleLink[]
+
+  @@unique([code])
+  @@map("punishment_rules")
+}
+
+// Many-to-many: a single punishment can cite more than one broken rule
+// (e.g. harassment + spam in the same incident), so this can't be a
+// plain nullable FK on Punishment the way templateId is.
+model PunishmentRuleLink {
+  punishmentId BigInt
+  ruleId       BigInt
+
+  punishment Punishment     @relation(fields: [punishmentId], references: [id], onDelete: Cascade)
+  rule       PunishmentRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@id([punishmentId, ruleId])
+  @@index([ruleId])
+  @@map("punishment_rule_links")
 }
 
 // ── Staff, roles & permissions ──────────────────────────────────────

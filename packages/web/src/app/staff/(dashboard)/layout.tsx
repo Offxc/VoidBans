@@ -31,6 +31,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
     { href: "/staff/appeals", label: "Appeals", show: hasPermission(principal, "appeals.view") },
     { href: "/staff/players", label: "Players", show: hasPermission(principal, "players.view_roster") },
     { href: "/staff/templates", label: "Templates", show: hasPermission(principal, "templates.view") },
+    { href: "/staff/rules", label: "Rules", show: hasPermission(principal, "rules.view") },
     // Owner-only, not permission-gated — /staff/settings itself redirects
     // any non-owner regardless, so showing this to a non-owner would just
     // be a nav link that bounces them straight back.

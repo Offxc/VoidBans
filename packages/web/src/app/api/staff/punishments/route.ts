@@ -10,6 +10,7 @@ const issueSchema = z.object({
   type: z.enum(["BAN", "MUTE", "KICK", "WARN"]),
   reason: z.string().min(1).max(2000),
   templateId: z.string().optional(),
+  ruleIds: z.array(z.string()).optional(),
   durationSeconds: z.number().int().positive().optional(),
   appealable: z.boolean().default(false),
   ipBanned: z.boolean().default(false),
@@ -75,6 +76,8 @@ export async function POST(req: NextRequest) {
     ipAddress = lastSession?.ipAddress ?? null;
   }
 
+  const ruleIds = (input.ruleIds ?? []).map((id) => BigInt(id));
+
   const punishment = await prisma.punishment.create({
     data: {
       publicBanId: generatePublicBanId(),
@@ -88,6 +91,7 @@ export async function POST(req: NextRequest) {
       appealable: input.appealable,
       ipBanned: wantsIpBan && ipAddress !== null,
       ipAddress,
+      ruleLinks: ruleIds.length > 0 ? { create: ruleIds.map((ruleId) => ({ ruleId })) } : undefined,
     },
   });
 
