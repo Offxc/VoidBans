@@ -3,6 +3,14 @@ import { readSession } from "@/lib/session";
 import { fetchGuildMember } from "@/lib/discord";
 import { isPermissionKey, type PermissionKey, type StaffPrincipal } from "@/lib/permissions";
 
+// How long a cached Discord nickname/role list is trusted before this
+// re-fetches it from Discord. Role -> permission-key *mappings* are always
+// read fresh (see below); this only bounds staleness of role membership
+// and the nickname itself, which previously only refreshed at login —
+// meaning a nickname change in Discord wouldn't show up here until the
+// staff member's next 12h session expired and they signed in again.
+const IDENTITY_REFRESH_MS = 5 * 60 * 1000;
+
 /**
  * Resolves the current request's staff principal from the session cookie,
  * re-deriving permissions from the *current* Discord role -> permission
@@ -13,10 +21,15 @@ export async function getStaffPrincipal(): Promise<StaffPrincipal | null> {
   const session = await readSession();
   if (!session) return null;
 
-  const staffUser = await prisma.staffUser.findUnique({
+  let staffUser = await prisma.staffUser.findUnique({
     where: { discordId: session.discordId },
   });
   if (!staffUser) return null;
+
+  const lastSynced = staffUser.lastLoginAt?.getTime() ?? 0;
+  if (Date.now() - lastSynced > IDENTITY_REFRESH_MS) {
+    staffUser = await refreshStaffIdentity(staffUser.discordId, staffUser.username);
+  }
 
   if (staffUser.isOwner) {
     return {
@@ -86,6 +99,29 @@ export async function syncStaffUserOnLogin(discordId: string, globalUsername: st
     update: {
       username: displayUsername,
       avatarHash,
+      discordRoles: member.roles,
+      lastLoginAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Re-checks nickname + role membership against Discord outside of login,
+ * so a nickname or role change in Discord shows up within
+ * IDENTITY_REFRESH_MS instead of waiting for the staff member's next
+ * sign-in (sessions last 12h — that's a long time to keep showing a
+ * renamed/departed member's stale identity). No fresh OAuth token is
+ * available here, so this can't re-check the global Discord username —
+ * only the guild member lookup (nick + roles), which is exactly the part
+ * that goes stale. Falls back to the currently stored username if the
+ * member has no server nickname set, same priority order as login.
+ */
+async function refreshStaffIdentity(discordId: string, currentUsername: string) {
+  const member = await fetchGuildMember(discordId);
+  return prisma.staffUser.update({
+    where: { discordId },
+    data: {
+      username: member.nick ?? currentUsername,
       discordRoles: member.roles,
       lastLoginAt: new Date(),
     },
