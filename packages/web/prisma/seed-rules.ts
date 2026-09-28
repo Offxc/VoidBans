@@ -30,190 +30,190 @@ const CATEGORIES: CategorySeed[] = [
   {
     name: "Chat Rules",
     description:
-      "Applies to all chats, clan names, signs, books, and item names unless stated otherwise. Violations can mean a warning, mute, kick, or ban.",
+      "Applies to all chats, clan names, signs, books, and item names unless stated otherwise. Violations may result in warnings, mutes, kicks, or bans.",
     rules: [
       {
         code: "C1",
         title: "Harassment",
-        description: "Don't harass other players or staff, in any chat. This includes messaging staff for items or an in-game advantage.",
+        description: "Do not harass other players or staff. Applies to ALL chats. Includes messaging staff for items or advantages.",
       },
       {
         code: "C2",
         title: "Spam",
-        description: "No spamming. That covers repeated messages, character spam, excessive caps, and misusing reports.",
+        description: "Spamming is prohibited. Repeated messages, character spam, all/majority caps, and misusing reports.",
       },
       {
         code: "C3",
         title: "Offensive Topics",
-        description: "No politics, religion, violence, sexual content, self-harm, or hate speech and slurs.",
+        description: "No politics/religion. No violence/sexual content. No suicide/self-harm. No hate speech/slurs.",
       },
       {
         code: "C4",
         title: "Username",
-        description: "Your username and nickname must be readable, must not impersonate another player or staff, and must not be offensive.",
+        description: "Must be readable & typable. Must not imitate another user, falsely mark yourself as staff, or be offensive.",
       },
       {
         code: "C5",
         title: "Drama",
-        description: "Player drama outside Minecraft stays out of our chat and Discord.",
+        description: "Player-related drama beyond Minecraft stays out of public chat and out of our Discord.",
       },
       {
         code: "C6",
         title: "Advertising",
-        description: "No advertising other servers, services, or giveaways without approval. In-game trades and shops are fine, just don't repost too often.",
+        description: "Advertising other servers, services, or giveaways is prohibited without approval. Trades/shops are fine, don't repost too often.",
       },
       {
         code: "C7",
         title: "No Mic Replies",
-        description: "If you're typing instead of talking in VC, use the VC's text chat. Don't reply to VC conversations in public chat.",
+        description: "If you're typing (no mic) in VC, use the VC's text chat. Don't reply in public or in-game chat to VC conversations.",
       },
       {
         code: "C8",
         title: "Language",
-        description: "English only in public chat and Discord.",
+        description: "English is required in all public chat channels, in Discord and in-game.",
       },
     ],
   },
   {
     name: "General Rules",
     description:
-      "Applies everywhere unless stated otherwise, covering conduct, accounts, and staff decisions. Disputes go in a ticket, not public chat.",
+      "Applies everywhere unless stated otherwise. Covers conduct, account/access rules, and staff decisions. Disputes belong in a ticket, not public chat.",
     rules: [
-      { code: "G1", title: "Skins", description: "Your skin must not be offensive." },
+      { code: "G1", title: "Skins", description: "Your skin must not contain offensive content." },
       {
         code: "G2",
         title: "Impersonation",
-        description: "Don't impersonate staff, through your skin, name, or chat messages.",
+        description: "Impersonating staff is prohibited, including through skins, names/nicks, or chat messages.",
       },
       {
         code: "G3",
         title: "Complicity",
-        description: "Helping someone break a rule, even indirectly, makes you accountable too.",
+        description: "If you aid or otherwise support rule-breaking, even indirectly, you can be held equally accountable.",
       },
       {
         code: "G4",
         title: "Respect Decisions",
-        description: "Don't complain about punishments in public chat, it upgrades to a 6-hour ban. Open a ticket instead.",
+        description: "Do NOT complain about punishments publicly. Public disputes upgrade to a 6-hour ban. Open a ticket instead.",
       },
       {
         code: "G5",
         title: "Rule System Abuse",
-        description: "Bypassing a rule on a technicality still breaks it. Intent matters more than wording.",
+        description: 'Exploiting the rule system is punishable. Bypassing a rule "by technicality" still counts as a violation.',
       },
       {
         code: "G6",
         title: "Interfering with Staff",
-        description: "Don't interfere with a staff investigation, attack staff while they're working, or refuse to cooperate.",
+        description: "Staff investigations must not be interfered with. No attacking staff while they work, or refusing to cooperate.",
       },
       {
         code: "G7",
         title: "VPN / Proxy",
-        description: "VPNs and proxies aren't allowed unless leadership pre-approves it.",
+        description: "Use of proxies or VPNs is strictly prohibited unless pre-authorized by leadership.",
       },
       {
         code: "G8",
         title: "Multiple Accounts",
-        description: "Two accounts per IP is fine. More than that, e.g. siblings sharing a household, needs a ticket.",
+        description: "We allow TWO accounts per IP. Multiple players in one household (e.g. siblings) should open a ticket.",
       },
     ],
   },
   {
     name: "Ingame Rules",
     description:
-      "Claim your land and items. We aren't responsible for anything stolen because you had no claim, or left permissions or trust open.",
+      "Please claim your land and items. Staff aren't responsible for anything stolen due to lack of claim, or open permissions/trust.",
     rules: [
       {
         code: "X1",
         title: "Griefing",
-        description: "Don't grief a claim you're not trusted in. Unclaimed builds, or ones you gave trust to, are at your own risk.",
+        description: "Griefing a claim you aren't trusted in is prohibited. Unclaimed builds (or ones you gave trust to) are at your own risk.",
       },
       {
         code: "X2",
         title: "Claim Blocking",
-        description: "Don't box in another player's claim, deny their expansion, or claim over graves to block retrieval.",
+        description: "Restricting another player's claim is prohibited. Includes encircling, snake/strip-claiming, or claiming over graves.",
       },
       {
         code: "X3",
         title: "Graves",
-        description: "You can guard another player's grave until they can loot it, but never block them from retrieving it.",
+        description: "You may defend another player's grave until they can loot it, but never obstruct it from retrieval.",
       },
       {
         code: "X4",
         title: "Point Feeding",
-        description: "Dying on purpose to hand a kill to an attacker or defender isn't allowed.",
+        description: "Point feeding (purposely dying to the attacker/defender) for any benefit is prohibited.",
       },
       {
         code: "X5",
         title: "Traps",
-        description: "No teleport traps or luring players into a kill chamber they can't realistically escape.",
+        description: "Teleportation traps are prohibited, including into an inescapable trap or kill chamber.",
       },
       {
         code: "X6",
         title: "Offensive Builds",
-        description: "No offensive content in builds, signs, or written books.",
+        description: "Builds that display offensive content are prohibited. Includes signs and written books.",
       },
       {
         code: "X7",
         title: "Economy Abuse",
-        description: "Bypassing the intended economy for unfair profit gets your gains taken and a rollback to before it happened. Not appealable.",
+        description: "Bypassing the intended economy for unfair profit means immediate removal and rollback. Not appealable.",
       },
     ],
   },
   {
     name: "Severe Rules",
     description:
-      "Zero-tolerance. These can mean an immediate ban, often without warning, plus extended punishment for evasion or repeat offenses.",
+      "Zero-tolerance. Violations may result in immediate bans, often without warning, and extended punishment for evasion or repeat offenses.",
     rules: [
       {
         code: "S1",
         title: "Punishment Evasion",
-        description: "Using an alt account or any other method to dodge a punishment extends it.",
+        description: "Attempts to evade punishment, including alt accounts or bypassing restrictions, extend the existing punishment.",
       },
       {
         code: "S2",
         title: "Competitive Advantage Mods",
-        description: "Client mods that give a competitive edge are banned. Minimaps, Litematica (no fast place), glowing ores, and brightness mods are fine.",
+        description: "Client mods giving a competitive advantage are forbidden. Mini-maps, Litematica (no fast place), glowing ores, and brightness mods are allowed.",
       },
       {
         code: "S3",
         title: "Duping / Glitch Abuse",
-        description: "Report glitches via ticket, don't use or share them. Covers duping and wall or claim bypasses, even attempts that fail.",
+        description: "Report glitches via ticket, don't use or share them. Includes duping and any wall/claim bypass, even attempted.",
       },
       {
         code: "S4",
         title: "Personal Information",
-        description: "Don't share others' names, addresses, socials, or similar. Malicious sharing is doxxing and is a permanent ban.",
+        description: "Do not share others' info (names, addresses, socials, etc.). Malicious sharing is doxxing and a permanent ban.",
       },
       {
         code: "S5",
         title: "Chargebacks",
-        description: "A chargeback is a permanent ban, and we'll formally dispute it through Tebex with proof of purchase and delivery.",
+        description: "Any chargeback results in a permanent ban, formally disputed through Tebex with purchase/delivery evidence.",
       },
       {
         code: "S6",
         title: "Lag Machines",
-        description: "Builds meant to cause lag, or that seriously hurt server performance, are punished based on severity.",
+        description: "Builds intended to cause lag, or that significantly impact server performance, are punished based on severity.",
       },
     ],
   },
   {
     name: "Streamer Rules",
-    description: "Streamers must take reasonable steps not to leak other players' locations or private info.",
+    description: "Streamers must take reasonable steps to avoid leaking player locations or private information.",
     rules: [
       {
         code: "T1",
         title: "Streamer Role",
-        description: "Open a ticket with your platform and channel link so we can assign the streamer role.",
+        description: "Open a ticket with your platform and channel link so we can assign the correct role.",
       },
       {
         code: "T2",
         title: "Stream Responsibility",
-        description: "You're responsible for your stream. Use a delay or overlay to stop leaks or rule-breaking content going out live.",
+        description: "You are responsible for what your stream shows. Use scenes/overlays/delay to prevent leaks or rule-breaking content.",
       },
       {
         code: "T3",
         title: "No Leaking",
-        description: "Don't leak other players' base locations. Hide coordinates and don't show waypoints or maps that give it away.",
+        description: "Do not leak other players' base locations. Hide coords, and don't show waypoints/maps that may give it away.",
       },
     ],
   },
