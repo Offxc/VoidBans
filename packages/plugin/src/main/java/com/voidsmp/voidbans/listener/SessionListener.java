@@ -38,26 +38,62 @@ public final class SessionListener implements Listener {
     }
 
     /**
-     * Blocks the connection outright if the incoming IP matches an active
-     * IP-banned punishment, regardless of which account is attempting to
-     * log in — this is what actually stops alt accounts, unlike a UUID-only
-     * ban. Runs synchronously on PlayerLoginEvent (not PlayerJoinEvent)
-     * because the connection must be denied before the player is let in;
-     * a short synchronous DB check here is the accepted tradeoff for that.
+     * Blocks the connection if either the incoming IP matches an active
+     * IP-banned punishment (stops alt accounts, unlike a UUID-only ban) or
+     * the connecting UUID itself has an active BAN — the actual "you are
+     * banned" enforcement, previously entirely missing: punishments issued
+     * from the web dashboard or /vban were recorded but never stopped
+     * anyone from playing. Runs synchronously on PlayerLoginEvent (not
+     * PlayerJoinEvent) because the connection must be denied before the
+     * player is let in; a short synchronous DB check here is the accepted
+     * tradeoff for that. For Bedrock players, event.getPlayer().getUniqueId()
+     * is already the Floodgate-translated UUID by this point in the login
+     * pipeline, so this needs no Bedrock-specific branch.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onLogin(PlayerLoginEvent event) {
         String ip = event.getRealAddress().getHostAddress();
+        String uuid = event.getPlayer().getUniqueId().toString();
 
         try (var conn = db.getConnection()) {
-            String banReason = findActiveIpBanReason(conn, ip);
-            if (banReason != null) {
+            ActiveBan ban = findActiveBan(conn, uuid);
+            if (ban != null) {
+                String key = ban.expiresAt != null ? "temp-ban" : "ban";
                 event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
-                        messages.render("ip-ban", banReason, "", null));
+                        messages.render(key, ban.reason, ban.publicBanId, ban.expiresAt));
+                return;
+            }
+
+            String ipBanReason = findActiveIpBanReason(conn, ip);
+            if (ipBanReason != null) {
+                event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
+                        messages.render("ip-ban", ipBanReason, "", null));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("IP ban check failed for " + ip + ": " + e.getMessage());
+            plugin.getLogger().warning("Ban check failed for " + uuid + ": " + e.getMessage());
             // Fail open — a DB hiccup should not lock out the whole server.
+        }
+    }
+
+    private record ActiveBan(String reason, String publicBanId, Instant expiresAt) {}
+
+    private ActiveBan findActiveBan(java.sql.Connection conn, String uuid) throws SQLException {
+        String sql = """
+            SELECT reason, publicBanId, expiresAt FROM punishments
+            WHERE playerUuid = ? AND type = 'BAN' AND active = TRUE
+              AND (expiresAt IS NULL OR expiresAt > NOW())
+            ORDER BY issuedAt DESC LIMIT 1
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Timestamp expiresAtTs = rs.getTimestamp("expiresAt");
+                return new ActiveBan(
+                        rs.getString("reason"),
+                        rs.getString("publicBanId"),
+                        expiresAtTs == null ? null : expiresAtTs.toInstant());
+            }
         }
     }
 
@@ -159,14 +195,22 @@ public final class SessionListener implements Listener {
     private void upsertPlayerOnLogin(java.sql.Connection conn, String uuid, String name) throws SQLException {
         String previousName = fetchLastSeenUsername(conn, uuid);
 
+        // ON DUPLICATE KEY intentionally does not overwrite firstJoined —
+        // for a real returning player that's correct (keep their true
+        // first-join date), and for a staff-pre-created placeholder row
+        // (hasJoined = FALSE, firstJoined = whenever staff created it) this
+        // is the row's actual first real join, but backfilling the exact
+        // original moment isn't worth a second UPDATE; hasJoined flipping
+        // to TRUE is what the UI actually keys off of.
         String sql = """
-            INSERT INTO players (uuid, username, lastSeenUsername, firstJoined, lastLogin, isOnline)
-            VALUES (?, ?, ?, NOW(), NOW(), TRUE)
+            INSERT INTO players (uuid, username, lastSeenUsername, firstJoined, lastLogin, isOnline, hasJoined)
+            VALUES (?, ?, ?, NOW(), NOW(), TRUE, TRUE)
             ON DUPLICATE KEY UPDATE
                 username = VALUES(username),
                 lastSeenUsername = VALUES(lastSeenUsername),
                 lastLogin = NOW(),
-                isOnline = TRUE
+                isOnline = TRUE,
+                hasJoined = TRUE
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid);

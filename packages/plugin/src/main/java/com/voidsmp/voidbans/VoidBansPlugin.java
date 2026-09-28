@@ -1,7 +1,9 @@
 package com.voidsmp.voidbans;
 
 import com.voidsmp.voidbans.db.Database;
+import com.voidsmp.voidbans.command.PunishmentCommand;
 import com.voidsmp.voidbans.integration.VulcanIntegration;
+import com.voidsmp.voidbans.listener.ChatListener;
 import com.voidsmp.voidbans.listener.SessionListener;
 import com.voidsmp.voidbans.message.MessageTemplate;
 import com.voidsmp.voidbans.task.IntegrationSettingsPollTask;
@@ -26,6 +28,12 @@ public final class VoidBansPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(
                 new SessionListener(this, database, messages, vulcanIntegration), this);
+        getServer().getPluginManager().registerEvents(
+                new ChatListener(this, database, messages), this);
+
+        PunishmentCommand punishmentCommand = new PunishmentCommand(this, database, messages);
+        getCommand("vban").setExecutor(punishmentCommand);
+        getCommand("vunban").setExecutor(punishmentCommand);
 
         if (getConfig().getBoolean("staff-alerts.enabled", true)) {
             long intervalTicks = getConfig().getLong("staff-alerts.poll-interval-seconds", 5) * 20L;

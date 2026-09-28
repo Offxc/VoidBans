@@ -52,6 +52,17 @@ messages:
   kick: |
     &cYou were kicked from this server.
     &7Reason: &f{reason}
+  mute: |
+    &cYou are muted on this server.
+    &7Reason: &f{reason}
+    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Ban ID: &f{ban_id}
+  temp-mute: |
+    &cYou are temporarily muted on this server.
+    &7Reason: &f{reason}
+    &7Expires: &f{expires_at}
+    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Ban ID: &f{ban_id}
   ip-ban: |
     &cThis network is banned from this server.
     &7Reason: &f{reason}
