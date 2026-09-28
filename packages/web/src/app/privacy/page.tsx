@@ -9,7 +9,7 @@ export default function PrivacyPage() {
 
       <div className="vb-panel" style={{ padding: 32, marginTop: 20, lineHeight: 1.7 }}>
         <h1 style={{ marginTop: 0 }}>Privacy Policy</h1>
-        <p style={{ color: "var(--text-dim)" }}>Last updated: TODO before launch.</p>
+        <p style={{ color: "var(--text-dim)" }}>Last updated: 28 September 2026.</p>
 
         <h2>What we collect</h2>
         <ul>
@@ -38,10 +38,24 @@ export default function PrivacyPage() {
         </p>
 
         <h2>Retention</h2>
-        <p>TODO: state a concrete retention period for session and IP data.</p>
+        <p>
+          While you&apos;re an active player, we hold your session, punishment, and (if applicable)
+          appeal and anticheat data for as long as you continue playing. We also keep this as
+          historical record after you stop playing — this is what lets staff look up your prior
+          activity or punishment history if you return later, and lets a punishment or appeal stay
+          resolvable and reviewable indefinitely rather than silently disappearing.
+        </p>
+        <p>
+          If you&apos;d like your historical data reviewed, corrected, or deleted, contact us using
+          the method below and we&apos;ll handle it directly — there&apos;s no automated
+          self-service deletion tool at this time.
+        </p>
 
         <h2>Contact</h2>
-        <p>TODO: add a contact method for data questions or appeals.</p>
+        <p>
+          For questions about your data, or to request a correction or deletion, email{" "}
+          <a href="mailto:contact@your-domain.example">contact@your-domain.example</a>.
+        </p>
       </div>
     </main>
   );
