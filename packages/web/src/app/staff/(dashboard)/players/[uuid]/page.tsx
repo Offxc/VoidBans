@@ -7,6 +7,7 @@ import { PlayerHead } from "@/components/PlayerHead";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentPanel } from "@/components/PunishmentPanel";
 import { PlayerNotes } from "@/components/PlayerNotes";
+import { PlayerAttachments } from "@/components/PlayerAttachments";
 import { ActivityTimeline, type ActivityEvent } from "@/components/ActivityTimeline";
 import { ViolationHistory } from "@/components/ViolationHistory";
 
@@ -26,6 +27,8 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const canViewSessions = hasPermission(principal, "players.view_sessions");
   const canViewIp = hasPermission(principal, "players.view_ip");
   const canViewNotes = hasPermission(principal, "players.notes");
+  const canViewAttachments = hasPermission(principal, "players.view_attachments");
+  const canAddAttachments = hasPermission(principal, "players.add_attachments");
   const canViewViolations = hasPermission(principal, "players.view_violations");
   const canIssue = hasPermission(principal, "bans.issue");
   const canRequest = hasPermission(principal, "bans.request");
@@ -34,7 +37,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const vulcanEnabled = await isVulcanIntegrationEnabled();
   const showViolations = vulcanEnabled && canViewViolations;
 
-  const [sessions, last30DaysAgg, last30DaysSessionCount, punishments, templates, usernameHistory, notes, violations] =
+  const [sessions, last30DaysAgg, last30DaysSessionCount, punishments, templates, usernameHistory, notes, violations, attachments] =
     await Promise.all([
       canViewSessions
         ? prisma.session.findMany({
@@ -78,6 +81,13 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
             where: { playerUuid: player.uuid },
             orderBy: { occurredAt: "desc" },
             take: 50,
+          })
+        : Promise.resolve([]),
+      canViewAttachments
+        ? prisma.playerAttachment.findMany({
+            where: { playerUuid: player.uuid },
+            orderBy: { createdAt: "desc" },
+            select: { id: true, punishmentId: true, caption: true, authorUsername: true, createdAt: true },
           })
         : Promise.resolve([]),
     ]);
@@ -200,6 +210,25 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                 createdAt: n.createdAt.toISOString(),
               }))}
               canWrite={canViewNotes}
+            />
+          </div>
+        </div>
+      )}
+
+      {canViewAttachments && (
+        <div className="vb-section">
+          <div className="vb-section-label">Attachments</div>
+          <div className="vb-panel" style={{ padding: 18 }}>
+            <PlayerAttachments
+              playerUuid={player.uuid}
+              attachments={attachments.map((a) => ({
+                id: a.id.toString(),
+                punishmentId: a.punishmentId?.toString() ?? null,
+                caption: a.caption,
+                authorUsername: a.authorUsername,
+                createdAt: a.createdAt.toISOString(),
+              }))}
+              canWrite={canAddAttachments}
             />
           </div>
         </div>

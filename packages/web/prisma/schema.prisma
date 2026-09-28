@@ -28,6 +28,7 @@ model Player {
   usernameHistory UsernameHistory[]
   notes          PlayerNote[]
   violations     ViolationEvent[]
+  attachments    PlayerAttachment[]
 
   @@index([username])
   @@index([isOnline])
@@ -63,6 +64,29 @@ model PlayerNote {
 
   @@index([playerUuid])
   @@map("player_notes")
+}
+
+// Staff-uploaded PNG evidence, attached to a player generally or to one
+// specific punishment. Image bytes live in the row (bytesSize is capped at
+// upload time) — this app has no file storage/volume, and evidence images
+// from staff are small enough that a DB blob avoids needing one.
+model PlayerAttachment {
+  id              BigInt   @id @default(autoincrement())
+  playerUuid      String   @db.Char(36)
+  punishmentId    BigInt?
+  data            Bytes    @db.MediumBlob
+  bytesSize       Int
+  caption         String?  @db.VarChar(280)
+  authorDiscordId String   @db.VarChar(32)
+  authorUsername  String   @db.VarChar(64)
+  createdAt       DateTime @default(now())
+
+  player     Player      @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+  punishment Punishment? @relation(fields: [punishmentId], references: [id], onDelete: Cascade)
+
+  @@index([playerUuid])
+  @@index([punishmentId])
+  @@map("player_attachments")
 }
 
 model Session {
@@ -143,9 +167,10 @@ model Punishment {
   ipAddress      String?        @db.VarChar(45)
   ipBanned       Boolean        @default(false)
 
-  player   Player                @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
-  template PunishmentTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  appeal   Appeal?
+  player      Player                @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
+  template    PunishmentTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  appeal      Appeal?
+  attachments PlayerAttachment[]
 
   @@index([playerUuid])
   @@index([active])
