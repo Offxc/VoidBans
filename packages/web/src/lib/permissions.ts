@@ -18,7 +18,6 @@ export const PERMISSION_KEYS = [
   "players.view_violations",
   "players.view_attachments",
   "players.add_attachments",
-  "bluemap.view",
   "templates.view",
   "templates.create",
   "templates.edit",

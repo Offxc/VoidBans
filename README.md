@@ -74,7 +74,6 @@ boundaries — not "op or not."
 - A role without ban-issuing rights can still request one, routed to someone who can act on it
 
 **Optional integrations**
-- BlueMap embed on its own staff tab, toggled and configured from Settings (owner-only)
 - Vulcan Anticheat: violation history and detected client brand on a player's profile, via a
   reflection-only integration with zero build-time dependency on Vulcan — see
   [Optional integrations](#optional-integrations)
@@ -287,8 +286,7 @@ with it, so that idea was dropped rather than half-built against nothing.
   client IP (`CF-Connecting-IP` when behind Cloudflare, `X-Forwarded-For` otherwise).
 - **Parameterized queries everywhere** via Prisma — no raw string-built SQL.
 - **CSP, frame-ancestors, and other security headers** set on every response
-  (`packages/web/src/middleware.ts`), with a narrowly-scoped exception only on the BlueMap tab's
-  route for its embed.
+  (`packages/web/src/middleware.ts`).
 - **Audit log** records sensitive actions — punishment issue/revoke, permission changes, template
   changes, appeal resolution — against the acting staff member.
 
