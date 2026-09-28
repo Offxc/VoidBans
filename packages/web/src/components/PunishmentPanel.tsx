@@ -31,30 +31,18 @@ type Action = {
   buttonClass: string;
 };
 
-// Entry: which starting path (manual/template/rule). Rule and manual
-// both flow into "action" -> "confirm"; template picks its action first
-// since a template already has a fixed type, then goes straight to
-// "confirm" once picked.
-type Screen = "entry" | "template" | "ruleSelect" | "action" | "confirm";
+type Mode = "choose" | "template" | "rule" | "manual";
 
 // Ordered by severity, least to most: colour and icon both track it, so
 // the buttons read as an escalation at a glance rather than five
 // identical options.
 const ACTIONS: Action[] = [
-  { key: "warn", label: "Warn", type: "WARN", hasDuration: false, hasIpBan: false, icon: MuteIcon, buttonClass: "vb-btn-ghost" },
   { key: "mute", label: "Mute", type: "MUTE", hasDuration: false, hasIpBan: false, icon: MuteIcon, buttonClass: "vb-btn-muted" },
   { key: "temp_mute", label: "Temp mute", type: "MUTE", hasDuration: true, hasIpBan: false, icon: TempMuteIcon, buttonClass: "vb-btn-muted" },
   { key: "kick", label: "Kick", type: "KICK", hasDuration: false, hasIpBan: false, icon: KickIcon, buttonClass: "vb-btn-warn" },
   { key: "temp_ban", label: "Temp ban", type: "BAN", hasDuration: true, hasIpBan: true, icon: TempHammerIcon, buttonClass: "vb-btn-warn" },
   { key: "ban", label: "Ban", type: "BAN", hasDuration: false, hasIpBan: true, icon: HammerIcon, buttonClass: "vb-btn-danger" },
 ];
-
-// Templates keep their own action list, since a template maps to exactly
-// one fixed type/duration pairing and staff pick which template (which
-// implies the action) rather than picking the action first.
-const TEMPLATE_ACTIONS = ACTIONS.filter((a) => a.key !== "warn").concat(
-  ACTIONS.filter((a) => a.key === "warn"),
-);
 
 export function PunishmentPanel({
   playerUuid,
@@ -72,9 +60,8 @@ export function PunishmentPanel({
   canIssueDirectly: boolean;
 }) {
   const router = useRouter();
-  const [screen, setScreen] = useState<Screen>("entry");
-  const [templateAction, setTemplateAction] = useState<Action | null>(null);
   const [active, setActive] = useState<Action | null>(null);
+  const [mode, setMode] = useState<Mode>("choose");
   const [templateId, setTemplateId] = useState<string>("");
   const [ruleIds, setRuleIds] = useState<string[]>([]);
   const [reason, setReason] = useState("");
@@ -83,7 +70,6 @@ export function PunishmentPanel({
   const [ipBan, setIpBan] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
 
   const rulesByCategory = rules.reduce<Map<string, Rule[]>>((map, r) => {
     const list = map.get(r.categoryName) ?? [];
@@ -96,14 +82,13 @@ export function PunishmentPanel({
   // just punishment type — a BAN template with no defaultDuration is
   // meant for the permanent "Ban" action, one with a defaultDuration
   // for "Temp ban".
-  const relevantTemplates = templateAction
-    ? templates.filter((t) => t.type === templateAction.type && Boolean(t.defaultDuration) === templateAction.hasDuration)
+  const relevantTemplates = active
+    ? templates.filter((t) => t.type === active.type && Boolean(t.defaultDuration) === active.hasDuration)
     : [];
 
-  function reset() {
-    setScreen("entry");
-    setTemplateAction(null);
-    setActive(null);
+  function openAction(action: Action) {
+    setActive(action);
+    setMode("choose");
     setTemplateId("");
     setRuleIds([]);
     setReason("");
@@ -114,32 +99,24 @@ export function PunishmentPanel({
   }
 
   function closePanel() {
-    setOpen(false);
-    reset();
-  }
-
-  function startTemplate() {
-    setScreen("template");
-  }
-
-  function startRules() {
-    setRuleIds([]);
-    setScreen("ruleSelect");
-  }
-
-  function startManual() {
-    setTemplateId("");
-    setRuleIds([]);
-    setReason("");
     setActive(null);
-    setScreen("action");
+    setMode("choose");
+  }
+
+  function pickTemplate(t: Template) {
+    setTemplateId(t.id);
+    setRuleIds([]);
+    setReason(t.defaultReason);
+    if (active?.hasDuration) setDurationSeconds(t.defaultDuration ?? null);
+    setAppealable(t.defaultAppealable);
+    setMode("manual"); // reuse the same confirm form, now pre-filled
   }
 
   function toggleRule(id: string) {
     setRuleIds((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
   }
 
-  function continueFromRules() {
+  function applyRules() {
     const selected = rules.filter((r) => ruleIds.includes(r.id));
     const byCategory = new Map<string, Rule[]>();
     for (const r of selected) {
@@ -150,31 +127,20 @@ export function PunishmentPanel({
     // Category prefix so the category shows up in the kick/mute screen,
     // not just the dashboard — e.g. "Chat Rules — C1: Harassment".
     const parts = [...byCategory.entries()].map(
-      ([category, catRules]) =>
-        `${category} — ${catRules.map((r) => `${r.code}: ${r.title}`).join(", ")}`,
+      ([category, catRules]) => `${category} — ${catRules.map((r) => `${r.code}: ${r.title}`).join(", ")}`,
     );
-    setReason(selected.length === 1 ? `Violation of ${parts[0]}` : `Violation of rules — ${parts.join("; ")}`);
     setTemplateId("");
-    setActive(null);
-    setScreen("action");
+    setReason(selected.length === 1 ? `Violation of ${parts[0]}` : `Violation of rules — ${parts.join("; ")}`);
+    setMode("manual");
   }
 
-  function pickTemplate(t: Template) {
-    if (!templateAction) return;
-    setTemplateId(t.id);
+  function startManual() {
+    setTemplateId("");
     setRuleIds([]);
-    setReason(t.defaultReason);
-    setActive(templateAction);
-    if (templateAction.hasDuration) setDurationSeconds(t.defaultDuration ?? null);
-    setAppealable(t.defaultAppealable);
-    setScreen("confirm");
-  }
-
-  function pickAction(action: Action) {
-    setActive(action);
+    setReason("");
     setDurationSeconds(null);
-    if (ruleIds.length === 0) setAppealable(false);
-    setScreen("confirm");
+    setAppealable(false);
+    setMode("manual");
   }
 
   async function submit(e: React.FormEvent) {
@@ -209,35 +175,54 @@ export function PunishmentPanel({
     }
   }
 
-  if (!open) {
+  if (!active) {
     return (
-      <div style={{ marginTop: 18 }}>
-        <button onClick={() => setOpen(true)} className="vb-btn vb-btn-primary">
-          {canIssueDirectly ? "Punish player" : "Request punishment"}
-        </button>
+      <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {ACTIONS.map((action) => {
+          const Icon = action.icon;
+          return (
+            <button key={action.key} onClick={() => openAction(action)} className={`vb-btn ${action.buttonClass}`}>
+              <Icon size={15} />
+              {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
+            </button>
+          );
+        })}
       </div>
     );
   }
 
-  if (screen === "entry") {
+  const title = canIssueDirectly ? active.label : `Request: ${active.label}`;
+
+  if (mode === "choose") {
     return (
       <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 14px", fontSize: 15 }}>
-          {canIssueDirectly ? "Punish player" : "Request punishment"}
-        </h3>
+        <h3 style={{ margin: "0 0 14px", fontSize: 15 }}>{title}</h3>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {rulesEnabled && (
-            <button onClick={startRules} disabled={rules.length === 0} className="vb-btn vb-btn-primary">
-              Rule(s)
+            <button
+              onClick={() => {
+                setRuleIds([]);
+                setMode("rule");
+              }}
+              disabled={rules.length === 0}
+              className="vb-btn vb-btn-primary"
+              title={rules.length === 0 ? "No rules set up yet" : undefined}
+            >
+              Use rule(s)
             </button>
           )}
           {templatesEnabled && (
-            <button onClick={startTemplate} disabled={templates.length === 0} className="vb-btn vb-btn-primary">
-              Template
+            <button
+              onClick={() => setMode("template")}
+              disabled={relevantTemplates.length === 0}
+              className="vb-btn vb-btn-primary"
+              title={relevantTemplates.length === 0 ? "No templates for this action type yet" : undefined}
+            >
+              Use a template
             </button>
           )}
           <button onClick={startManual} className="vb-btn vb-btn-ghost">
-            Manual
+            Manual entry
           </button>
           <button onClick={closePanel} className="vb-btn vb-btn-quiet">
             Cancel
@@ -247,10 +232,10 @@ export function PunishmentPanel({
     );
   }
 
-  if (screen === "ruleSelect") {
+  if (mode === "rule") {
     return (
       <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>Which rule(s) were broken?</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title} — which rule(s) were broken?</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 420, overflowY: "auto" }}>
           {[...rulesByCategory.entries()].map(([category, catRules]) => (
             <div key={category}>
@@ -278,10 +263,10 @@ export function PunishmentPanel({
           ))}
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <button onClick={continueFromRules} disabled={ruleIds.length === 0} className="vb-btn vb-btn-primary">
+          <button onClick={applyRules} disabled={ruleIds.length === 0} className="vb-btn vb-btn-primary">
             Continue
           </button>
-          <button onClick={() => setScreen("entry")} className="vb-btn vb-btn-quiet">
+          <button onClick={() => setMode("choose")} className="vb-btn vb-btn-quiet">
             Back
           </button>
         </div>
@@ -289,136 +274,75 @@ export function PunishmentPanel({
     );
   }
 
-  if (screen === "template") {
+  if (mode === "template") {
     return (
       <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>Which action does this template use?</h3>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-          {TEMPLATE_ACTIONS.map((a) => {
-            const Icon = a.icon;
-            const count = templates.filter((t) => t.type === a.type && Boolean(t.defaultDuration) === a.hasDuration).length;
-            return (
-              <button
-                key={a.key}
-                onClick={() => setTemplateAction(a)}
-                disabled={count === 0}
-                className={`vb-btn ${templateAction?.key === a.key ? "vb-btn-primary" : "vb-btn-ghost"}`}
-              >
-                <Icon size={15} />
-                {a.label}
-              </button>
-            );
-          })}
+        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title} — choose a template</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {relevantTemplates.map((t) => (
+            <button key={t.id} onClick={() => pickTemplate(t)} className="vb-card" style={{ textAlign: "left", color: "inherit" }}>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{t.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>{t.defaultReason}</div>
+            </button>
+          ))}
         </div>
-        {templateAction && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {relevantTemplates.map((t) => (
-              <button key={t.id} onClick={() => pickTemplate(t)} className="vb-card" style={{ textAlign: "left", color: "inherit" }}>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{t.name}</div>
-                <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>{t.defaultReason}</div>
-              </button>
-            ))}
-            {relevantTemplates.length === 0 && (
-              <p style={{ color: "var(--text-dim)", fontSize: 13 }}>No templates for {templateAction.label}.</p>
-            )}
-          </div>
-        )}
-        <button onClick={() => setScreen("entry")} className="vb-btn vb-btn-quiet" style={{ marginTop: 12 }}>
+        <button onClick={() => setMode("choose")} className="vb-btn vb-btn-quiet" style={{ marginTop: 12 }}>
           Back
         </button>
       </div>
     );
   }
 
-  if (screen === "action") {
-    return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
-          {ruleIds.length > 0 ? "What action fits this?" : "Choose an action"}
-        </h3>
-        {reason && (
-          <p style={{ fontSize: 13, color: "var(--text-dim)", marginTop: 0, marginBottom: 14 }}>{reason}</p>
-        )}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {ACTIONS.map((a) => {
-            const Icon = a.icon;
-            return (
-              <button key={a.key} onClick={() => pickAction(a)} className={`vb-btn ${a.buttonClass}`}>
-                <Icon size={15} />
-                {a.label}
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => setScreen(ruleIds.length > 0 ? "ruleSelect" : "entry")}
-          className="vb-btn vb-btn-quiet"
-          style={{ marginTop: 12 }}
-        >
-          Back
-        </button>
-      </div>
-    );
-  }
+  return (
+    <form onSubmit={submit} className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
+      <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
+        {title}
+        {templateId && " — from template"}
+        {ruleIds.length > 0 && ` — from ${ruleIds.length === 1 ? "rule" : "rules"}`}
+      </h3>
 
-  if (screen === "confirm" && active) {
-    return (
-      <form onSubmit={submit} className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
-          {active.label}
-          {templateId && " — from template"}
-          {ruleIds.length > 0 && ` — from ${ruleIds.length === 1 ? "rule" : "rules"}`}
-        </h3>
+      <label className="vb-field">
+        Reason
+        <textarea
+          className="vb-textarea"
+          required
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+        />
+      </label>
 
-        <label className="vb-field">
-          Reason
-          <textarea
-            className="vb-textarea"
-            required
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-          />
+      {active.hasDuration && (
+        <DurationInput label="Duration" seconds={durationSeconds} onChange={setDurationSeconds} required />
+      )}
+
+      {active.type === "BAN" && (
+        <label className="vb-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <input type="checkbox" checked={appealable} onChange={(e) => setAppealable(e.target.checked)} />
+          Appealable
         </label>
+      )}
 
-        {active.hasDuration && (
-          <DurationInput label="Duration" seconds={durationSeconds} onChange={setDurationSeconds} required />
-        )}
+      {active.hasIpBan && (
+        <label className="vb-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <input type="checkbox" checked={ipBan} onChange={(e) => setIpBan(e.target.checked)} />
+          Also ban this player&apos;s IP address (blocks any account connecting from it)
+        </label>
+      )}
 
-        {active.type === "BAN" && (
-          <label className="vb-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" checked={appealable} onChange={(e) => setAppealable(e.target.checked)} />
-            Appealable
-          </label>
-        )}
+      {result && <p style={{ fontSize: 13, color: "var(--text-dim)" }}>{result}</p>}
 
-        {active.hasIpBan && (
-          <label className="vb-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" checked={ipBan} onChange={(e) => setIpBan(e.target.checked)} />
-            Also ban this player&apos;s IP address (blocks any account connecting from it)
-          </label>
-        )}
-
-        {result && <p style={{ fontSize: 13, color: "var(--text-dim)" }}>{result}</p>}
-
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button type="submit" disabled={submitting} className="vb-btn vb-btn-primary">
-            {submitting ? "Submitting…" : canIssueDirectly ? "Confirm" : "Submit request"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setScreen(templateId ? "template" : "action")}
-            className="vb-btn vb-btn-quiet"
-          >
-            Back
-          </button>
-          <button type="button" onClick={closePanel} className="vb-btn vb-btn-quiet">
-            Cancel
-          </button>
-        </div>
-      </form>
-    );
-  }
-
-  return null;
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <button type="submit" disabled={submitting} className="vb-btn vb-btn-primary">
+          {submitting ? "Submitting…" : canIssueDirectly ? "Confirm" : "Submit request"}
+        </button>
+        <button type="button" onClick={() => setMode("choose")} className="vb-btn vb-btn-quiet">
+          Back
+        </button>
+        <button type="button" onClick={closePanel} className="vb-btn vb-btn-quiet">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
 }

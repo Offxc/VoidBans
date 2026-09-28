@@ -3,7 +3,7 @@ import { LocalTime } from "@/components/LocalTime";
 export interface ActivityEvent {
   id: string;
   at: string;
-  kind: "punishment" | "appeal" | "note";
+  kind: "punishment" | "appeal";
   summary: string;
   detail: string;
 }
@@ -11,13 +11,11 @@ export interface ActivityEvent {
 const KIND_COLOR: Record<ActivityEvent["kind"], string> = {
   punishment: "var(--danger)",
   appeal: "var(--accent-2)",
-  note: "var(--text-dim)",
 };
 
 const KIND_LABEL: Record<ActivityEvent["kind"], string> = {
   punishment: "Punishment",
   appeal: "Appeal",
-  note: "Note",
 };
 
 export function ActivityTimeline({ events }: { events: ActivityEvent[] }) {

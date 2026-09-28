@@ -124,15 +124,6 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         summary: `Appeal submitted for ${p.publicBanId}`,
         detail: `Status: ${p.appeal!.status}`,
       })),
-    ...(canViewNotes
-      ? notes.map((n) => ({
-          id: `note-${n.id}`,
-          at: n.createdAt.toISOString(),
-          kind: "note" as const,
-          summary: n.body,
-          detail: `Note by ${n.authorUsername}`,
-        }))
-      : []),
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
   return (

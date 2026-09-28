@@ -66,7 +66,7 @@ export function PlayerNotes({
           <div>
             <div>{n.body}</div>
             <div style={{ color: "var(--text-dim)", fontSize: 12, marginTop: 4 }}>
-              {n.authorUsername} · <LocalTime iso={n.createdAt} relative />
+              {n.authorUsername} · <LocalTime iso={n.createdAt} />
             </div>
           </div>
           {canDelete && (
