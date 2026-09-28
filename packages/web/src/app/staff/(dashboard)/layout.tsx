@@ -16,11 +16,15 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
   // Enforced for every staff member, including one who logged in before
   // this requirement existed — there is no minecraftUuid backfill, so the
   // gate is "does this row have one yet", checked on every dashboard load.
+  // minecraftLinkSkippedAt lets someone who has never actually joined the
+  // server (so linking is genuinely impossible right now) through once
+  // they've tried and explicitly chosen to continue without it — they
+  // still get nudged to finish linking from the dashboard header.
   const staffUser = await prisma.staffUser.findUnique({
     where: { discordId: principal.discordId },
-    select: { minecraftUuid: true },
+    select: { minecraftUuid: true, minecraftLinkSkippedAt: true },
   });
-  if (!staffUser?.minecraftUuid) {
+  if (!staffUser?.minecraftUuid && !staffUser?.minecraftLinkSkippedAt) {
     redirect("/staff/link-account");
   }
 
@@ -47,6 +51,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
           discordId={principal.discordId}
           avatarHash={principal.avatarHash}
           isOwner={principal.isOwner}
+          needsMinecraftLink={!staffUser?.minecraftUuid}
         />
         <main style={{ flex: 1, padding: "24px 32px 40px", maxWidth: 1100 }}>{children}</main>
       </div>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { discordAvatarUrl } from "@/lib/discord-avatar";
 
 export function StaffHeader({
@@ -5,11 +6,13 @@ export function StaffHeader({
   discordId,
   avatarHash,
   isOwner,
+  needsMinecraftLink,
 }: {
   username: string;
   discordId: string;
   avatarHash: string | null;
   isOwner: boolean;
+  needsMinecraftLink: boolean;
 }) {
   return (
     <header
@@ -35,6 +38,11 @@ export function StaffHeader({
         <div style={{ fontWeight: 600 }}>{username}</div>
         {isOwner && <div style={{ fontSize: 11, color: "var(--accent-2)" }}>Owner</div>}
       </div>
+      {needsMinecraftLink && (
+        <Link href="/staff/link-account" className="vb-pill vb-pill-warn" style={{ textDecoration: "none" }}>
+          Set your Minecraft username
+        </Link>
+      )}
       <form action="/api/auth/logout" method="post">
         <button type="submit" className="vb-btn vb-btn-ghost" style={{ marginLeft: 8, padding: "6px 12px", fontSize: 12.5 }}>
           Log out

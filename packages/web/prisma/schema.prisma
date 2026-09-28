@@ -308,6 +308,12 @@ model StaffUser {
   // Player row. Nullable only because it doesn't exist until the staff
   // member completes that one-time step; every login re-checks for null.
   minecraftUuid String?  @unique @db.Char(36)
+  // Set once this staff member has tried to link (their first lookup
+  // failed — they've genuinely never joined the server) AND chosen to
+  // continue without linking for now. Lets the dashboard gate let them
+  // through unlinked rather than stuck at /staff/link-account forever,
+  // while still nudging them to finish linking once they have joined.
+  minecraftLinkSkippedAt DateTime?
 
   @@map("staff_users")
 }
