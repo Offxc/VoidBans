@@ -13,10 +13,9 @@ import { SiteIconEditor } from "@/components/SiteIconEditor";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
-  // Settings is intentionally owner-gated at the page level, not just
-  // behind settings.manage, since role/permission edits here can grant
-  // settings.manage to someone else — only the owner identity is trusted
-  // to bootstrap that.
+  // Settings is owner-only, not permission-gated — role/permission edits
+  // here can grant any permission to anyone, so only the owner identity
+  // (tied to a Discord ID, not a reassignable role) is trusted with that.
   if (!principal?.isOwner) redirect("/staff");
 
   const [roles, questions, vulcanEnabled, rulesConfig, iconUrl] = await Promise.all([

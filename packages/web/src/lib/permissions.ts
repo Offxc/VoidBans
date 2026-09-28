@@ -23,7 +23,6 @@ export const PERMISSION_KEYS = [
   "templates.view",
   "templates.create",
   "templates.edit",
-  "settings.manage",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];
