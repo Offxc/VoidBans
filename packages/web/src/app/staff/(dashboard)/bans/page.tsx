@@ -5,6 +5,7 @@ import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
+import { RevokeButton } from "@/components/RevokeButton";
 
 const PAGE_SIZE = 50;
 
@@ -15,6 +16,8 @@ export default async function PunishmentsListPage({
 }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "bans.view")) redirect("/staff");
+
+  const canRevoke = hasPermission(principal, "bans.revoke");
 
   const page = Math.max(1, Number(searchParams.page) || 1);
 
@@ -44,6 +47,7 @@ export default async function PunishmentsListPage({
               <th>Reason</th>
               <th>Issued</th>
               <th>Status</th>
+              {canRevoke && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -63,11 +67,12 @@ export default async function PunishmentsListPage({
                 <td>
                   <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
                 </td>
+                {canRevoke && <td>{p.active && <RevokeButton punishmentId={p.id.toString()} />}</td>}
               </tr>
             ))}
             {punishments.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ color: "var(--text-dim)" }}>
+                <td colSpan={canRevoke ? 7 : 6} style={{ color: "var(--text-dim)" }}>
                   No punishments yet.
                 </td>
               </tr>
