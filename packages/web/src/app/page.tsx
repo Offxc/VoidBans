@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BanLookupForm } from "@/components/BanLookup";
 import { getRulesConfig } from "@/lib/rules";
+import { getSiteIconUrl } from "@/lib/site-icon";
 
 // Reads site_settings at request time (whether the Rules button should
 // show) — force dynamic so this never gets baked into a static page at
@@ -9,11 +10,17 @@ import { getRulesConfig } from "@/lib/rules";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { enabled: rulesEnabled } = await getRulesConfig();
+  const [{ enabled: rulesEnabled }, iconUrl] = await Promise.all([getRulesConfig(), getSiteIconUrl()]);
 
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-      <header style={{ display: "flex", justifyContent: "flex-end", padding: "20px 24px" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px" }}>
+        {iconUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={iconUrl} alt="" width={32} height={32} style={{ borderRadius: 8 }} />
+        ) : (
+          <span />
+        )}
         <Link href="/staff/login" className="vb-btn vb-btn-ghost" style={{ textDecoration: "none" }}>
           Staff Login
         </Link>

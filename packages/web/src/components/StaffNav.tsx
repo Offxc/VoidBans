@@ -8,7 +8,7 @@ interface NavItem {
   label: string;
 }
 
-export function StaffNav({ items }: { items: NavItem[] }) {
+export function StaffNav({ items, iconUrl }: { items: NavItem[]; iconUrl: string | null }) {
   const pathname = usePathname();
 
   return (
@@ -27,18 +27,23 @@ export function StaffNav({ items }: { items: NavItem[] }) {
         top: 16,
       }}
     >
-      <div
-        style={{
-          padding: "0 8px 18px",
-          fontWeight: 700,
-          fontFamily: "var(--font-sora)",
-          fontSize: 15,
-          background: "linear-gradient(135deg, var(--text), var(--accent-2))",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        }}
-      >
-        VoidBans
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px 18px" }}>
+        {iconUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={iconUrl} alt="" width={22} height={22} style={{ borderRadius: 6, flexShrink: 0 }} />
+        )}
+        <span
+          style={{
+            fontWeight: 700,
+            fontFamily: "var(--font-sora)",
+            fontSize: 15,
+            background: "linear-gradient(135deg, var(--text), var(--accent-2))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          VoidBans
+        </span>
       </div>
 
       {items.map((item) => {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { getSiteIconUrl } from "@/lib/site-icon";
 import { StaffNav } from "@/components/StaffNav";
 import { StaffHeader } from "@/components/StaffHeader";
 
@@ -32,9 +33,11 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
     { href: "/staff/settings", label: "Settings", show: principal.isOwner || hasPermission(principal, "settings.manage") },
   ].filter((item) => item.show);
 
+  const iconUrl = await getSiteIconUrl();
+
   return (
     <div style={{ display: "flex", minHeight: "100dvh" }}>
-      <StaffNav items={nav} />
+      <StaffNav items={nav} iconUrl={iconUrl} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <StaffHeader
           username={principal.username}
