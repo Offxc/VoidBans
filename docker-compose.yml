@@ -54,11 +54,24 @@ services:
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
       BLUEMAP_URL: ${BLUEMAP_URL:-}
       NODE_ENV: production
-    # Bound to localhost only — Caddy on the host reverse-proxies to this
-    # port. Never publish this on 0.0.0.0; that would expose it directly,
-    # bypassing Caddy's TLS and any host-level protections.
-    ports:
-      - "127.0.0.1:3300:3300"
+    # No host port published at all. The reverse proxy in front of this
+    # (an existing Caddy belonging to another project on this host) reaches
+    # `web` directly over Docker's internal network by container name/alias
+    # instead — see the `caddy-reachable` network below. This is strictly
+    # tighter than a 127.0.0.1-only port publish: the app is never bound to
+    # any host network interface at all, not even loopback.
+    networks:
+      - default
+      - caddy-reachable
+
+networks:
+  default: {}
+  # Pre-existing network owned by the other project's Caddy — not created
+  # here, only joined. Its host reverse-proxy config points at this
+  # service's container name/alias on this network; see deploy/DEPLOYMENT.md.
+  caddy-reachable:
+    name: proxy_network
+    external: true
 
 volumes:
   voidbans-db:
