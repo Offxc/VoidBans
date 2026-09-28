@@ -1,13 +1,7 @@
 <h1 align="center">VoidBans</h1>
 
 <p align="center">
-  <strong>A self-hosted ban lookup and staff moderation dashboard for a Minecraft server.</strong>
-</p>
-
-<p align="center">
-  Discord-gated staff panel, public ban lookup and appeals, in-game session and punishment
-  tracking, and optional anticheat integration — one deployment, one database, no third party
-  holding your moderation history.
+  <strong>Self-hosted ban lookup and staff moderation dashboard for a Minecraft server.</strong>
 </p>
 
 <p align="center">
@@ -20,96 +14,78 @@
 
 ---
 
-VoidBans is two things that share one MySQL database: a Paper plugin that runs on your Minecraft
-server, and a Next.js web app that serves the public ban lookup page and the staff dashboard. They
-never talk to each other directly.
+Two pieces sharing one MySQL database: a Paper plugin that runs on the Minecraft server, and a
+Next.js app that serves the public ban-lookup site and the staff dashboard. They don't talk to
+each other directly — everything goes through the shared schema.
 
 ```
-Paper server + plugin ──▶ MySQL (shared schema) ◀── Next.js web app (public site + staff dashboard)
+Paper server + plugin ──▶ MySQL (shared schema) ◀── Next.js app (public site + staff dashboard)
 ```
 
-The plugin tracks sessions (login/logout, client brand) and writes punishments issued in-game. The
-web app is the only thing with Discord OAuth, permission logic, and the public lookup UI. **The web
-app's Prisma schema is the source of truth for the database shape** — the plugin reads and writes
-rows but never runs migrations.
-
-## Why
-
-Most Minecraft punishment plugins stop at "here's a `/ban` command and a flat file of who's
-banned." Nothing they produce is meant to be looked at by a player, and nothing surfaces
-session history, appeals, or fine-grained staff permissions without buying into a bigger
-ecosystem.
-
-VoidBans is the other shape: a real web app a banned player can actually visit to see why and
-appeal, and a dashboard where staff access is granted per Discord role with real permission
-boundaries — not "op or not."
+The plugin tracks sessions, enforces bans/mutes in-game, and writes punishments issued with
+`/vban`. The web app owns Discord OAuth, permissions, and the public lookup UI. The web app's
+Prisma schema is the source of truth for the database — the plugin reads and writes rows but
+never runs migrations.
 
 ## Features
 
 **Public site**
-- Ban ID lookup — a player enters the ID from their in-game ban message and sees the reason,
-  type, and current status
-- Direct `/<ban-id>` URLs, so the in-game message can link straight to the result
-- Owner-configurable appeal questions, one appeal per ban, staff accept/deny with a written
-  response and optional auto-revoke on accept
-- Optional `/rules` page, owner-written in Markdown from Settings, with a homepage button —
-  off by default until the owner enables it
+- Ban ID lookup (`/VB-XXXXXXXX`), linked directly from the in-game kick/mute message
+- Appeals — one per ban, owner-configurable questions, staff accept/deny with a response and
+  optional auto-revoke
+- Optional `/rules` page (Markdown, owner-written)
 
 **Staff dashboard**
-- Discord OAuth sign-in; the first account to ever log in becomes the owner
-- Bans list, online/offline player roster with Minecraft head renders, per-player profile
-- Session history in the viewer's own local timezone, last 30 days' playtime, distinct IP count
-- Punishment actions — mute, temp mute, kick, temp ban, ban — each either from a template or
-  filled in manually, with an optional IP ban that blocks reconnection from that address
-  regardless of account
-- Username history, freeform staff notes (deletable, by permission), staff-uploaded PNG
-  attachments, and a merged activity timeline per player
-- Pre-ban a player who has never joined — look up a UUID or Java username (resolved via Mojang)
-  or a known Bedrock UUID, create their profile ahead of time, and punish it immediately; the
-  punishment takes effect the moment they connect for the first time
-- Owner-configurable punishment templates, with template creation itself gated by permission
-- In-game staff chat alerts on punishment, with a configurable prefix and message
+- Discord OAuth login; first account in becomes the owner
+- Punishment list, online/offline roster, per-player profile with sessions, IPs, notes, PNG
+  attachments, and a merged activity timeline
+- Issue a ban/mute/kick/warn manually, from a template, or by selecting one or more rulebook
+  entries — reason, duration, and appealability get filled in either way; templates and
+  rule-based punishing are independent toggles and can both be on
+- Pre-ban a player who's never joined, by UUID or username (Mojang-resolved) — the punishment
+  takes effect the moment they connect
+- Revoke or edit any punishment, template, or rule after the fact
+- Per-Discord-role permissions, checked server-side on every request — not "op or not"
 
-**Permissions**
-- Fine-grained permission keys (view bans, issue bans, view IPs, view sessions, resolve appeals,
-  manage templates, …), checked server-side on every request
-- Owner maps a live Discord role to a set of permissions from a dropdown + checkbox grid —
-  nobody gets dashboard access just by holding a role until the owner grants it
-- A role without ban-issuing rights can still request one, routed to someone who can act on it
+**In-game (plugin)**
+- Bans and mutes are actually enforced: checked on login and on every chat message against the
+  live `punishments` table, no restart needed for a ban/unban to take effect
+- IP bans block reconnection from the same network on a different account
+- `/vban` and `/vunban`
+- Chat alert to staff on any punishment, in-game or dashboard-issued
+- Bedrock (Geyser/Floodgate) players work the same as Java — enforcement keys off UUID, which
+  Floodgate already normalizes before the plugin sees it
 
-**Optional integrations**
-- Vulcan Anticheat: violation history and detected client brand on a player's profile, via a
-  reflection-only integration with zero build-time dependency on Vulcan — see
-  [Optional integrations](#optional-integrations)
+**Optional**
+- Vulcan Anticheat integration (violation history, detected client) — reflection-only, zero
+  build dependency on Vulcan, off until enabled in Settings
 
 ## Tech stack
 
 | Layer | Choice |
 | --- | --- |
-| Web framework | Next.js 14 (App Router, React 18, TypeScript strict) |
+| Web | Next.js 14 (App Router), TypeScript, React 18 |
 | Database | MySQL/MariaDB + Prisma |
-| Auth | Discord OAuth2, signed session cookies (`jose`) |
-| Minecraft plugin | Java 17, Paper API, HikariCP |
-| Reverse proxy / TLS | Caddy |
-| Deployment | Docker Compose |
+| Auth | Discord OAuth2, signed session cookies |
+| Plugin | Java 17, Paper API, HikariCP |
+| Proxy/TLS | Caddy |
+| Deploy | Docker Compose |
 
-No Redis, no message queue, no search service — the plugin and web app talk to each other only
-through the shared MySQL schema. Fewer moving parts to run and patch.
+No Redis, no queue, no search service. The plugin and web app only ever meet at the database.
 
 ## Quick start
 
-Requirements: **Node 20+**, **pnpm**, a MySQL/MariaDB instance, and a Discord application (see the
-deployment guide for how to create one).
+Needs Node 20+, pnpm, a MySQL/MariaDB instance, and a Discord application.
 
 ```bash
-git clone <this-repo-url> voidbans
-cd voidbans
+git clone git@github.com:Offxc/VoidBans.git
+cd VoidBans
 pnpm install
 cp packages/web/.env.example packages/web/.env
 ```
 
-Fill in `packages/web/.env` — at minimum `DATABASE_URL`, a `SESSION_SECRET`
-(`openssl rand -base64 48`), and the four `DISCORD_*` values.
+Fill in `packages/web/.env`: `DATABASE_URL`, `SESSION_SECRET` (`openssl rand -base64 48`), the
+four `DISCORD_*` values.
 
 ```bash
 cd packages/web
@@ -117,26 +93,25 @@ pnpm exec prisma migrate dev
 pnpm dev
 ```
 
-The app is on <http://localhost:3000>. Sign in once via Staff Login to become the owner.
+Open <http://localhost:3000>, sign in via Staff Login — that first login becomes the owner.
 
-Build the plugin separately with Maven:
+Build the plugin separately:
 
 ```bash
 cd packages/plugin
 JAVA_HOME=<path-to-jdk-17> mvn package
 ```
 
-The jar lands at `target/VoidBans.jar` — drop it into your Paper server's `plugins/` folder and
-point its generated `config.yml` at the same database.
+Jar lands at `target/VoidBans.jar` — drop it in the Paper server's `plugins/` folder and point its
+generated `config.yml` at the same database.
 
 ## Self-hosting
 
-[**deploy/DEPLOYMENT.md**](deploy/DEPLOYMENT.md) is the full deployment guide: creating the
-Discord application and bot, DNS, Docker on a fresh Ubuntu server, first boot, editing an existing
-Caddy instance safely, installing the plugin, and post-deploy checks. A live, formatted copy with
-copyable commands is linked at the top of that file.
+[`deploy/DEPLOYMENT.md`](deploy/DEPLOYMENT.md) covers the Discord app/bot setup, DNS, Docker on a
+fresh box, first boot, dropping into an existing Caddy instance, installing the plugin, and
+post-deploy checks.
 
-The short version:
+Short version:
 
 ```bash
 cp .env.example .env     # fill in, then:
@@ -146,221 +121,150 @@ docker compose run --rm migrate
 docker compose up -d web
 ```
 
-Three services come up: `db` (MySQL), a one-shot `migrate` that applies pending migrations before
-the app starts, and `web`. Only `web` and `db` are published, and both are bound to `127.0.0.1`
-only — a reverse proxy (Caddy) in front handles TLS and the public-facing port.
+`db`, a one-shot `migrate`, and `web`. Neither `web` nor `db` is published on a public interface —
+put a reverse proxy in front for TLS.
 
 ## Configuration
 
 | Variable | Where | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | `packages/web/.env` | MySQL connection string (Prisma) |
-| `SESSION_SECRET` | `packages/web/.env` | Signs staff session cookies. 32+ random chars — `openssl rand -base64 48` |
-| `SITE_URL` | `packages/web/.env` | Public URL of this deployment — must match `site-url` in the plugin's config |
-| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | `packages/web/.env` | Discord OAuth app credentials |
-| `DISCORD_REDIRECT_URI` | `packages/web/.env` | OAuth callback URL, `${SITE_URL}/api/auth/callback` |
-| `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` | `packages/web/.env` | Bot used server-side to read a logging-in user's guild roles |
-| `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` above |
-| `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` — the only thing to change when moving domains |
-| `chat-prefix` | `packages/plugin/config.yml` | Prefix shown before every message the plugin sends in chat |
-| `messages.*` | `packages/plugin/config.yml` | In-game ban/mute/kick message templates — placeholders: `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}` |
-| `staff-alerts.*` | `packages/plugin/config.yml` | In-game staff chat alert on punishment |
+| `DATABASE_URL` | `packages/web/.env` | MySQL connection string |
+| `SESSION_SECRET` | `packages/web/.env` | 32+ random chars, signs staff session cookies |
+| `SITE_URL` | `packages/web/.env` | Public URL — must match `site-url` in the plugin config |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | `packages/web/.env` | Discord OAuth app |
+| `DISCORD_REDIRECT_URI` | `packages/web/.env` | `${SITE_URL}/api/auth/callback` |
+| `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` | `packages/web/.env` | Reads a logging-in user's guild roles |
+| `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` |
+| `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` |
+| `chat-prefix` | `packages/plugin/config.yml` | Prefix for messages the plugin sends in chat |
+| `messages.*` | `packages/plugin/config.yml` | Ban/mute/kick messages — `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}` |
+| `staff-alerts.*` | `packages/plugin/config.yml` | In-game staff alert on punishment |
 
-Changing where the site is hosted is a two-line change (`SITE_URL` and `site-url`) — the domain is
-never hardcoded anywhere else in the code, only as an example value in `.env.example` files and
-docs.
+Moving domains is a two-line change (`SITE_URL`, `site-url`) — nothing else hardcodes it.
 
 ## Project layout
 
 ```
 packages/
-  web/                    Next.js app — public site + staff dashboard + API routes
-    prisma/               Schema (source of truth for the DB) and migrations
-    src/app/               Pages and API routes
-    src/app/staff/(dashboard)/   Guarded staff dashboard route group
-    src/components/         Shared UI
-    src/lib/                Auth, permissions, session, rate limiting, integrations
-  plugin/                  Paper plugin (Java)
-    src/main/java/…/listener/     Session tracking, ban/IP-ban login enforcement, mute chat enforcement
-    src/main/java/…/command/      /vban and /vunban
-    src/main/java/…/integration/  Reflection-only Vulcan integration
-    src/main/java/…/task/         Staff alert polling, integration settings polling
-    src/main/resources/     plugin.yml, default config.yml
+  web/
+    prisma/                       Schema + migrations
+    src/app/                      Pages and API routes
+    src/app/staff/(dashboard)/    Guarded staff route group
+    src/components/
+    src/lib/                      Auth, permissions, session, rate limiting, integrations
+  plugin/
+    src/main/java/…/listener/     Sessions, ban/mute enforcement
+    src/main/java/…/command/      /vban, /vunban
+    src/main/java/…/integration/  Vulcan (reflection-only)
+    src/main/java/…/task/         Staff alert + integration-settings polling
 deploy/
-  DEPLOYMENT.md            Full deployment guide
-  Caddyfile.example        Reference site block for an existing Caddy instance
+  DEPLOYMENT.md
+  Caddyfile.example
 ```
 
-## Permission model
+## Permissions
 
-Every sensitive action is gated behind a permission key, checked server-side on every request —
-the UI hiding a button is a convenience, never the actual boundary. See
-[`packages/web/src/lib/permissions.ts`](packages/web/src/lib/permissions.ts) for the full list
-(`bans.issue`, `appeals.resolve`, `players.view_ip`, etc.). When adding a new staff-facing
-feature, add a permission key for it rather than checking a role name directly.
+Every route checks a permission key server-side — the UI hiding a button is a convenience, not
+the boundary. Full list in
+[`packages/web/src/lib/permissions.ts`](packages/web/src/lib/permissions.ts).
 
-**The first Discord account to log in via "Staff Login" on a freshly deployed site becomes the
-owner**, with full permissions and access to Settings. This happens automatically and silently —
-there's no setup wizard gating it. If you're standing this up for the first time, **log in
-yourself immediately after deploying, before announcing the site to anyone**, or someone else
-could end up owning your permission panel.
+**First Discord login on a fresh deploy becomes the owner**, automatically, with full access.
+Log in yourself right after deploying, before telling anyone the URL exists.
 
-Every other staff member's access comes entirely from the owner mapping a Discord role to
-permissions in Settings — nobody else gets access just by having a role in the server until the
-owner grants that role permissions there.
+Everyone else's access comes from the owner mapping Discord roles to permissions in Settings.
+Holding a role in Discord grants nothing on its own.
 
-**Every staff member, including the owner, must link their own Minecraft account** (at
-`/staff/link-account`) before the dashboard is usable — enforced on every dashboard load, not just
-first login, so it also catches accounts that logged in before this existed. They enter their own
-Minecraft username, which must belong to a player who has actually joined the server at least once
-(it resolves to a real `Player` row, not an arbitrary typed name). This link is what lets the
-punishment API recognize "this target is staff" and refuse the action — without it, there'd be no
-way to know a given Minecraft account belongs to a logged-in staff member at all. Non-owner staff
-can't punish another linked staff account through the dashboard; the owner is exempt, since they're
-the ultimate authority on the panel and may need to act against a compromised or rogue account.
+**Every staff member, owner included, links their Minecraft account** at `/staff/link-account`
+before the dashboard works — checked on every load, not just first login. This is what lets the
+punishment API recognize "this target is staff" and block the action; non-owner staff can't
+punish a linked staff account, the owner can.
 
-## IP logging and IP bans
+## IP logging
 
-The plugin records the IP address of every login session, for every player — not just those who
-get punished. This exists so an IP ban (a checkbox on the ban/temp-ban actions in the dashboard)
-can actually block reconnection attempts from alt accounts, not just the original account. This is
-real data collection worth calling out explicitly in your privacy policy before launch — see
-[`packages/web/src/app/privacy/page.tsx`](packages/web/src/app/privacy/page.tsx), which already
-covers it, but check it still matches your actual retention practice.
+The plugin logs the IP of every session, for every player, so IP bans can actually block
+reconnection from a different account on the same network. Cover this in your privacy policy.
+`players.view_ip` gates who on staff can see it — dashboard access alone doesn't.
 
-IP data is only visible to staff holding `players.view_ip` specifically — having dashboard access
-at all does not imply seeing IPs.
+## Punishment enforcement
 
-## In-game staff chat alerts
+A ban or mute is enforced by the plugin, not just recorded:
 
-Whenever a punishment is issued — from `/vban` in-game **or** the web dashboard — the plugin
-broadcasts a chat message to online players holding the `voidbans.alerts.punishments` permission.
-The web dashboard doesn't talk to the plugin directly, so the plugin notices dashboard-issued
-punishments by polling the `punishments` table every `staff-alerts.poll-interval-seconds` (default
-5s); in-game `/vban` alerts are effectively instant.
+- **Ban** — checked on `PlayerLoginEvent`, before the connection completes. Kick message renders
+  the real reason, ban ID, and `{site_url}/{ban_id}` from `messages.ban`/`messages.temp-ban`.
+- **Mute** — checked on every chat message; cancelled with `messages.mute`/`messages.temp-mute`.
+- Both hit the live `punishments` table on every attempt, no caching — a ban or unban from the
+  dashboard takes effect on the next login or message, no restart.
 
-This permission isn't meant to be handed out via `plugin.yml`'s Bukkit default — grant it per-rank
-with LuckPerms instead, so it lines up with however your staff ranks are already structured:
+**Bedrock (Geyser/Floodgate)** needs no separate code path — Floodgate substitutes its own UUID
+before the login event fires, and that's what everything here keys off. Their username carries
+the `.` prefix Floodgate adds, and the kick/mute link is plain text instead of clickable (Geyser's
+disconnect screen doesn't render Java's link component) but still fully readable. One real gap: a
+Bedrock player who's never joined can't be found by name in the pre-ban lookup — no public API
+for that — so pre-banning one needs their UUID already in hand.
+
+## Staff chat alerts
+
+Any punishment — `/vban` or dashboard — triggers a chat alert to staff holding
+`voidbans.alerts.punishments`. The plugin polls the `punishments` table every
+`staff-alerts.poll-interval-seconds` (default 5s) to catch dashboard-issued ones; `/vban` alerts
+are instant. Grant the permission per-rank via LuckPerms, not the Bukkit default:
 
 ```
 /lp group <rankname> permission set voidbans.alerts.punishments true
 ```
 
-Run that once per rank that should see the alerts (e.g. `helper`, `moderator`, `admin`). The
-message text and the `&`-coded prefix in front of it are both configurable in `config.yml`
-(`chat-prefix`, `staff-alerts.message`), independent of this repo's code.
-
-## Punishment enforcement
-
-A ban or mute issued from the web dashboard, `/vban`, or pre-issued against a player who hasn't
-joined yet is enforced by the plugin itself, not left as a database row nobody checks:
-
-- A **ban** is checked on `PlayerLoginEvent`, before the connection completes — a banned UUID never
-  gets in. The kick screen renders the player's actual ban reason, ban ID, and a link to
-  `{site_url}/{ban_id}` (the same public page anyone can look up a ban ID from), from the
-  `messages.ban` / `messages.temp-ban` templates in `config.yml`.
-- A **mute** is checked on every chat message; a muted player's message is cancelled and they get
-  the `messages.mute` / `messages.temp-mute` template instead.
-- Both checks run against the live `punishments` table on every attempt (no caching), so a ban or
-  unban issued from the dashboard takes effect on the player's very next login or message — no
-  restart, no delay beyond the query itself.
-
-**Bedrock players (Geyser/Floodgate)** are fully covered — by the time `PlayerLoginEvent` fires,
-Floodgate has already substituted its own generated UUID for the connection, and that's the same
-UUID this plugin's `players` table keys everything off, so ban/mute enforcement needs no
-Bedrock-specific code path. Two things are genuinely different for them:
-
-- Their username in `players`/the dashboard carries the `.` prefix Floodgate adds (e.g. `.Steve`) —
-  that's expected, not a bug.
-- The kick/mute message's `{site_url}/{ban_id}` link is plain text on Bedrock (Geyser's disconnect
-  screen doesn't render Java's clickable-link component), but it's still fully legible and
-  copyable — a Bedrock player can read the ban ID and type the URL in manually, same information,
-  just not clickable.
-
-One real limitation: a Bedrock player who has **never joined** can't be found by username through
-the dashboard's pre-ban lookup — there's no public API to resolve a not-yet-joined Bedrock
-player's name to a UUID the way Mojang does for Java accounts. Pre-banning one requires already
-having their UUID (from a past session, a report, or another source) and entering it directly.
+Message text and prefix are both in `config.yml` (`chat-prefix`, `staff-alerts.message`).
 
 ## Optional integrations
 
-VoidBans can optionally pull extra data from other plugins you may or may not have installed.
-These are genuinely optional: the VoidBans plugin has **zero compile-time dependency** on any of
-them (not even a soft one) — it checks for the target plugin at runtime via reflection and simply
-does nothing if it isn't present.
+Reflection-only — zero compile-time dependency, checked at runtime, no-op if the plugin isn't
+installed.
 
-### Vulcan Anticheat
+**Vulcan Anticheat** — flag/punish events and detected client, shown on a player's profile. Off
+by default, enable in Settings → Integrations. Polled every 20s, no restart needed to flip it.
+`packages/plugin/pom.xml` has no reference to Vulcan and its jar is never bundled here (paid,
+licensed plugin).
 
-If [Vulcan](https://vulcanac.net/) is installed, VoidBans can record its flag/punish events into a
-`violation_events` table and show them on a player's profile, and read the player's detected
-client brand into the session log. This is off by default — turn it on from **Settings →
-Integrations** (owner-only) in the dashboard. The plugin polls that setting every 20 seconds, so
-flipping the toggle takes effect without a restart.
-
-Because this is reflection-only, nothing about VoidBans' own build depends on Vulcan being present
-or even on you owning a Vulcan license — `packages/plugin/pom.xml` has no reference to it, and
-Vulcan's jar is never bundled or committed to this repo (it's a paid, licensed plugin — don't add
-it here).
-
-Turning the integration off in Settings hides the violation history UI everywhere; it does not
-delete rows already recorded, so re-enabling later shows the full history again.
-
-We evaluated AntiSpoof Pro for detected-plugin-list data as well, but its jar exposes no public
-API, Bukkit events, or PlaceholderAPI hooks to read from — there's currently no way to integrate
-with it, so that idea was dropped rather than half-built against nothing.
+AntiSpoof Pro was evaluated for detected-plugin data and dropped — its jar exposes no API, Bukkit
+events, or PlaceholderAPI hooks to read from.
 
 ## Security
 
-- **Every sensitive route checks permissions server-side**, independent of what the UI shows —
-  see [Permission model](#permission-model).
-- **Public ban IDs are the only public identifier.** `publicBanId` (e.g. `VB-8F2K9Q`) is
-  non-sequential and 8+ characters of base32, resisting enumeration. Player UUIDs and internal
-  database IDs are never returned from an unauthenticated endpoint.
-- **OAuth CSRF protection** via a signed `state` parameter on the Discord login flow.
-- **Session cookies** are `httpOnly`, `Secure` in production, and signed (`jose`/JWT) — never
-  readable or forgeable client-side.
-- **Rate limiting** on the public ban-lookup and appeal-submission endpoints, keyed off the real
-  client IP (`CF-Connecting-IP` when behind Cloudflare, `X-Forwarded-For` otherwise).
-- **Parameterized queries everywhere** via Prisma — no raw string-built SQL.
-- **CSP, frame-ancestors, and other security headers** set on every response
-  (`packages/web/src/middleware.ts`).
-- **Audit log** records sensitive actions — punishment issue/revoke, permission changes, template
-  changes, appeal resolution — against the acting staff member.
+- Permissions checked server-side on every route, not just hidden in the UI
+- Public ban IDs (`VB-XXXXXXXX`) are non-sequential 8-char base32 — not enumerable. UUIDs and
+  internal IDs never leave an unauthenticated endpoint
+- OAuth CSRF protection via signed `state`
+- Session cookies: `httpOnly`, `Secure` in production, signed (`jose`)
+- Rate limiting on public lookup/appeal endpoints, keyed off real client IP
+- Parameterized queries throughout (Prisma) — no raw string-built SQL
+- CSP and other security headers on every response (`packages/web/src/middleware.ts`)
+- Audit log on punishment issue/revoke, permission changes, template/rule changes, appeal
+  resolution
 
-Found something? Open a security advisory on the repository rather than a public issue.
+Report a vulnerability via a security advisory on the repo, not a public issue.
 
-## Status
+## Known gaps
 
-Actively built for one production deployment. Known gaps, so nobody discovers them the hard way:
+- No automated test suite — `tsc`, `eslint`, `next build`, and manual testing against a seeded DB
+- `bans.request` (staff without issue rights) returns 202 with nothing queued yet — the
+  permission branch exists, the request queue doesn't
 
-- **No automated test suite.** Verified so far by `tsc`, `eslint`, `next build`, and manual
-  click-through against a seeded local database — no CI, no test runner wired up yet.
-- **Punishment requests aren't persisted yet.** A staff member without `bans.issue` but with
-  `bans.request` gets a 202 response with no queued record — the permission branch and API shape
-  exist, the request queue itself doesn't.
-- **The Docker build is unverified against a real Docker daemon** as of this writing — reasoned
-  through carefully against the actual Next.js standalone output, but not yet run end to end on
-  the deployment target.
-- **Privacy Policy and Terms pages ship with `TODO`s** (retention period, contact method) — fill
-  those in before announcing the site publicly.
+## Not included
 
-## Not included, on purpose
-
-No AntiSpoof integration (no API surface to read from — see
-[Optional integrations](#optional-integrations)). No third-party analytics or telemetry. No
-billing or multi-tenancy — this is one deployment for one server, not a hosted platform.
+No AntiSpoof integration (nothing to read from it). No analytics or telemetry. No billing or
+multi-tenancy — one deployment for one server.
 
 ## Contributing
 
 ```bash
 pnpm install
-cp packages/web/.env.example packages/web/.env   # fill in real values
+cp packages/web/.env.example packages/web/.env
 cd packages/web
 pnpm exec prisma migrate dev
 pnpm dev
 ```
 
-No CI is wired up yet. Run these locally before pushing:
+No CI yet — run before pushing:
 
 ```bash
 cd packages/web
@@ -369,12 +273,10 @@ pnpm exec eslint .
 pnpm run build
 ```
 
-Schema changes need a migration (`pnpm exec prisma migrate dev --name …`) committed alongside the
-code that depends on it — the plugin and web app share this schema but only the web app runs
-migrations, so a change that ships without one will pass locally and then throw
-`P2022: column does not exist` the moment it's deployed. `SessionListener.java`'s `UPDATE …
-ORDER BY … LIMIT` (closing the most recent open session) is MySQL-specific syntax, not
-standard SQL — worth knowing before "porting" that query anywhere else.
+Schema changes need a migration (`pnpm exec prisma migrate dev --name …`) committed with the code
+that needs it — only the web app runs migrations, so a schema change without one passes locally
+and throws `P2022: column does not exist` on deploy. `SessionListener.java`'s
+`UPDATE … ORDER BY … LIMIT` is MySQL-specific, not standard SQL.
 
 ## License
 
