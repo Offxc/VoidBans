@@ -28,7 +28,15 @@ export async function getStaffPrincipal(): Promise<StaffPrincipal | null> {
 
   const lastSynced = staffUser.lastLoginAt?.getTime() ?? 0;
   if (Date.now() - lastSynced > IDENTITY_REFRESH_MS) {
-    staffUser = await refreshStaffIdentity(staffUser.discordId, staffUser.username);
+    // Best-effort: this now runs on every dashboard page load (not just
+    // login, which already had its own try/catch around the whole OAuth
+    // flow), so a transient Discord API hiccup here must not take down
+    // every staff page — fall back to the still-valid cached row instead.
+    try {
+      staffUser = await refreshStaffIdentity(staffUser.discordId, staffUser.username);
+    } catch (err) {
+      console.error("Failed to refresh staff identity from Discord, using cached values:", err);
+    }
   }
 
   if (staffUser.isOwner) {
