@@ -27,40 +27,96 @@ const ACTION_KINDS = [
   { key: "ban", label: "Ban", type: "BAN" as const, hasDuration: false },
 ];
 
-export function TemplateEditor({ templates, canEdit }: { templates: Template[]; canEdit: boolean }) {
+function actionKeyFor(type: Template["type"], hasDuration: boolean): string {
+  return ACTION_KINDS.find((a) => a.type === type && a.hasDuration === hasDuration)?.key ?? ACTION_KINDS[0]!.key;
+}
+
+interface FormState {
+  name: string;
+  actionKey: string;
+  reason: string;
+  durationSeconds: number | null;
+  appealable: boolean;
+}
+
+const EMPTY_FORM: FormState = {
+  name: "",
+  actionKey: ACTION_KINDS[0]!.key,
+  reason: "",
+  durationSeconds: null,
+  appealable: false,
+};
+
+export function TemplateEditor({
+  templates,
+  canCreate,
+  canEdit,
+}: {
+  templates: Template[];
+  canCreate: boolean;
+  canEdit: boolean;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [actionKey, setActionKey] = useState(ACTION_KINDS[0]!.key);
-  const [reason, setReason] = useState("");
-  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
-  const [appealable, setAppealable] = useState(false);
+  // "new" opens the create form; an id string opens that template for
+  // editing (pre-filled); null means the form is closed.
+  const [editingId, setEditingId] = useState<string | "new" | null>(null);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const action = ACTION_KINDS.find((a) => a.key === actionKey)!;
+  const action = ACTION_KINDS.find((a) => a.key === form.actionKey)!;
 
-  async function create() {
+  function openCreate() {
+    setForm(EMPTY_FORM);
+    setEditingId("new");
+  }
+
+  function openEdit(t: Template) {
+    setForm({
+      name: t.name,
+      actionKey: actionKeyFor(t.type, Boolean(t.defaultDuration)),
+      reason: t.defaultReason,
+      durationSeconds: t.defaultDuration,
+      appealable: t.defaultAppealable,
+    });
+    setEditingId(t.id);
+  }
+
+  function close() {
+    setEditingId(null);
+  }
+
+  async function save() {
     setSaving(true);
     try {
-      await fetch("/api/staff/templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          type: action.type,
-          defaultReason: reason,
-          defaultDurationSeconds: action.hasDuration ? durationSeconds ?? undefined : undefined,
-          defaultAppealable: appealable,
-        }),
+      const body = JSON.stringify({
+        name: form.name,
+        type: action.type,
+        defaultReason: form.reason,
+        defaultDurationSeconds: action.hasDuration ? form.durationSeconds ?? undefined : undefined,
+        defaultAppealable: form.appealable,
       });
-      setOpen(false);
-      setName("");
-      setReason("");
-      setDurationSeconds(null);
-      setAppealable(false);
+
+      if (editingId === "new") {
+        await fetch("/api/staff/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body });
+      } else if (editingId) {
+        await fetch(`/api/staff/templates/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body });
+      }
+
+      setEditingId(null);
       router.refresh();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function remove(id: string) {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/staff/templates/${id}`, { method: "DELETE" });
+      router.refresh();
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -76,27 +132,44 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
               {t.defaultDuration ? formatDuration(t.defaultDuration) : "Permanent"} ·{" "}
               {t.defaultAppealable ? "Appealable" : "Not appealable"}
             </div>
+            {canEdit && (
+              <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                <button onClick={() => openEdit(t)} className="vb-btn vb-btn-quiet" style={{ fontSize: 12, padding: "3px 10px" }}>
+                  Edit
+                </button>
+                <button
+                  onClick={() => remove(t.id)}
+                  disabled={deletingId === t.id}
+                  className="vb-btn vb-btn-quiet"
+                  style={{ fontSize: 12, padding: "3px 10px" }}
+                >
+                  {deletingId === t.id ? "Removing…" : "Delete"}
+                </button>
+              </div>
+            )}
           </div>
         ))}
         {templates.length === 0 && <p style={{ color: "var(--text-dim)", fontSize: 14 }}>No templates yet.</p>}
       </div>
 
-      {canEdit && !open && (
-        <button onClick={() => setOpen(true)} className="vb-btn vb-btn-primary" style={{ marginTop: 16 }}>
+      {canCreate && editingId === null && (
+        <button onClick={openCreate} className="vb-btn vb-btn-primary" style={{ marginTop: 16 }}>
           New template
         </button>
       )}
 
-      {canEdit && open && (
+      {editingId !== null && (
         <div className="vb-panel" style={{ padding: 18, marginTop: 14, maxWidth: 360, display: "flex", flexDirection: "column", gap: 10 }}>
-          <input className="vb-input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            className="vb-input"
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          />
           <select
             className="vb-select"
-            value={actionKey}
-            onChange={(e) => {
-              setActionKey(e.target.value);
-              setDurationSeconds(null);
-            }}
+            value={form.actionKey}
+            onChange={(e) => setForm((f) => ({ ...f, actionKey: e.target.value, durationSeconds: null }))}
           >
             {ACTION_KINDS.map((a) => (
               <option key={a.key} value={a.key}>
@@ -107,26 +180,35 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
           <textarea
             className="vb-textarea"
             placeholder="Default reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            value={form.reason}
+            onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
             rows={3}
           />
           {action.hasDuration && (
-            <DurationInput label="Default duration" seconds={durationSeconds} onChange={setDurationSeconds} required />
+            <DurationInput
+              label="Default duration"
+              seconds={form.durationSeconds}
+              onChange={(durationSeconds) => setForm((f) => ({ ...f, durationSeconds }))}
+              required
+            />
           )}
           <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-dim)" }}>
-            <input type="checkbox" checked={appealable} onChange={(e) => setAppealable(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={form.appealable}
+              onChange={(e) => setForm((f) => ({ ...f, appealable: e.target.checked }))}
+            />
             Appealable by default
           </label>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button
-              onClick={create}
-              disabled={saving || !name || !reason || (action.hasDuration && !durationSeconds)}
+              onClick={save}
+              disabled={saving || !form.name || !form.reason || (action.hasDuration && !form.durationSeconds)}
               className="vb-btn vb-btn-primary"
             >
-              {saving ? "Saving…" : "Create"}
+              {saving ? "Saving…" : editingId === "new" ? "Create" : "Save"}
             </button>
-            <button onClick={() => setOpen(false)} className="vb-btn vb-btn-quiet">
+            <button onClick={close} className="vb-btn vb-btn-quiet">
               Cancel
             </button>
           </div>

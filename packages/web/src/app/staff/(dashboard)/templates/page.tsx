@@ -9,13 +9,15 @@ export default async function TemplatesPage() {
   if (!principal || !hasPermission(principal, "templates.view")) redirect("/staff");
 
   const templates = await prisma.punishmentTemplate.findMany({ orderBy: { name: "asc" } });
-  const canEdit = hasPermission(principal, "templates.create") || hasPermission(principal, "templates.edit");
+  const canCreate = hasPermission(principal, "templates.create");
+  const canEdit = hasPermission(principal, "templates.edit");
 
   return (
     <div>
       <h1 style={{ fontSize: 22, marginBottom: 16 }}>Templates</h1>
 
       <TemplateEditor
+        canCreate={canCreate}
         canEdit={canEdit}
         templates={templates.map((t) => ({
           id: t.id.toString(),
