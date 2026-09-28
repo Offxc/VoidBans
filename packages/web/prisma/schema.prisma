@@ -22,6 +22,13 @@ model Player {
   lastLogin          DateTime?
   lastLogout         DateTime?
   isOnline           Boolean  @default(false)
+  // False only for a row staff pre-created (via the pre-ban lookup) for a
+  // UUID that has never actually connected — firstJoined on such a row is
+  // just the time it was created, not a real join, so the UI must not show
+  // it as one. The plugin's own INSERT ... ON DUPLICATE KEY UPDATE on
+  // login always sets this back to TRUE, absorbing the placeholder into a
+  // real player row the moment they actually connect.
+  hasJoined          Boolean  @default(true)
 
   sessions       Session[]
   punishments    Punishment[]

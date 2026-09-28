@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `players` ADD COLUMN `hasJoined` BOOLEAN NOT NULL DEFAULT TRUE;

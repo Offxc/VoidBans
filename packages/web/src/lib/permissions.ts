@@ -19,6 +19,7 @@ export const PERMISSION_KEYS = [
   "players.view_violations",
   "players.view_attachments",
   "players.add_attachments",
+  "players.pre_ban",
   "templates.view",
   "templates.create",
   "templates.edit",

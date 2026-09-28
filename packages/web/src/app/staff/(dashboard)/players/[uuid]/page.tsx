@@ -143,16 +143,31 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           {targetStaffUser && <span className="vb-pill">Staff</span>}
-          <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
-            {player.isOnline ? "Online" : "Offline"}
-          </span>
+          {!player.hasJoined ? (
+            <span className="vb-pill vb-pill-warn">Never joined</span>
+          ) : (
+            <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
+              {player.isOnline ? "Online" : "Offline"}
+            </span>
+          )}
         </div>
       </div>
 
+      {!player.hasJoined && (
+        <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 10 }}>
+          This profile was pre-created by staff — {player.username} hasn&apos;t actually connected to the server
+          yet. Any punishment issued here takes effect the moment they first join.
+        </p>
+      )}
+
       <div className="vb-panel" style={{ padding: 18, marginTop: 14 }}>
         <dl style={{ display: "grid", gridTemplateColumns: "180px 1fr", rowGap: 10, fontSize: 14, margin: 0 }}>
-          <dt style={{ color: "var(--text-dim)" }}>First joined</dt>
-          <dd style={{ margin: 0 }}><LocalTime iso={player.firstJoined.toISOString()} /></dd>
+          {player.hasJoined && (
+            <>
+              <dt style={{ color: "var(--text-dim)" }}>First joined</dt>
+              <dd style={{ margin: 0 }}><LocalTime iso={player.firstJoined.toISOString()} /></dd>
+            </>
+          )}
           {canViewSessions && (
             <>
               <dt style={{ color: "var(--text-dim)" }}>Playtime (last 30 days)</dt>

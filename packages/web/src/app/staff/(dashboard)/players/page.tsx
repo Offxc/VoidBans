@@ -3,6 +3,7 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { LivePlayerRoster } from "@/components/LivePlayerRoster";
+import { PreBanLookup } from "@/components/PreBanLookup";
 
 export default async function PlayersPage() {
   const principal = await getStaffPrincipal();
@@ -25,6 +26,8 @@ export default async function PlayersPage() {
   return (
     <div>
       <h1 style={{ fontSize: 22, marginBottom: 16 }}>Players</h1>
+
+      {hasPermission(principal, "players.pre_ban") && <PreBanLookup canCreate />}
 
       <LivePlayerRoster
         initialOnline={online.map((p) => ({ ...p, lastLogout: p.lastLogout?.toISOString() ?? null }))}
