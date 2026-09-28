@@ -62,7 +62,11 @@ boundaries — not "op or not."
 - Punishment actions — mute, temp mute, kick, temp ban, ban — each either from a template or
   filled in manually, with an optional IP ban that blocks reconnection from that address
   regardless of account
-- Username history, freeform staff notes, and a merged activity timeline per player
+- Username history, freeform staff notes (deletable, by permission), staff-uploaded PNG
+  attachments, and a merged activity timeline per player
+- Pre-ban a player who has never joined — look up a UUID or Java username (resolved via Mojang)
+  or a known Bedrock UUID, create their profile ahead of time, and punish it immediately; the
+  punishment takes effect the moment they connect for the first time
 - Owner-configurable punishment templates, with template creation itself gated by permission
 - In-game staff chat alerts on punishment, with a configurable prefix and message
 
@@ -159,7 +163,7 @@ only — a reverse proxy (Caddy) in front handles TLS and the public-facing port
 | `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` above |
 | `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` — the only thing to change when moving domains |
 | `chat-prefix` | `packages/plugin/config.yml` | Prefix shown before every message the plugin sends in chat |
-| `messages.*` | `packages/plugin/config.yml` | In-game ban/kick message templates — placeholders: `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}` |
+| `messages.*` | `packages/plugin/config.yml` | In-game ban/mute/kick message templates — placeholders: `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}` |
 | `staff-alerts.*` | `packages/plugin/config.yml` | In-game staff chat alert on punishment |
 
 Changing where the site is hosted is a two-line change (`SITE_URL` and `site-url`) — the domain is
@@ -177,7 +181,8 @@ packages/
     src/components/         Shared UI
     src/lib/                Auth, permissions, session, rate limiting, integrations
   plugin/                  Paper plugin (Java)
-    src/main/java/…/listener/     Session and login/IP-ban enforcement
+    src/main/java/…/listener/     Session tracking, ban/IP-ban login enforcement, mute chat enforcement
+    src/main/java/…/command/      /vban and /vunban
     src/main/java/…/integration/  Reflection-only Vulcan integration
     src/main/java/…/task/         Staff alert polling, integration settings polling
     src/main/resources/     plugin.yml, default config.yml
@@ -244,6 +249,38 @@ with LuckPerms instead, so it lines up with however your staff ranks are already
 Run that once per rank that should see the alerts (e.g. `helper`, `moderator`, `admin`). The
 message text and the `&`-coded prefix in front of it are both configurable in `config.yml`
 (`chat-prefix`, `staff-alerts.message`), independent of this repo's code.
+
+## Punishment enforcement
+
+A ban or mute issued from the web dashboard, `/vban`, or pre-issued against a player who hasn't
+joined yet is enforced by the plugin itself, not left as a database row nobody checks:
+
+- A **ban** is checked on `PlayerLoginEvent`, before the connection completes — a banned UUID never
+  gets in. The kick screen renders the player's actual ban reason, ban ID, and a link to
+  `{site_url}/{ban_id}` (the same public page anyone can look up a ban ID from), from the
+  `messages.ban` / `messages.temp-ban` templates in `config.yml`.
+- A **mute** is checked on every chat message; a muted player's message is cancelled and they get
+  the `messages.mute` / `messages.temp-mute` template instead.
+- Both checks run against the live `punishments` table on every attempt (no caching), so a ban or
+  unban issued from the dashboard takes effect on the player's very next login or message — no
+  restart, no delay beyond the query itself.
+
+**Bedrock players (Geyser/Floodgate)** are fully covered — by the time `PlayerLoginEvent` fires,
+Floodgate has already substituted its own generated UUID for the connection, and that's the same
+UUID this plugin's `players` table keys everything off, so ban/mute enforcement needs no
+Bedrock-specific code path. Two things are genuinely different for them:
+
+- Their username in `players`/the dashboard carries the `.` prefix Floodgate adds (e.g. `.Steve`) —
+  that's expected, not a bug.
+- The kick/mute message's `{site_url}/{ban_id}` link is plain text on Bedrock (Geyser's disconnect
+  screen doesn't render Java's clickable-link component), but it's still fully legible and
+  copyable — a Bedrock player can read the ban ID and type the URL in manually, same information,
+  just not clickable.
+
+One real limitation: a Bedrock player who has **never joined** can't be found by username through
+the dashboard's pre-ban lookup — there's no public API to resolve a not-yet-joined Bedrock
+player's name to a UUID the way Mojang does for Java accounts. Pre-banning one requires already
+having their UUID (from a past session, a report, or another source) and entering it directly.
 
 ## Optional integrations
 
