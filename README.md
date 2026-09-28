@@ -74,7 +74,7 @@ boundaries — not "op or not."
 - A role without ban-issuing rights can still request one, routed to someone who can act on it
 
 **Optional integrations**
-- BlueMap embed on its own staff tab, only rendered when configured
+- BlueMap embed on its own staff tab, toggled and configured from Settings (owner-only)
 - Vulcan Anticheat: violation history and detected client brand on a player's profile, via a
   reflection-only integration with zero build-time dependency on Vulcan — see
   [Optional integrations](#optional-integrations)
@@ -157,7 +157,6 @@ only — a reverse proxy (Caddy) in front handles TLS and the public-facing port
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | `packages/web/.env` | Discord OAuth app credentials |
 | `DISCORD_REDIRECT_URI` | `packages/web/.env` | OAuth callback URL, `${SITE_URL}/api/auth/callback` |
 | `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` | `packages/web/.env` | Bot used server-side to read a logging-in user's guild roles |
-| `BLUEMAP_URL` | `packages/web/.env` | BlueMap web root for the staff live-map tab; omit to hide that tab |
 | `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` above |
 | `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` — the only thing to change when moving domains |
 | `chat-prefix` | `packages/plugin/config.yml` | Prefix shown before every message the plugin sends in chat |
@@ -288,7 +287,7 @@ with it, so that idea was dropped rather than half-built against nothing.
   client IP (`CF-Connecting-IP` when behind Cloudflare, `X-Forwarded-For` otherwise).
 - **Parameterized queries everywhere** via Prisma — no raw string-built SQL.
 - **CSP, frame-ancestors, and other security headers** set on every response
-  (`packages/web/next.config.mjs`), with a narrowly-scoped exception only on the BlueMap tab's
+  (`packages/web/src/middleware.ts`), with a narrowly-scoped exception only on the BlueMap tab's
   route for its embed.
 - **Audit log** records sensitive actions — punishment issue/revoke, permission changes, template
   changes, appeal resolution — against the acting staff member.

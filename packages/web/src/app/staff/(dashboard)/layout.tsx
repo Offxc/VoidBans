@@ -3,6 +3,7 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getSiteIconUrl } from "@/lib/site-icon";
+import { getBlueMapConfig } from "@/lib/bluemap";
 import { StaffNav } from "@/components/StaffNav";
 import { StaffHeader } from "@/components/StaffHeader";
 
@@ -24,16 +25,16 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
     redirect("/staff/link-account");
   }
 
+  const [iconUrl, blueMapConfig] = await Promise.all([getSiteIconUrl(), getBlueMapConfig()]);
+
   const nav = [
     { href: "/staff/bans", label: "Punishments", show: hasPermission(principal, "bans.view") },
     { href: "/staff/appeals", label: "Appeals", show: hasPermission(principal, "appeals.view") },
     { href: "/staff/players", label: "Players", show: hasPermission(principal, "players.view_roster") },
-    { href: "/staff/bluemap", label: "BlueMap", show: hasPermission(principal, "bluemap.view") },
+    { href: "/staff/bluemap", label: "BlueMap", show: hasPermission(principal, "bluemap.view") && blueMapConfig.enabled },
     { href: "/staff/templates", label: "Templates", show: hasPermission(principal, "templates.view") },
     { href: "/staff/settings", label: "Settings", show: principal.isOwner || hasPermission(principal, "settings.manage") },
   ].filter((item) => item.show);
-
-  const iconUrl = await getSiteIconUrl();
 
   return (
     <div style={{ display: "flex", minHeight: "100dvh" }}>

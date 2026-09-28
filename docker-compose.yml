@@ -52,7 +52,6 @@ services:
       DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
-      BLUEMAP_URL: ${BLUEMAP_URL:-}
       NODE_ENV: production
     # No host port published at all. The reverse proxy in front of this
     # (an existing Caddy belonging to another project on this host) reaches

@@ -5,11 +5,13 @@ import { PERMISSION_KEYS } from "@/lib/permissions";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getRulesConfig } from "@/lib/rules";
 import { getSiteIconUrl } from "@/lib/site-icon";
+import { getBlueMapConfig } from "@/lib/bluemap";
 import { RolePermissionEditor } from "@/components/RolePermissionEditor";
 import { AppealQuestionEditor } from "@/components/AppealQuestionEditor";
 import { IntegrationsEditor } from "@/components/IntegrationsEditor";
 import { RulesEditor } from "@/components/RulesEditor";
 import { SiteIconEditor } from "@/components/SiteIconEditor";
+import { BlueMapEditor } from "@/components/BlueMapEditor";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -19,7 +21,7 @@ export default async function SettingsPage() {
   // to bootstrap that.
   if (!principal?.isOwner) redirect("/staff");
 
-  const [roles, questions, vulcanEnabled, rulesConfig, iconUrl] = await Promise.all([
+  const [roles, questions, vulcanEnabled, rulesConfig, iconUrl, blueMapConfig] = await Promise.all([
     prisma.staffRole.findMany({
       include: { permissions: true },
       orderBy: { displayName: "asc" },
@@ -28,6 +30,7 @@ export default async function SettingsPage() {
     isVulcanIntegrationEnabled(),
     getRulesConfig(),
     getSiteIconUrl(),
+    getBlueMapConfig(),
   ]);
 
   return (
@@ -92,6 +95,13 @@ export default async function SettingsPage() {
             address). 256×256 preferred. Shown top-left on the homepage and staff dashboard.
           </p>
           <SiteIconEditor iconUrl={iconUrl} />
+        </div>
+      </div>
+
+      <div className="vb-section">
+        <div className="vb-section-label">BlueMap</div>
+        <div className="vb-panel" style={{ padding: 18 }}>
+          <BlueMapEditor enabled={blueMapConfig.enabled} url={blueMapConfig.url} />
         </div>
       </div>
     </div>

@@ -9,32 +9,33 @@ import { NextRequest, NextResponse } from "next/server";
 // nonce lets Next's own hydration scripts through (it tags them with this
 // nonce automatically once it sees x-nonce on the request) without opening
 // script-src up to 'unsafe-inline' generally.
-function buildCsp(nonce: string, blueMapOrigin: string | null): string {
+// The BlueMap embed URL is now an owner-editable Settings value stored in
+// the database (see lib/bluemap.ts), not an env var — which means it's no
+// longer readable from here: middleware runs on Next's Edge runtime and
+// can't use the Prisma/Node client, and adding a network round-trip to
+// fetch it on every single request (this middleware runs site-wide) isn't
+// worth it for one iframe on one staff-only page. Since the URL is only
+// ever set by the site owner (Settings is owner-gated), not arbitrary
+// user input, allow any https origin in frame-src but only on the one
+// route that ever embeds anything — every other page still gets
+// frame-src 'none'.
+function buildCsp(nonce: string, allowAnyFrame: boolean): string {
   return [
     "default-src 'self'",
     "img-src 'self' data: https://mc-heads.net https://crafatar.com https://cdn.discordapp.com https://i.postimg.cc",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline'",
     "connect-src 'self'",
-    blueMapOrigin ? `frame-src 'self' ${blueMapOrigin}` : "frame-src 'none'",
+    allowAnyFrame ? "frame-src 'self' https:" : "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'none'",
   ].join("; ");
 }
 
-function blueMapOrigin(): string | null {
-  if (!process.env.BLUEMAP_URL) return null;
-  try {
-    return new URL(process.env.BLUEMAP_URL).origin;
-  } catch {
-    return null;
-  }
-}
-
 export function middleware(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildCsp(nonce, req.nextUrl.pathname === "/staff/bluemap" ? blueMapOrigin() : null);
+  const csp = buildCsp(nonce, req.nextUrl.pathname === "/staff/bluemap");
 
   // Next reads x-nonce off the *request* headers to tag its own inline
   // scripts — has to be forwarded this way, not just set on the response.
