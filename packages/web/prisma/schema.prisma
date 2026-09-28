@@ -227,21 +227,36 @@ model PunishmentTemplate {
   @@map("punishment_templates")
 }
 
+// A category grouping rules — "Chat Rules", "Severe Rules", etc. Drives
+// both the public /rules page (grouped sections, in sortOrder) and the
+// rule picker when punishing. This replaced a hand-written Markdown page
+// as the single source of truth: editing a rule here updates both places
+// at once instead of two independently-maintained copies drifting apart.
+model RuleCategory {
+  id          BigInt @id @default(autoincrement())
+  name        String @db.VarChar(64)
+  description String? @db.Text
+  sortOrder   Int     @default(0)
+
+  rules PunishmentRule[]
+
+  @@map("rule_categories")
+}
+
 // A rule from the server's rulebook, selectable when issuing a punishment
-// (staff pick which rule(s) were broken instead of, or alongside, a
-// template). Deliberately separate from the free-text Markdown rules
-// page (see lib/rules.ts / SiteSetting "rules.markdown") — that page is
-// public-facing prose for players, this is structured data for punishing.
-// Carries the same default-punishment fields as PunishmentTemplate by
-// design: the owner can enable templates, rules, or both, and a rule
-// picked here works the same way a template does — it's fine for them to
-// overlap.
+// and shown publicly on /rules under its category. Most real rules don't
+// dictate a fixed punishment — severity is a staff judgment call made
+// after seeing the player's history — so type/duration/appealable are
+// optional per rule rather than required the way a template's are: a
+// rule can suggest a default if the owner wants, but citing one at
+// punish time never forces a specific action or length.
 model PunishmentRule {
   id                BigInt         @id @default(autoincrement())
+  categoryId        BigInt
   code              String         @db.VarChar(16)
   title             String         @db.VarChar(120)
   description       String?        @db.Text
-  type              PunishmentType
+  suggestedType     PunishmentType?
   defaultDuration   Int?
   defaultAppealable Boolean        @default(false)
   active            Boolean        @default(true)
@@ -249,9 +264,11 @@ model PunishmentRule {
   createdByDiscordId String        @db.VarChar(32)
   createdAt         DateTime       @default(now())
 
+  category        RuleCategory         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   punishmentLinks PunishmentRuleLink[]
 
   @@unique([code])
+  @@index([categoryId])
   @@map("punishment_rules")
 }
 

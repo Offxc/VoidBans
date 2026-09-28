@@ -69,7 +69,11 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         ? prisma.punishmentTemplate.findMany({ orderBy: { name: "asc" } })
         : Promise.resolve([]),
       canIssue || canRequest
-        ? prisma.punishmentRule.findMany({ where: { active: true }, orderBy: [{ sortOrder: "asc" }, { code: "asc" }] })
+        ? prisma.punishmentRule.findMany({
+            where: { active: true },
+            orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { code: "asc" }],
+            include: { category: { select: { name: true } } },
+          })
         : Promise.resolve([]),
       prisma.usernameHistory.findMany({
         where: { playerUuid: player.uuid },
@@ -209,11 +213,9 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
           }))}
           rules={rules.map((r) => ({
             id: r.id.toString(),
+            categoryName: r.category.name,
             code: r.code,
             title: r.title,
-            type: r.type,
-            defaultDuration: r.defaultDuration,
-            defaultAppealable: r.defaultAppealable,
           }))}
           templatesEnabled={punishmentModes.templatesEnabled}
           rulesEnabled={punishmentModes.rulesEnabled}

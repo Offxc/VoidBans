@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BanLookupForm } from "@/components/BanLookup";
-import { getRulesConfig } from "@/lib/rules";
+import { isRulesPageEnabled } from "@/lib/rules";
 import { getSiteIconUrl } from "@/lib/site-icon";
 
 // Reads site_settings at request time (whether the Rules button should
@@ -10,7 +10,7 @@ import { getSiteIconUrl } from "@/lib/site-icon";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [{ enabled: rulesEnabled }, iconUrl] = await Promise.all([getRulesConfig(), getSiteIconUrl()]);
+  const [rulesEnabled, iconUrl] = await Promise.all([isRulesPageEnabled(), getSiteIconUrl()]);
 
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>

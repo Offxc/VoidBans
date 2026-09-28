@@ -1,42 +1,41 @@
 import { prisma } from "@/lib/prisma";
 
-const RULES_ENABLED_KEY = "rules.enabled";
-const RULES_MARKDOWN_KEY = "rules.markdown";
+const RULES_PAGE_ENABLED_KEY = "rules.page_enabled";
 
-export interface RulesConfig {
-  enabled: boolean;
-  markdown: string;
+/**
+ * Whether the public /rules page shows a "Server Rules" button on the
+ * homepage — independent of punishing.rules_enabled (whether staff can
+ * cite a rule when punishing), since a server might want one without the
+ * other. Off by default so a fresh deploy doesn't show an empty page
+ * before any rules exist.
+ */
+export async function isRulesPageEnabled(): Promise<boolean> {
+  const setting = await prisma.siteSetting.findUnique({ where: { key: RULES_PAGE_ENABLED_KEY } });
+  return setting?.value === true;
+}
+
+export async function setRulesPageEnabled(enabled: boolean): Promise<void> {
+  await prisma.siteSetting.upsert({
+    where: { key: RULES_PAGE_ENABLED_KEY },
+    create: { key: RULES_PAGE_ENABLED_KEY, value: enabled },
+    update: { value: enabled },
+  });
 }
 
 /**
- * Server rules, owner-editable Markdown stored in site_settings — same
- * pattern as the Vulcan integration toggle. Disabled by default so a
- * fresh deploy doesn't show an empty "Rules" button before the owner has
- * written anything.
+ * Rules grouped by category, in display order — the single source both
+ * the public /rules page and the staff punish-panel rule picker render
+ * from. Only active rules and only within their category's sortOrder,
+ * then each rule's own sortOrder.
  */
-export async function getRulesConfig(): Promise<RulesConfig> {
-  const [enabledSetting, markdownSetting] = await Promise.all([
-    prisma.siteSetting.findUnique({ where: { key: RULES_ENABLED_KEY } }),
-    prisma.siteSetting.findUnique({ where: { key: RULES_MARKDOWN_KEY } }),
-  ]);
-
-  return {
-    enabled: enabledSetting?.value === true,
-    markdown: typeof markdownSetting?.value === "string" ? markdownSetting.value : "",
-  };
-}
-
-export async function setRulesConfig(config: RulesConfig): Promise<void> {
-  await prisma.$transaction([
-    prisma.siteSetting.upsert({
-      where: { key: RULES_ENABLED_KEY },
-      create: { key: RULES_ENABLED_KEY, value: config.enabled },
-      update: { value: config.enabled },
-    }),
-    prisma.siteSetting.upsert({
-      where: { key: RULES_MARKDOWN_KEY },
-      create: { key: RULES_MARKDOWN_KEY, value: config.markdown },
-      update: { value: config.markdown },
-    }),
-  ]);
+export async function getRulesByCategory() {
+  return prisma.ruleCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: {
+      rules: {
+        where: { active: true },
+        orderBy: { sortOrder: "asc" },
+      },
+    },
+  });
 }
