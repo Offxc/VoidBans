@@ -10,6 +10,14 @@
   holding your moderation history.
 </p>
 
+<p align="center">
+  <img alt="Next.js 14" src="https://img.shields.io/badge/Next.js-14-black.svg">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6.svg">
+  <img alt="Java 17" src="https://img.shields.io/badge/Java-17-ED8B00.svg">
+  <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8-4479A1.svg">
+  <img alt="Self-hosted" src="https://img.shields.io/badge/deploy-Docker%20Compose-2496ED.svg">
+</p>
+
 ---
 
 VoidBans is two things that share one MySQL database: a Paper plugin that runs on your Minecraft
@@ -81,6 +89,9 @@ boundaries — not "op or not."
 | Minecraft plugin | Java 17, Paper API, HikariCP |
 | Reverse proxy / TLS | Caddy |
 | Deployment | Docker Compose |
+
+No Redis, no message queue, no search service — the plugin and web app talk to each other only
+through the shared MySQL schema. Fewer moving parts to run and patch.
 
 ## Quick start
 
@@ -304,6 +315,32 @@ Actively built for one production deployment. Known gaps, so nobody discovers th
 No AntiSpoof integration (no API surface to read from — see
 [Optional integrations](#optional-integrations)). No third-party analytics or telemetry. No
 billing or multi-tenancy — this is one deployment for one server, not a hosted platform.
+
+## Contributing
+
+```bash
+pnpm install
+cp packages/web/.env.example packages/web/.env   # fill in real values
+cd packages/web
+pnpm exec prisma migrate dev
+pnpm dev
+```
+
+No CI is wired up yet. Run these locally before pushing:
+
+```bash
+cd packages/web
+pnpm exec tsc --noEmit
+pnpm exec eslint .
+pnpm run build
+```
+
+Schema changes need a migration (`pnpm exec prisma migrate dev --name …`) committed alongside the
+code that depends on it — the plugin and web app share this schema but only the web app runs
+migrations, so a change that ships without one will pass locally and then throw
+`P2022: column does not exist` the moment it's deployed. `SessionListener.java`'s `UPDATE …
+ORDER BY … LIMIT` (closing the most recent open session) is MySQL-specific syntax, not
+standard SQL — worth knowing before "porting" that query anywhere else.
 
 ## License
 
