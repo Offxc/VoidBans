@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { DurationInput, formatDuration } from "@/components/DurationInput";
 
 interface Template {
   id: string;
@@ -18,7 +19,7 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
   const [name, setName] = useState("");
   const [type, setType] = useState<Template["type"]>("BAN");
   const [reason, setReason] = useState("");
-  const [durationHours, setDurationHours] = useState("");
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [appealable, setAppealable] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -32,14 +33,14 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
           name,
           type,
           defaultReason: reason,
-          defaultDurationHours: durationHours ? Number(durationHours) : undefined,
+          defaultDurationSeconds: durationSeconds ?? undefined,
           defaultAppealable: appealable,
         }),
       });
       setOpen(false);
       setName("");
       setReason("");
-      setDurationHours("");
+      setDurationSeconds(null);
       setAppealable(false);
       router.refresh();
     } finally {
@@ -56,7 +57,7 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
             <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>{t.type}</div>
             <div style={{ fontSize: 13, marginTop: 8 }}>{t.defaultReason}</div>
             <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 8 }}>
-              {t.defaultDuration ? `${t.defaultDuration / 3600}h` : "Permanent"} ·{" "}
+              {t.defaultDuration ? formatDuration(t.defaultDuration) : "Permanent"} ·{" "}
               {t.defaultAppealable ? "Appealable" : "Not appealable"}
             </div>
           </div>
@@ -86,12 +87,10 @@ export function TemplateEditor({ templates, canEdit }: { templates: Template[]; 
             onChange={(e) => setReason(e.target.value)}
             rows={3}
           />
-          <input
-            className="vb-input"
-            type="number"
-            placeholder="Default duration (hours, blank = permanent)"
-            value={durationHours}
-            onChange={(e) => setDurationHours(e.target.value)}
+          <DurationInput
+            label="Default duration (blank = permanent)"
+            seconds={durationSeconds}
+            onChange={setDurationSeconds}
           />
           <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-dim)" }}>
             <input type="checkbox" checked={appealable} onChange={(e) => setAppealable(e.target.checked)} />

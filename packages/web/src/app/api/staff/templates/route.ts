@@ -8,7 +8,7 @@ const templateSchema = z.object({
   name: z.string().min(1).max(64),
   type: z.enum(["BAN", "MUTE", "KICK", "WARN"]),
   defaultReason: z.string().min(1).max(2000),
-  defaultDurationHours: z.number().int().positive().optional(),
+  defaultDurationSeconds: z.number().int().positive().optional(),
   defaultAppealable: z.boolean().default(false),
 });
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       name: input.name,
       type: input.type,
       defaultReason: input.defaultReason,
-      defaultDuration: input.defaultDurationHours ? input.defaultDurationHours * 3600 : null,
+      defaultDuration: input.defaultDurationSeconds ?? null,
       defaultAppealable: input.defaultAppealable,
       createdByDiscordId: principal.discordId,
     },

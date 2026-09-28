@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MuteIcon, TempMuteIcon, KickIcon, HammerIcon, TempHammerIcon } from "@/components/PunishmentIcons";
+import { DurationInput } from "@/components/DurationInput";
 
 interface Template {
   id: string;
@@ -50,7 +51,7 @@ export function PunishmentPanel({
   const [mode, setMode] = useState<Mode>("choose");
   const [templateId, setTemplateId] = useState<string>("");
   const [reason, setReason] = useState("");
-  const [durationHours, setDurationHours] = useState<string>("");
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [appealable, setAppealable] = useState(false);
   const [ipBan, setIpBan] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -63,7 +64,7 @@ export function PunishmentPanel({
     setMode("choose");
     setTemplateId("");
     setReason("");
-    setDurationHours("");
+    setDurationSeconds(null);
     setAppealable(false);
     setIpBan(false);
     setResult(null);
@@ -77,7 +78,7 @@ export function PunishmentPanel({
   function pickTemplate(t: Template) {
     setTemplateId(t.id);
     setReason(t.defaultReason);
-    if (active?.hasDuration) setDurationHours(t.defaultDuration ? String(t.defaultDuration / 3600) : "");
+    if (active?.hasDuration) setDurationSeconds(t.defaultDuration ?? null);
     setAppealable(t.defaultAppealable);
     setMode("manual"); // reuse the same confirm form, now pre-filled
   }
@@ -85,7 +86,7 @@ export function PunishmentPanel({
   function startManual() {
     setTemplateId("");
     setReason("");
-    setDurationHours("");
+    setDurationSeconds(null);
     setAppealable(false);
     setMode("manual");
   }
@@ -104,7 +105,7 @@ export function PunishmentPanel({
           type: active.type,
           reason,
           templateId: templateId || undefined,
-          durationSeconds: active.hasDuration && durationHours ? Number(durationHours) * 3600 : undefined,
+          durationSeconds: active.hasDuration && durationSeconds ? durationSeconds : undefined,
           appealable,
           ipBanned: active.hasIpBan ? ipBan : false,
         }),
@@ -201,17 +202,7 @@ export function PunishmentPanel({
       </label>
 
       {active.hasDuration && (
-        <label className="vb-field">
-          Duration (hours)
-          <input
-            className="vb-input"
-            type="number"
-            min={1}
-            required
-            value={durationHours}
-            onChange={(e) => setDurationHours(e.target.value)}
-          />
-        </label>
+        <DurationInput label="Duration" seconds={durationSeconds} onChange={setDurationSeconds} required />
       )}
 
       {active.type === "BAN" && (
