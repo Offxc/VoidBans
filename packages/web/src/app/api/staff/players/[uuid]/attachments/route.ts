@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest, { params }: { params: { uuid: strin
     return NextResponse.json({ error: "File is not a valid PNG" }, { status: 400 });
   }
 
-  const player = await prisma.player.findUnique({ where: { uuid: params.uuid }, select: { uuid: true } });
+  const player = await prisma.player.findUnique({ where: { uuid: params.uuid }, select: { uuid: true, username: true } });
   if (!player) return NextResponse.json({ error: "Player not found" }, { status: 404 });
 
   const attachment = await prisma.playerAttachment.create({
@@ -101,6 +102,13 @@ export async function POST(req: NextRequest, { params }: { params: { uuid: strin
       targetId: params.uuid,
       details: { attachmentId: attachment.id.toString(), punishmentId: punishmentId?.toString() ?? null },
     },
+  });
+
+  notifyDiscordWebhook("attachment_added", {
+    title: "Attachment added",
+    description: `**${principal.username}** added an attachment on **${player.username}**${caption ? `\n${caption}` : ""}`,
+    color: 0xc084fc,
+    url: `${process.env.SITE_URL ?? ""}/staff/players/${params.uuid}`,
   });
 
   return NextResponse.json({ id: attachment.id.toString() }, { status: 201 });

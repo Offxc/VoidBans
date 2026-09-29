@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isValidBanIdFormat } from "@/lib/ban-id";
 import { rateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
+import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
 const appealSchema = z.object({
   answers: z.record(z.string(), z.string().max(2000)),
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: { banId: stri
 
   const punishment = await prisma.punishment.findUnique({
     where: { publicBanId: banId },
-    include: { appeal: true },
+    include: { appeal: true, player: { select: { username: true } } },
   });
 
   if (!punishment) return NextResponse.json({ error: "Not found." }, { status: 404 });
@@ -60,6 +61,13 @@ export async function POST(req: NextRequest, { params }: { params: { banId: stri
       punishmentId: punishment.id,
       answers: parsed.data.answers,
     },
+  });
+
+  notifyDiscordWebhook("appeal_submitted", {
+    title: "Appeal submitted",
+    description: `**${punishment.player.username}** appealed their ${punishment.type.toLowerCase()} (${punishment.publicBanId})`,
+    color: 0xfbbf24,
+    url: `${process.env.SITE_URL ?? ""}/${punishment.publicBanId}`,
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

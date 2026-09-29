@@ -5,11 +5,13 @@ import { PERMISSION_KEYS } from "@/lib/permissions";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { getPunishmentModes } from "@/lib/punishment-modes";
+import { getDiscordWebhookConfig } from "@/lib/discord-webhook";
 import { RolePermissionEditor } from "@/components/RolePermissionEditor";
 import { AppealQuestionEditor } from "@/components/AppealQuestionEditor";
 import { IntegrationsEditor } from "@/components/IntegrationsEditor";
 import { SiteIconEditor } from "@/components/SiteIconEditor";
 import { PunishmentModesEditor } from "@/components/PunishmentModesEditor";
+import { DiscordWebhookEditor } from "@/components/DiscordWebhookEditor";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -18,7 +20,7 @@ export default async function SettingsPage() {
   // (tied to a Discord ID, not a reassignable role) is trusted with that.
   if (!principal?.isOwner) redirect("/staff");
 
-  const [roles, questions, vulcanEnabled, iconUrl, punishmentModes] = await Promise.all([
+  const [roles, questions, vulcanEnabled, iconUrl, punishmentModes, webhookConfig] = await Promise.all([
     prisma.staffRole.findMany({
       include: { permissions: true },
       orderBy: { displayName: "asc" },
@@ -27,6 +29,7 @@ export default async function SettingsPage() {
     isVulcanIntegrationEnabled(),
     getSiteIconUrl(),
     getPunishmentModes(),
+    getDiscordWebhookConfig(),
   ]);
 
   return (
@@ -83,6 +86,17 @@ export default async function SettingsPage() {
             templatesEnabled={punishmentModes.templatesEnabled}
             rulesEnabled={punishmentModes.rulesEnabled}
           />
+        </div>
+      </div>
+
+      <div className="vb-section">
+        <div className="vb-section-label">Discord webhook</div>
+        <div className="vb-panel" style={{ padding: 18 }}>
+          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
+            Post a message to a Discord channel when any of the events below happen. Leave the URL
+            blank to turn this off entirely.
+          </p>
+          <DiscordWebhookEditor url={webhookConfig.url} events={webhookConfig.events} />
         </div>
       </div>
 

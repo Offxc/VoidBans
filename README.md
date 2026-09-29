@@ -37,8 +37,8 @@ never runs migrations.
 
 **Staff dashboard**
 - Discord OAuth login; first account in becomes the owner
-- Punishment list, online/offline roster, per-player profile with sessions, IPs, notes, PNG
-  attachments, and a merged activity timeline
+- Punishment list, online/offline roster, per-player profile (sticky identity/status panel,
+  punishment history, sessions, IPs, notes, PNG attachments)
 - Issue a ban/mute/kick/warn manually, from a template, or by selecting one or more rulebook
   entries — reason, duration, and appealability get filled in either way; templates and
   rule-based punishing are independent toggles and can both be on
@@ -46,6 +46,8 @@ never runs migrations.
   takes effect the moment they connect
 - Revoke or edit any punishment, template, or rule after the fact
 - Per-Discord-role permissions, checked server-side on every request — not "op or not"
+- Discord webhook notifications (punishment issued/lifted, note or attachment added, appeal
+  submitted/resolved), each event toggled independently
 
 **In-game (plugin)**
 - Bans and mutes are actually enforced: checked on login and on every chat message against the

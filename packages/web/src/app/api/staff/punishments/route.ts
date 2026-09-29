@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { generatePublicBanId } from "@/lib/ban-id";
+import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
 const issueSchema = z.object({
   playerUuid: z.string().uuid(),
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
       ipAddress,
       ruleLinks: ruleIds.length > 0 ? { create: ruleIds.map((ruleId) => ({ ruleId })) } : undefined,
     },
+    include: { player: { select: { username: true } } },
   });
 
   await prisma.auditLog.create({
@@ -103,6 +105,13 @@ export async function POST(req: NextRequest) {
       targetId: punishment.id.toString(),
       details: { type: input.type, publicBanId: punishment.publicBanId, ipBanned: punishment.ipBanned },
     },
+  });
+
+  notifyDiscordWebhook("punishment_issued", {
+    title: `${punishment.type} issued`,
+    description: `**${punishment.player.username}** was ${punishment.type.toLowerCase()}ed by **${principal.username}**\nReason: ${punishment.reason}`,
+    color: 0xf87171,
+    url: `${process.env.SITE_URL ?? ""}/${punishment.publicBanId}`,
   });
 
   return NextResponse.json({ ok: true, publicBanId: punishment.publicBanId }, { status: 201 });
