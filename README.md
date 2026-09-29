@@ -33,7 +33,8 @@ never runs migrations.
 - Ban ID lookup (`/VB-XXXXXXXX`), linked directly from the in-game kick/mute message
 - Appeals — one per ban, owner-configurable questions, staff accept/deny with a response and
   optional auto-revoke
-- Optional `/rules` page (Markdown, owner-written)
+- Optional `/rules` page — built from the same categories/rules staff pick from when punishing,
+  not separately maintained
 
 **Staff dashboard**
 - Discord OAuth login; first account in becomes the owner
@@ -240,8 +241,8 @@ events, or PlaceholderAPI hooks to read from.
 - Rate limiting on public lookup/appeal endpoints, keyed off real client IP
 - Parameterized queries throughout (Prisma) — no raw string-built SQL
 - CSP and other security headers on every response (`packages/web/src/middleware.ts`)
-- Audit log on punishment issue/revoke, permission changes, template/rule changes, appeal
-  resolution
+- Audit log on every sensitive action — punishments, notes, attachments, roles/permissions,
+  templates, rules, settings changes, appeal resolution — against the acting staff member
 
 Report a vulnerability via a security advisory on the repo, not a public issue.
 
