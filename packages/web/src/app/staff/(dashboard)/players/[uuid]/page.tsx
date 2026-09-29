@@ -112,253 +112,243 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const activePunishment = punishments.find((p) => p.active && (!p.expiresAt || p.expiresAt.getTime() > Date.now()));
 
   return (
-    <div>
-      {/* Identity — avatar, name, and every risk signal staff need before scrolling */}
-      <div className="vb-panel-strong" style={{ padding: 22, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-        <PlayerHead uuid={player.uuid} size={56} />
-        <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 21, margin: 0 }}>{player.username}</h1>
-          <div style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "ui-monospace, monospace" }}>
-            {player.uuid}
+    <div className="vb-profile">
+      {/* Left rail: identity, risk signals, stats, and the punish action
+          all stay in view while the right column scrolls — staff never
+          lose sight of who they're looking at or their current status
+          while reading through punishment history. */}
+      <aside className={`vb-profile-rail ${activePunishment ? "vb-profile-rail-flagged" : ""}`}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
+          <PlayerHead uuid={player.uuid} size={72} />
+          <div>
+            <h1 style={{ fontSize: 19, margin: 0 }}>{player.username}</h1>
+            <div style={{ fontSize: 11.5, color: "var(--text-faint)", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>
+              {player.uuid}
+            </div>
           </div>
           {usernameHistory.length > 0 && (
-            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
               Formerly: {usernameHistory.map((h) => h.username).join(", ")}
             </div>
           )}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {activePunishment && (
+              <span className="vb-pill vb-pill-danger">Active {activePunishment.type.toLowerCase()}</span>
+            )}
+            {targetStaffUser && <span className="vb-pill">Staff</span>}
+            {!player.hasJoined ? (
+              <span className="vb-pill vb-pill-warn">Never joined</span>
+            ) : (
+              <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
+                {player.isOnline ? "Online" : "Offline"}
+              </span>
+            )}
+          </div>
         </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {activePunishment && (
-            <span className="vb-pill vb-pill-danger">Active {activePunishment.type.toLowerCase()}</span>
+
+        {!player.hasJoined && (
+          <p style={{ color: "var(--text-dim)", fontSize: 12.5, margin: "14px 0 0", textAlign: "center" }}>
+            Pre-created by staff. Hasn&apos;t connected yet. Any punishment takes effect on first join.
+          </p>
+        )}
+
+        <div className="vb-profile-stats">
+          {player.hasJoined && (
+            <StatRow label="First joined" value={<LocalTime iso={player.firstJoined.toISOString()} />} />
           )}
-          {targetStaffUser && <span className="vb-pill">Staff</span>}
-          {!player.hasJoined ? (
-            <span className="vb-pill vb-pill-warn">Never joined</span>
-          ) : (
-            <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
-              {player.isOnline ? "Online" : "Offline"}
-            </span>
+          {canViewSessions && (
+            <>
+              <StatRow label="Playtime (30d)" value={formatDuration(last30DaysPlaytimeSeconds)} />
+              <StatRow label="Sessions (30d)" value={String(last30DaysSessionCount)} />
+            </>
           )}
+          {canViewIp && uniqueIpCount !== null && <StatRow label="Distinct IPs" value={String(uniqueIpCount)} />}
         </div>
-      </div>
 
-      {!player.hasJoined && (
-        <p style={{ color: "var(--text-dim)", fontSize: 13, margin: "10px 0 0" }}>
-          This profile was pre-created by staff. {player.username} hasn&apos;t actually connected to the server
-          yet. Any punishment issued here takes effect the moment they first join.
-        </p>
-      )}
-
-      {/* Stat strip — compact tiles, not a vertical key:value list */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 10,
-          marginTop: 14,
-        }}
-      >
-        {player.hasJoined && (
-          <StatTile label="First joined" value={<LocalTime iso={player.firstJoined.toISOString()} />} />
+        {(canIssue || canRequest) && !canPunishThisPlayer && (
+          <p style={{ color: "var(--text-dim)", fontSize: 12.5, marginTop: 16, textAlign: "center" }}>
+            {targetStaffUser?.username} is staff and can&apos;t be punished here.
+          </p>
         )}
-        {canViewSessions && (
-          <>
-            <StatTile label="Playtime (30d)" value={formatDuration(last30DaysPlaytimeSeconds)} />
-            <StatTile label="Sessions (30d)" value={String(last30DaysSessionCount)} />
-          </>
+
+        {(canIssue || canRequest) && canPunishThisPlayer && (
+          <div style={{ marginTop: 16 }}>
+            <PunishmentPanel
+              playerUuid={player.uuid}
+              templates={templates.map((t) => ({
+                id: t.id.toString(),
+                name: t.name,
+                type: t.type,
+                defaultReason: t.defaultReason,
+                defaultDuration: t.defaultDuration,
+                defaultAppealable: t.defaultAppealable,
+              }))}
+              rules={rules.map((r) => ({
+                id: r.id.toString(),
+                categoryName: r.category.name,
+                code: r.code,
+                title: r.title,
+                description: r.description,
+              }))}
+              templatesEnabled={punishmentModes.templatesEnabled}
+              rulesEnabled={punishmentModes.rulesEnabled}
+              canIssueDirectly={canIssue}
+            />
+          </div>
         )}
-        {canViewIp && uniqueIpCount !== null && <StatTile label="Distinct IPs" value={String(uniqueIpCount)} />}
-      </div>
+      </aside>
 
-      {/* Punish action bar */}
-      {(canIssue || canRequest) && !canPunishThisPlayer && (
-        <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 18 }}>
-          {targetStaffUser?.username} is a staff member and can&apos;t be punished from here.
-        </p>
-      )}
-
-      {(canIssue || canRequest) && canPunishThisPlayer && (
-        <PunishmentPanel
-          playerUuid={player.uuid}
-          templates={templates.map((t) => ({
-            id: t.id.toString(),
-            name: t.name,
-            type: t.type,
-            defaultReason: t.defaultReason,
-            defaultDuration: t.defaultDuration,
-            defaultAppealable: t.defaultAppealable,
-          }))}
-          rules={rules.map((r) => ({
-            id: r.id.toString(),
-            categoryName: r.category.name,
-            code: r.code,
-            title: r.title,
-            description: r.description,
-          }))}
-          templatesEnabled={punishmentModes.templatesEnabled}
-          rulesEnabled={punishmentModes.rulesEnabled}
-          canIssueDirectly={canIssue}
-        />
-      )}
-
-      {/* Punishments — the primary reason staff land on this page, so it's
-          its own table (not folded into a generic activity feed) right
-          after the action to take one. */}
-      <div className="vb-section">
-        <div className="vb-section-label">Punishments ({punishments.length})</div>
-        <div className="vb-panel" style={{ overflowX: "auto" }}>
+      {/* Right column: history, in priority order */}
+      <div className="vb-profile-main">
+        <div className="vb-section" style={{ marginTop: 0 }}>
+          <div className="vb-section-label">Punishments ({punishments.length})</div>
           {punishments.length === 0 ? (
-            <p style={{ color: "var(--text-dim)", fontSize: 14, padding: 18, margin: 0 }}>No punishments on record.</p>
+            <div className="vb-panel" style={{ padding: 18 }}>
+              <p style={{ color: "var(--text-dim)", fontSize: 14, margin: 0 }}>No punishments on record.</p>
+            </div>
           ) : (
-            <table className="vb-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Type</th>
-                  <th>Reason</th>
-                  <th>Issued</th>
-                  <th>Staff</th>
-                  <th>Status</th>
-                  {canRevoke && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {punishments.map((p) => (
-                  <tr key={p.id.toString()}>
-                    <td>
-                      <a href={`/${p.publicBanId}`} className="vb-pill" style={{ textDecoration: "none" }}>
-                        {p.publicBanId}
-                      </a>
-                    </td>
-                    <td>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {punishments.map((p) => (
+                <div
+                  key={p.id.toString()}
+                  className="vb-punishment-row"
+                  data-status={p.active ? "active" : "inactive"}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <a href={`/${p.publicBanId}`} className="vb-pill" style={{ textDecoration: "none" }}>
+                      {p.publicBanId}
+                    </a>
+                    <strong style={{ fontSize: 13.5 }}>
                       {p.type}
-                      {p.ipBanned && <span style={{ color: "var(--text-dim)" }}> +IP</span>}
-                    </td>
-                    <td style={{ maxWidth: 320 }}>
-                      {p.reason}
-                      {p.appeal && (
-                        <div style={{ fontSize: 11.5, color: "var(--text-dim)", marginTop: 3 }}>
-                          Appeal: {p.appeal.status.toLowerCase()}
-                        </div>
-                      )}
-                    </td>
-                    <td>
+                      {p.ipBanned && <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> +IP</span>}
+                    </strong>
+                    <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
+                    <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--text-dim)" }}>
                       <LocalTime iso={p.issuedAt.toISOString()} />
-                    </td>
-                    <td style={{ color: "var(--text-dim)" }}>{p.staffUsername ?? "—"}</td>
-                    <td>
-                      <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
-                    </td>
-                    {canRevoke && <td>{p.active && <RevokeButton punishmentId={p.id.toString()} />}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13.5, margin: "8px 0 0" }}>{p.reason}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
+                      {p.staffUsername ? `by ${p.staffUsername}` : "issued by console"}
+                    </span>
+                    {p.appeal && (
+                      <span className="vb-pill vb-pill-neutral" style={{ fontSize: 10.5 }}>
+                        Appeal: {p.appeal.status.toLowerCase()}
+                      </span>
+                    )}
+                    {canRevoke && p.active && (
+                      <span style={{ marginLeft: "auto" }}>
+                        <RevokeButton punishmentId={p.id.toString()} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
+
+        {canViewNotes && (
+          <div className="vb-section">
+            <div className="vb-section-label">Notes</div>
+            <div className="vb-panel" style={{ padding: 18 }}>
+              <PlayerNotes
+                playerUuid={player.uuid}
+                notes={notes.map((n) => ({
+                  id: n.id.toString(),
+                  body: n.body,
+                  authorUsername: n.authorUsername,
+                  createdAt: n.createdAt.toISOString(),
+                }))}
+                canWrite={canViewNotes}
+                canDelete={canDeleteNotes}
+              />
+            </div>
+          </div>
+        )}
+
+        {canViewAttachments && (
+          <div className="vb-section">
+            <div className="vb-section-label">Attachments</div>
+            <div className="vb-panel" style={{ padding: 18 }}>
+              <PlayerAttachments
+                playerUuid={player.uuid}
+                attachments={attachments.map((a) => ({
+                  id: a.id.toString(),
+                  punishmentId: a.punishmentId?.toString() ?? null,
+                  caption: a.caption,
+                  authorUsername: a.authorUsername,
+                  createdAt: a.createdAt.toISOString(),
+                }))}
+                canWrite={canAddAttachments}
+              />
+            </div>
+          </div>
+        )}
+
+        {canViewSessions && (
+          <div className="vb-section">
+            <div className="vb-section-label">Recent sessions</div>
+            <div className="vb-panel" style={{ padding: "4px 18px" }}>
+              {sessions.length === 0 && <p style={{ color: "var(--text-dim)", fontSize: 14 }}>No sessions recorded.</p>}
+              {sessions.map((s) => (
+                <div
+                  key={s.id.toString()}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "10px 0",
+                    borderTop: "1px solid rgba(168, 130, 255, 0.08)",
+                    fontSize: 14,
+                  }}
+                >
+                  <span>
+                    <LocalTime iso={s.loginAt.toISOString()} />
+                    {s.clientBrand && (
+                      <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.clientBrand}</span>
+                    )}
+                    {canViewIp && s.ipAddress && (
+                      <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.ipAddress}</span>
+                    )}
+                  </span>
+                  <span style={{ color: "var(--text-dim)" }}>
+                    {s.durationSeconds ? formatDuration(s.durationSeconds) : "In progress"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showViolations && (
+          <div className="vb-section">
+            <div className="vb-section-label">Anticheat violations</div>
+            <div className="vb-panel" style={{ padding: 18 }}>
+              <ViolationHistory
+                events={violations.map((v) => ({
+                  id: v.id.toString(),
+                  checkName: v.checkName,
+                  category: v.category,
+                  violationLevel: v.violationLevel,
+                  info: v.info,
+                  punished: v.punished,
+                  occurredAt: v.occurredAt.toISOString(),
+                }))}
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {canViewNotes && (
-        <div className="vb-section">
-          <div className="vb-section-label">Notes</div>
-          <div className="vb-panel" style={{ padding: 18 }}>
-            <PlayerNotes
-              playerUuid={player.uuid}
-              notes={notes.map((n) => ({
-                id: n.id.toString(),
-                body: n.body,
-                authorUsername: n.authorUsername,
-                createdAt: n.createdAt.toISOString(),
-              }))}
-              canWrite={canViewNotes}
-              canDelete={canDeleteNotes}
-            />
-          </div>
-        </div>
-      )}
-
-      {canViewAttachments && (
-        <div className="vb-section">
-          <div className="vb-section-label">Attachments</div>
-          <div className="vb-panel" style={{ padding: 18 }}>
-            <PlayerAttachments
-              playerUuid={player.uuid}
-              attachments={attachments.map((a) => ({
-                id: a.id.toString(),
-                punishmentId: a.punishmentId?.toString() ?? null,
-                caption: a.caption,
-                authorUsername: a.authorUsername,
-                createdAt: a.createdAt.toISOString(),
-              }))}
-              canWrite={canAddAttachments}
-            />
-          </div>
-        </div>
-      )}
-
-      {canViewSessions && (
-        <div className="vb-section">
-          <div className="vb-section-label">Recent sessions</div>
-          <div className="vb-panel" style={{ padding: "4px 18px" }}>
-            {sessions.length === 0 && <p style={{ color: "var(--text-dim)", fontSize: 14 }}>No sessions recorded.</p>}
-            {sessions.map((s) => (
-              <div
-                key={s.id.toString()}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "10px 0",
-                  borderTop: "1px solid rgba(168, 130, 255, 0.08)",
-                  fontSize: 14,
-                }}
-              >
-                <span>
-                  <LocalTime iso={s.loginAt.toISOString()} />
-                  {s.clientBrand && (
-                    <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.clientBrand}</span>
-                  )}
-                  {canViewIp && s.ipAddress && (
-                    <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.ipAddress}</span>
-                  )}
-                </span>
-                <span style={{ color: "var(--text-dim)" }}>
-                  {s.durationSeconds ? formatDuration(s.durationSeconds) : "In progress"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {showViolations && (
-        <div className="vb-section">
-          <div className="vb-section-label">Anticheat violations</div>
-          <div className="vb-panel" style={{ padding: 18 }}>
-            <ViolationHistory
-              events={violations.map((v) => ({
-                id: v.id.toString(),
-                checkName: v.checkName,
-                category: v.category,
-                violationLevel: v.violationLevel,
-                info: v.info,
-                punished: v.punished,
-                occurredAt: v.occurredAt.toISOString(),
-              }))}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
+function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="vb-card" style={{ padding: "10px 14px" }}>
-      <div style={{ fontSize: 11, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 3 }}>{value}</div>
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderTop: "1px solid var(--glass-border)", fontSize: 13 }}>
+      <span style={{ color: "var(--text-dim)" }}>{label}</span>
+      <span style={{ fontWeight: 600 }}>{value}</span>
     </div>
   );
 }

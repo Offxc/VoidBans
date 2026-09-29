@@ -190,7 +190,7 @@ export function PunishmentPanel({
 
   if (mode === "choose") {
     return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 460 }}>
+      <div className="vb-panel" style={{ marginTop: 18, padding: 18, width: "100%" }}>
         <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>{title}</h3>
         <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-dim)" }}>
           How should the reason for this be filled in?
@@ -246,7 +246,7 @@ export function PunishmentPanel({
 
   if (mode === "rule") {
     return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 460 }}>
+      <div className="vb-panel" style={{ marginTop: 18, padding: 18, width: "100%" }}>
         <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title}: which rule(s) were broken?</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 460, overflowY: "auto" }}>
           {[...rulesByCategory.entries()].map(([category, catRules]) => (
@@ -303,7 +303,7 @@ export function PunishmentPanel({
 
   if (mode === "template") {
     return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
+      <div className="vb-panel" style={{ marginTop: 18, padding: 18, width: "100%" }}>
         <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title}: choose a template</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {relevantTemplates.map((t) => (
@@ -321,7 +321,7 @@ export function PunishmentPanel({
   }
 
   return (
-    <form onSubmit={submit} className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
+    <form onSubmit={submit} className="vb-panel" style={{ marginTop: 18, padding: 18, width: "100%" }}>
       <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
         {title}
         {templateId && " — from template"}

@@ -188,9 +188,9 @@ input, button, textarea, select {
 }
 
 .vb-btn-muted {
-  background: var(--glass);
-  color: var(--text-dim);
-  border-color: var(--glass-border-strong);
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.3);
 }
 
 /* ── Inputs ───────────────────────────────────────────────────────────── */
@@ -497,5 +497,74 @@ a.vb-card:hover, button.vb-card:hover {
     margin: 12px 12px 0 !important;
     padding: 10px 12px !important;
     flex-wrap: wrap;
+  }
+}
+
+/* ── Player profile: sticky identity rail + scrolling history ───────── */
+.vb-profile {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.vb-profile-rail {
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 22px 18px;
+  position: sticky;
+  top: 16px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Active punishment gets a visible red glow on the whole rail, not just a
+   small pill buried in a badge row — the one thing staff must not miss. */
+.vb-profile-rail-flagged {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3), 0 0 40px rgba(248, 113, 113, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.vb-profile-stats {
+  margin-top: 16px;
+  padding-top: 4px;
+}
+
+.vb-profile-main {
+  min-width: 0;
+}
+
+/* Punishment rows: a colored left border carries status at a glance —
+   red while active, dim once it's over — instead of a plain table row
+   staff have to read to tell apart. */
+.vb-punishment-row {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.vb-punishment-row[data-status="active"] {
+  border-left-color: var(--danger);
+}
+
+.vb-punishment-row[data-status="inactive"] {
+  opacity: 0.7;
+}
+
+@media (max-width: 860px) {
+  .vb-profile {
+    display: block;
+  }
+
+  .vb-profile-rail {
+    position: static;
+    margin-bottom: 20px;
   }
 }
