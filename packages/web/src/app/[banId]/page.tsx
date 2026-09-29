@@ -11,7 +11,10 @@ export default async function BanPage({ params }: { params: { banId: string } })
 
   const punishment = await prisma.punishment.findUnique({
     where: { publicBanId: banId },
-    include: { appeal: true },
+    include: {
+      appeal: true,
+      ruleLinks: { include: { rule: { select: { code: true, title: true, description: true } } } },
+    },
   });
 
   if (!punishment) notFound();
@@ -38,6 +41,26 @@ export default async function BanPage({ params }: { params: { banId: string } })
             {new Date(punishment.issuedAt).toLocaleString()}
           </dd>
         </dl>
+
+        {punishment.ruleLinks.length > 0 && (
+          <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--glass-border)" }}>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 10 }}>
+              Rule{punishment.ruleLinks.length > 1 ? "s" : ""} broken
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {punishment.ruleLinks.map(({ rule }) => (
+                <div key={rule.code}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>
+                    {rule.code} — {rule.title}
+                  </div>
+                  {rule.description && (
+                    <div style={{ fontSize: 13.5, color: "var(--text-dim)", marginTop: 2 }}>{rule.description}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {punishment.appealable && (
