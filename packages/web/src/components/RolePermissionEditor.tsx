@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface DiscordRole {
@@ -29,6 +29,7 @@ export function RolePermissionEditor({
   const [selectedDiscordRoleId, setSelectedDiscordRoleId] = useState("");
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/staff/settings/discord-roles")
@@ -45,6 +46,9 @@ export function RolePermissionEditor({
     setSelectedDiscordRoleId(discordRoleId);
     const existing = roles.find((r) => r.discordRoleId === discordRoleId);
     setChecked(new Set(existing?.permissions ?? []));
+    // Clicking "Edit" on a row further down the already-mapped-roles
+    // table otherwise leaves the checkbox editor off-screen above it.
+    requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   function toggle(key: string) {
@@ -113,7 +117,7 @@ export function RolePermissionEditor({
       )}
 
       {selectedDiscordRoleId && (
-        <div>
+        <div ref={editorRef}>
           <div
             className="vb-panel"
             style={{
@@ -141,6 +145,7 @@ export function RolePermissionEditor({
           <tr>
             <th>Role</th>
             <th>Permissions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -148,8 +153,24 @@ export function RolePermissionEditor({
             <tr key={r.id}>
               <td>{r.displayName}</td>
               <td style={{ color: "var(--text-dim)" }}>{r.permissions.join(", ") || "none"}</td>
+              <td>
+                <button
+                  onClick={() => selectRole(r.discordRoleId)}
+                  className="vb-btn vb-btn-quiet"
+                  style={{ fontSize: 12, padding: "3px 10px" }}
+                >
+                  Edit
+                </button>
+              </td>
             </tr>
           ))}
+          {roles.length === 0 && (
+            <tr>
+              <td colSpan={3} style={{ color: "var(--text-dim)" }}>
+                No roles mapped yet — select one above to grant it permissions.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

@@ -71,7 +71,6 @@ export function PunishmentPanel({
   const [ipBan, setIpBan] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [expandedRuleId, setExpandedRuleId] = useState<string | null>(null);
 
   const rulesByCategory = rules.reduce<Map<string, Rule[]>>((map, r) => {
     const list = map.get(r.categoryName) ?? [];
@@ -197,9 +196,12 @@ export function PunishmentPanel({
 
   if (mode === "choose") {
     return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 14px", fontSize: 15 }}>{title}</h3>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 460 }}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15 }}>{title}</h3>
+        <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-dim)" }}>
+          How should the reason for this be filled in?
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {rulesEnabled && (
             <button
               onClick={() => {
@@ -207,85 +209,88 @@ export function PunishmentPanel({
                 setMode("rule");
               }}
               disabled={rules.length === 0}
-              className="vb-btn vb-btn-primary"
+              className="vb-card"
+              style={{ textAlign: "left", color: "inherit", cursor: rules.length === 0 ? "not-allowed" : "pointer", opacity: rules.length === 0 ? 0.5 : 1 }}
               title={rules.length === 0 ? "No rules set up yet" : undefined}
             >
-              Use rule(s)
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: 13.5 }}>Pick from the rulebook</span>
+                <span className="vb-pill vb-pill-neutral" style={{ fontSize: 10.5 }}>Recommended</span>
+              </div>
+              <div style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 3 }}>
+                Select one or more rules the player broke — the reason is filled in for you.
+              </div>
             </button>
           )}
           {templatesEnabled && (
             <button
               onClick={() => setMode("template")}
               disabled={relevantTemplates.length === 0}
-              className="vb-btn vb-btn-primary"
+              className="vb-card"
+              style={{ textAlign: "left", color: "inherit", cursor: relevantTemplates.length === 0 ? "not-allowed" : "pointer", opacity: relevantTemplates.length === 0 ? 0.5 : 1 }}
               title={relevantTemplates.length === 0 ? "No templates for this action type yet" : undefined}
             >
-              Use a template
+              <div style={{ fontWeight: 600, fontSize: 13.5 }}>Use a saved template</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 3 }}>
+                Pick a preset reason and duration staff have saved for this action.
+              </div>
             </button>
           )}
-          <button onClick={startManual} className="vb-btn vb-btn-ghost">
-            Manual entry
-          </button>
-          <button onClick={closePanel} className="vb-btn vb-btn-quiet">
-            Cancel
+          <button onClick={startManual} className="vb-card" style={{ textAlign: "left", color: "inherit" }}>
+            <div style={{ fontWeight: 600, fontSize: 13.5 }}>Write it manually</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 3 }}>
+              Type your own reason and set the duration yourself.
+            </div>
           </button>
         </div>
+        <button onClick={closePanel} className="vb-btn vb-btn-quiet" style={{ marginTop: 12 }}>
+          Cancel
+        </button>
       </div>
     );
   }
 
   if (mode === "rule") {
     return (
-      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
+      <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 460 }}>
         <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title} — which rule(s) were broken?</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 420, overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 460, overflowY: "auto" }}>
           {[...rulesByCategory.entries()].map(([category, catRules]) => (
             <div key={category}>
               <div style={{ fontSize: 12, color: "var(--text-dim)", marginBottom: 6, fontWeight: 600 }}>{category}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {catRules.map((r) => {
-                  const expanded = expandedRuleId === r.id;
-                  return (
-                    <div key={r.id} className="vb-card" style={{ padding: 10 }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, flex: 1, cursor: "pointer", minWidth: 0 }}>
-                          <input
-                            type="checkbox"
-                            checked={ruleIds.includes(r.id)}
-                            onChange={() => toggleRule(r.id)}
-                            style={{ marginTop: 3, flexShrink: 0, width: 18, height: 18 }}
-                          />
-                          <span style={{ fontWeight: 600, fontSize: 13 }}>
-                            {r.code} — {r.title}
-                          </span>
-                        </label>
-                        {r.description && (
-                          <button
-                            type="button"
-                            onClick={() => setExpandedRuleId(expanded ? null : r.id)}
-                            className="vb-btn vb-btn-quiet"
-                            style={{ fontSize: 11, padding: "4px 8px", flexShrink: 0 }}
-                          >
-                            {expanded ? "Hide" : "Details"}
-                          </button>
-                        )}
-                      </div>
-                      {expanded && r.description && (
-                        <p
+                {catRules.map((r) => (
+                  <label
+                    key={r.id}
+                    className="vb-card"
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 10, cursor: "pointer" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={ruleIds.includes(r.id)}
+                      onChange={() => toggleRule(r.id)}
+                      style={{ marginTop: 3, flexShrink: 0, width: 18, height: 18 }}
+                    />
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13 }}>
+                        {r.code} — {r.title}
+                      </span>
+                      {r.description && (
+                        <span
                           style={{
+                            display: "block",
                             fontSize: 12.5,
                             color: "var(--text-dim)",
-                            margin: "8px 0 0",
-                            paddingLeft: 28,
+                            marginTop: 3,
                             whiteSpace: "pre-wrap",
                           }}
                         >
                           {r.description}
-                        </p>
+                        </span>
                       )}
-                    </div>
-                  );
-                })}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
           ))}
