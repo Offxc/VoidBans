@@ -172,7 +172,7 @@ export function PunishmentPanel({
 
   if (!active) {
     return (
-      <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
         {ACTIONS.map((action) => {
           const Icon = action.icon;
           return (
@@ -180,7 +180,7 @@ export function PunishmentPanel({
               key={action.key}
               onClick={() => openAction(action)}
               className={`vb-btn ${action.buttonClass}`}
-              style={{ justifyContent: "center", width: "100%" }}
+              style={{ justifyContent: "flex-start", width: "100%" }}
             >
               <Icon size={15} />
               {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
