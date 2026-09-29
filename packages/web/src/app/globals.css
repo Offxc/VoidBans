@@ -528,6 +528,22 @@ a.vb-card:hover, button.vb-card:hover {
   box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3), 0 0 40px rgba(248, 113, 113, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.vb-profile-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.vb-profile-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 .vb-profile-stats {
   margin-top: 16px;
   padding-top: 4px;
@@ -566,5 +582,42 @@ a.vb-card:hover, button.vb-card:hover {
   .vb-profile-rail {
     position: static;
     margin-bottom: 20px;
+    padding: 18px;
+  }
+
+  /* The rail is full page-width here, not a narrow sidebar column, so
+     stop pretending it's one: avatar and name sit side by side instead
+     of stacked and centered, which is what made the card read as
+     mostly-empty space around a small centered block. */
+  .vb-profile-identity {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: 14px;
+  }
+
+  .vb-profile-identity-text {
+    min-width: 0;
+  }
+
+  .vb-profile-badges {
+    justify-content: flex-start;
+  }
+
+  .vb-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px 20px;
+  }
+
+  /* Stack label over value instead of side by side — a label plus a
+     longer value (e.g. a full date) doesn't fit gracefully split across
+     half of an already-narrow column. */
+  .vb-profile-stats > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    border-top: none;
+    padding: 0;
   }
 }

@@ -118,36 +118,36 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
           lose sight of who they're looking at or their current status
           while reading through punishment history. */}
       <aside className={`vb-profile-rail ${activePunishment ? "vb-profile-rail-flagged" : ""}`}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
+        <div className="vb-profile-identity">
           <PlayerHead uuid={player.uuid} size={72} />
-          <div>
+          <div className="vb-profile-identity-text">
             <h1 style={{ fontSize: 19, margin: 0 }}>{player.username}</h1>
             <div style={{ fontSize: 11.5, color: "var(--text-faint)", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>
               {player.uuid}
             </div>
-          </div>
-          {usernameHistory.length > 0 && (
-            <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
-              Formerly: {usernameHistory.map((h) => h.username).join(", ")}
+            {usernameHistory.length > 0 && (
+              <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 4 }}>
+                Formerly: {usernameHistory.map((h) => h.username).join(", ")}
+              </div>
+            )}
+            <div className="vb-profile-badges">
+              {activePunishment && (
+                <span className="vb-pill vb-pill-danger">Active {activePunishment.type.toLowerCase()}</span>
+              )}
+              {targetStaffUser && <span className="vb-pill">Staff</span>}
+              {!player.hasJoined ? (
+                <span className="vb-pill vb-pill-warn">Never joined</span>
+              ) : (
+                <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
+                  {player.isOnline ? "Online" : "Offline"}
+                </span>
+              )}
             </div>
-          )}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
-            {activePunishment && (
-              <span className="vb-pill vb-pill-danger">Active {activePunishment.type.toLowerCase()}</span>
-            )}
-            {targetStaffUser && <span className="vb-pill">Staff</span>}
-            {!player.hasJoined ? (
-              <span className="vb-pill vb-pill-warn">Never joined</span>
-            ) : (
-              <span className={`vb-pill ${player.isOnline ? "vb-pill-success" : "vb-pill-neutral"}`}>
-                {player.isOnline ? "Online" : "Offline"}
-              </span>
-            )}
           </div>
         </div>
 
         {!player.hasJoined && (
-          <p style={{ color: "var(--text-dim)", fontSize: 12.5, margin: "14px 0 0", textAlign: "center" }}>
+          <p style={{ color: "var(--text-dim)", fontSize: 12.5, margin: "14px 0 0" }}>
             Pre-created by staff. Hasn&apos;t connected yet. Any punishment takes effect on first join.
           </p>
         )}

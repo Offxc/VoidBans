@@ -172,11 +172,16 @@ export function PunishmentPanel({
 
   if (!active) {
     return (
-      <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {ACTIONS.map((action) => {
           const Icon = action.icon;
           return (
-            <button key={action.key} onClick={() => openAction(action)} className={`vb-btn ${action.buttonClass}`}>
+            <button
+              key={action.key}
+              onClick={() => openAction(action)}
+              className={`vb-btn ${action.buttonClass}`}
+              style={{ justifyContent: "center", width: "100%" }}
+            >
               <Icon size={15} />
               {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
             </button>
