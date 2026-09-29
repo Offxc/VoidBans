@@ -140,6 +140,7 @@ export function RolePermissionEditor({
         </div>
       )}
 
+      <div style={{ overflowX: "auto" }}>
       <table className="vb-table">
         <thead>
           <tr>
@@ -173,6 +174,7 @@ export function RolePermissionEditor({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

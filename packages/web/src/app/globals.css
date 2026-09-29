@@ -432,3 +432,70 @@ a.vb-card:hover, button.vb-card:hover {
   max-width: 100%;
   border-radius: var(--radius-sm);
 }
+
+/* ── Responsive dashboard shell ──────────────────────────────────────── */
+/* Below this width the sidebar nav is a slide-in drawer instead of a
+   permanent 216px column — on a phone that column alone was eating over
+   half the screen, permanently, on every dashboard page. */
+.vb-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.vb-nav-toggle {
+  display: none;
+}
+
+.vb-nav-backdrop {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .vb-shell {
+    display: block;
+  }
+
+  .vb-nav-toggle {
+    display: inline-flex;
+  }
+
+  /* !important throughout: StaffNav sets width/margin/position/top as
+     inline styles for the desktop layout, which otherwise always beat a
+     stylesheet rule regardless of specificity. */
+  .vb-nav {
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    top: 0 !important;
+    z-index: 50;
+    width: min(78vw, 280px) !important;
+    margin: 0 !important;
+    border-radius: 0;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    overflow-y: auto;
+  }
+
+  .vb-nav[data-open="true"] {
+    transform: translateX(0);
+  }
+
+  .vb-nav-backdrop[data-open="true"] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .vb-main {
+    max-width: 100% !important;
+    padding: 16px 14px 32px !important;
+  }
+
+  .vb-header {
+    margin: 12px 12px 0 !important;
+    padding: 10px 12px !important;
+    flex-wrap: wrap;
+  }
+}

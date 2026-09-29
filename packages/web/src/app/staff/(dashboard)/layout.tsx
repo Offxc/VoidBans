@@ -52,7 +52,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
   ].filter((item) => item.show);
 
   return (
-    <div style={{ display: "flex", minHeight: "100dvh" }}>
+    <div className="vb-shell">
       <StaffNav items={nav} iconUrl={iconUrl} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <StaffHeader
@@ -62,7 +62,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
           isOwner={principal.isOwner}
           needsMinecraftLink={!staffUser?.minecraftUuid}
         />
-        <main style={{ flex: 1, padding: "24px 32px 40px", maxWidth: 1100 }}>{children}</main>
+        <main className="vb-main" style={{ flex: 1, padding: "24px 32px 40px", maxWidth: 1100 }}>{children}</main>
       </div>
     </div>
   );

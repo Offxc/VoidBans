@@ -16,10 +16,9 @@ export function StaffHeader({
 }) {
   return (
     <header
-      className="vb-panel"
+      className="vb-panel vb-header"
       style={{
         display: "flex",
-        justifyContent: "flex-end",
         alignItems: "center",
         gap: 12,
         padding: "10px 18px",
@@ -32,9 +31,9 @@ export function StaffHeader({
         alt=""
         width={32}
         height={32}
-        style={{ borderRadius: "50%", boxShadow: "0 0 0 2px var(--glass-border-strong)" }}
+        style={{ borderRadius: "50%", boxShadow: "0 0 0 2px var(--glass-border-strong)", flexShrink: 0 }}
       />
-      <div style={{ fontSize: 13.5, lineHeight: 1.3 }}>
+      <div style={{ fontSize: 13.5, lineHeight: 1.3, marginRight: "auto" }}>
         <div style={{ fontWeight: 600 }}>{username}</div>
         {isOwner && <div style={{ fontSize: 11, color: "var(--accent-2)" }}>Owner</div>}
       </div>
@@ -44,7 +43,7 @@ export function StaffHeader({
         </Link>
       )}
       <form action="/api/auth/logout" method="post">
-        <button type="submit" className="vb-btn vb-btn-ghost" style={{ marginLeft: 8, padding: "6px 12px", fontSize: 12.5 }}>
+        <button type="submit" className="vb-btn vb-btn-ghost" style={{ padding: "6px 12px", fontSize: 12.5, flexShrink: 0 }}>
           Log out
         </button>
       </form>
