@@ -119,19 +119,13 @@ export function PunishmentPanel({
 
   function applyRules() {
     const selected = rules.filter((r) => ruleIds.includes(r.id));
-    const byCategory = new Map<string, Rule[]>();
-    for (const r of selected) {
-      const list = byCategory.get(r.categoryName) ?? [];
-      list.push(r);
-      byCategory.set(r.categoryName, list);
-    }
-    // Category prefix so the category shows up in the kick/mute screen,
-    // not just the dashboard — e.g. "Chat Rules — C1: Harassment".
-    const parts = [...byCategory.entries()].map(
-      ([category, catRules]) => `${category} — ${catRules.map((r) => `${r.code}: ${r.title}`).join(", ")}`,
-    );
+    // Reads like something a staff member would actually type, not a
+    // generated log line — no category grouping or nested punctuation
+    // baked in here, since the full rule text (with category) is already
+    // shown separately on the ban ID page. Stays short and flat no
+    // matter how many rules are picked: "Harassment (C1), Spam (C2)".
     setTemplateId("");
-    setReason(selected.length === 1 ? `Violation of ${parts[0]}` : `Violation of rules — ${parts.join("; ")}`);
+    setReason(selected.map((r) => `${r.title} (${r.code})`).join(", "));
     setMode("manual");
   }
 
@@ -218,7 +212,7 @@ export function PunishmentPanel({
                 <span className="vb-pill vb-pill-neutral" style={{ fontSize: 10.5 }}>Recommended</span>
               </div>
               <div style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 3 }}>
-                Select one or more rules the player broke — the reason is filled in for you.
+                Select one or more rules the player broke, and the reason is filled in for you.
               </div>
             </button>
           )}
@@ -253,7 +247,7 @@ export function PunishmentPanel({
   if (mode === "rule") {
     return (
       <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 460 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title} — which rule(s) were broken?</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title}: which rule(s) were broken?</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 460, overflowY: "auto" }}>
           {[...rulesByCategory.entries()].map(([category, catRules]) => (
             <div key={category}>
@@ -310,7 +304,7 @@ export function PunishmentPanel({
   if (mode === "template") {
     return (
       <div className="vb-panel" style={{ marginTop: 18, padding: 18, maxWidth: 420 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title} — choose a template</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{title}: choose a template</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {relevantTemplates.map((t) => (
             <button key={t.id} onClick={() => pickTemplate(t)} className="vb-card" style={{ textAlign: "left", color: "inherit" }}>
