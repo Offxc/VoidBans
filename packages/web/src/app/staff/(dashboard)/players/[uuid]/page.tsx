@@ -7,9 +7,10 @@ import { getPunishmentModes } from "@/lib/punishment-modes";
 import { PlayerHead } from "@/components/PlayerHead";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentPanel } from "@/components/PunishmentPanel";
+import { PunishmentStatus } from "@/components/PunishmentStatus";
+import { RevokeButton } from "@/components/RevokeButton";
 import { PlayerNotes } from "@/components/PlayerNotes";
 import { PlayerAttachments } from "@/components/PlayerAttachments";
-import { ActivityTimeline, type ActivityEvent } from "@/components/ActivityTimeline";
 import { ViolationHistory } from "@/components/ViolationHistory";
 
 export default async function PlayerProfilePage({ params }: { params: { uuid: string } }) {
@@ -34,6 +35,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const canViewViolations = hasPermission(principal, "players.view_violations");
   const canIssue = hasPermission(principal, "bans.issue");
   const canRequest = hasPermission(principal, "bans.request");
+  const canRevoke = hasPermission(principal, "bans.revoke");
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const vulcanEnabled = await isVulcanIntegrationEnabled();
@@ -107,30 +109,14 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
     ? new Set(sessions.map((s) => s.ipAddress).filter((ip): ip is string => !!ip)).size
     : null;
 
-  const timeline: ActivityEvent[] = [
-    ...punishments.map((p) => ({
-      id: `punishment-${p.id}`,
-      at: p.issuedAt.toISOString(),
-      kind: "punishment" as const,
-      summary: `${p.type}${p.ipBanned ? " + IP ban" : ""} — ${p.reason}`,
-      detail: `${p.publicBanId} · ${punishmentStatusText(p.active, p.expiresAt)}${p.staffUsername ? ` · by ${p.staffUsername}` : ""}`,
-    })),
-    ...punishments
-      .filter((p) => p.appeal)
-      .map((p) => ({
-        id: `appeal-${p.appeal!.id}`,
-        at: p.appeal!.submittedAt.toISOString(),
-        kind: "appeal" as const,
-        summary: `Appeal submitted for ${p.publicBanId}`,
-        detail: `Status: ${p.appeal!.status}`,
-      })),
-  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const activePunishment = punishments.find((p) => p.active && (!p.expiresAt || p.expiresAt.getTime() > Date.now()));
 
   return (
     <div>
-      <div className="vb-panel-strong" style={{ padding: 22, display: "flex", alignItems: "center", gap: 16 }}>
+      {/* Identity — avatar, name, and every risk signal staff need before scrolling */}
+      <div className="vb-panel-strong" style={{ padding: 22, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <PlayerHead uuid={player.uuid} size={56} />
-        <div>
+        <div style={{ minWidth: 0 }}>
           <h1 style={{ fontSize: 21, margin: 0 }}>{player.username}</h1>
           <div style={{ fontSize: 12.5, color: "var(--text-faint)", fontFamily: "ui-monospace, monospace" }}>
             {player.uuid}
@@ -141,7 +127,10 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
             </div>
           )}
         </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {activePunishment && (
+            <span className="vb-pill vb-pill-danger">Active {activePunishment.type.toLowerCase()}</span>
+          )}
           {targetStaffUser && <span className="vb-pill">Staff</span>}
           {!player.hasJoined ? (
             <span className="vb-pill vb-pill-warn">Never joined</span>
@@ -154,37 +143,34 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
       </div>
 
       {!player.hasJoined && (
-        <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 10 }}>
-          This profile was pre-created by staff — {player.username} hasn&apos;t actually connected to the server
+        <p style={{ color: "var(--text-dim)", fontSize: 13, margin: "10px 0 0" }}>
+          This profile was pre-created by staff. {player.username} hasn&apos;t actually connected to the server
           yet. Any punishment issued here takes effect the moment they first join.
         </p>
       )}
 
-      <div className="vb-panel" style={{ padding: 18, marginTop: 14 }}>
-        <dl style={{ display: "grid", gridTemplateColumns: "180px 1fr", rowGap: 10, fontSize: 14, margin: 0 }}>
-          {player.hasJoined && (
-            <>
-              <dt style={{ color: "var(--text-dim)" }}>First joined</dt>
-              <dd style={{ margin: 0 }}><LocalTime iso={player.firstJoined.toISOString()} /></dd>
-            </>
-          )}
-          {canViewSessions && (
-            <>
-              <dt style={{ color: "var(--text-dim)" }}>Playtime (last 30 days)</dt>
-              <dd style={{ margin: 0 }}>{formatDuration(last30DaysPlaytimeSeconds)}</dd>
-              <dt style={{ color: "var(--text-dim)" }}>Sessions (last 30 days)</dt>
-              <dd style={{ margin: 0 }}>{last30DaysSessionCount}</dd>
-            </>
-          )}
-          {canViewIp && uniqueIpCount !== null && (
-            <>
-              <dt style={{ color: "var(--text-dim)" }}>Distinct IPs (recent sessions)</dt>
-              <dd style={{ margin: 0 }}>{uniqueIpCount}</dd>
-            </>
-          )}
-        </dl>
+      {/* Stat strip — compact tiles, not a vertical key:value list */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          gap: 10,
+          marginTop: 14,
+        }}
+      >
+        {player.hasJoined && (
+          <StatTile label="First joined" value={<LocalTime iso={player.firstJoined.toISOString()} />} />
+        )}
+        {canViewSessions && (
+          <>
+            <StatTile label="Playtime (30d)" value={formatDuration(last30DaysPlaytimeSeconds)} />
+            <StatTile label="Sessions (30d)" value={String(last30DaysSessionCount)} />
+          </>
+        )}
+        {canViewIp && uniqueIpCount !== null && <StatTile label="Distinct IPs" value={String(uniqueIpCount)} />}
       </div>
 
+      {/* Punish action bar */}
       {(canIssue || canRequest) && !canPunishThisPlayer && (
         <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 18 }}>
           {targetStaffUser?.username} is a staff member and can&apos;t be punished from here.
@@ -215,10 +201,60 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         />
       )}
 
+      {/* Punishments — the primary reason staff land on this page, so it's
+          its own table (not folded into a generic activity feed) right
+          after the action to take one. */}
       <div className="vb-section">
-        <div className="vb-section-label">Activity</div>
-        <div className="vb-panel" style={{ padding: "4px 18px" }}>
-          <ActivityTimeline events={timeline} />
+        <div className="vb-section-label">Punishments ({punishments.length})</div>
+        <div className="vb-panel" style={{ overflowX: "auto" }}>
+          {punishments.length === 0 ? (
+            <p style={{ color: "var(--text-dim)", fontSize: 14, padding: 18, margin: 0 }}>No punishments on record.</p>
+          ) : (
+            <table className="vb-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Reason</th>
+                  <th>Issued</th>
+                  <th>Staff</th>
+                  <th>Status</th>
+                  {canRevoke && <th></th>}
+                </tr>
+              </thead>
+              <tbody>
+                {punishments.map((p) => (
+                  <tr key={p.id.toString()}>
+                    <td>
+                      <a href={`/${p.publicBanId}`} className="vb-pill" style={{ textDecoration: "none" }}>
+                        {p.publicBanId}
+                      </a>
+                    </td>
+                    <td>
+                      {p.type}
+                      {p.ipBanned && <span style={{ color: "var(--text-dim)" }}> +IP</span>}
+                    </td>
+                    <td style={{ maxWidth: 320 }}>
+                      {p.reason}
+                      {p.appeal && (
+                        <div style={{ fontSize: 11.5, color: "var(--text-dim)", marginTop: 3 }}>
+                          Appeal: {p.appeal.status.toLowerCase()}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <LocalTime iso={p.issuedAt.toISOString()} />
+                    </td>
+                    <td style={{ color: "var(--text-dim)" }}>{p.staffUsername ?? "—"}</td>
+                    <td>
+                      <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
+                    </td>
+                    {canRevoke && <td>{p.active && <RevokeButton punishmentId={p.id.toString()} />}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -316,11 +352,15 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   );
 }
 
-function punishmentStatusText(active: boolean, expiresAt: Date | null): string {
-  if (!active) return "Inactive";
-  if (!expiresAt) return "Active · Permanent";
-  if (expiresAt.getTime() <= Date.now()) return "Expired";
-  return `Active until ${expiresAt.toLocaleString()}`;
+function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="vb-card" style={{ padding: "10px 14px" }}>
+      <div style={{ fontSize: 11, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 3 }}>{value}</div>
+    </div>
+  );
 }
 
 function formatDuration(totalSeconds: number): string {
