@@ -1,36 +1,43 @@
 :root {
-  /* Base surfaces — deep purple-black, not neutral grey */
-  --bg: #0a0714;
-  --bg-elevated: #0e0a1c;
+  /* Surfaces: deep purple-black, stepped up in small increments */
+  --bg: #0c0a14;
+  --bg-sidebar: #0f0c18;
+  --surface: #14111e;
+  --surface-2: #1b1727;
+  --surface-3: #231e33;
+  --border: #262036;
+  --border-strong: #372f4c;
 
-  /* Glass panel: semi-transparent purple, always paired with backdrop-blur */
-  --glass: rgba(35, 22, 62, 0.46);
-  --glass-strong: rgba(42, 27, 74, 0.62);
-  --glass-border: rgba(168, 130, 255, 0.16);
-  --glass-border-strong: rgba(168, 130, 255, 0.3);
+  --text: #eeebf6;
+  --text-dim: #a39db8;
+  --text-faint: #6d6785;
 
-  /* Solid fallback surface for things blur would hurt (dropdown menus, inputs) */
-  --surface-solid: #150f28;
+  --accent: #8b5cf6;
+  --accent-hover: #9b72f7;
+  --accent-text: #c4b5fd;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+  --accent-ring: 0 0 0 3px rgba(139, 92, 246, 0.28);
 
-  --text: #ede9f7;
-  --text-dim: #9a90b8;
-  --text-faint: #6b6389;
-
-  --accent: #a855f7;
-  --accent-2: #c084fc;
-  --accent-soft: rgba(168, 85, 247, 0.14);
-  --accent-glow: 0 0 0 1px rgba(168, 85, 247, 0.4), 0 0 24px rgba(168, 85, 247, 0.25);
-  --accent-glow-lg: 0 0 0 1px rgba(168, 85, 247, 0.45), 0 0 48px rgba(168, 85, 247, 0.35);
-
-  --success: #4ade80;
-  --success-soft: rgba(74, 222, 128, 0.14);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.12);
   --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.14);
+  --warn-soft: rgba(251, 191, 36, 0.12);
   --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.14);
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #7dd3fc;
+  --info-soft: rgba(56, 189, 248, 0.12);
 
-  --radius: 14px;
-  --radius-sm: 9px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  /* Legacy aliases still referenced inline by components */
+  --glass: var(--surface);
+  --glass-strong: var(--surface-2);
+  --glass-border: var(--border);
+  --glass-border-strong: var(--border-strong);
+  --surface-solid: var(--surface-2);
+  --accent-2: var(--accent-text);
 
   color-scheme: dark;
 }
@@ -46,22 +53,22 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(168, 85, 247, 0.16), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 20%, rgba(96, 52, 200, 0.14), transparent 55%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
   font-family: var(--font-sora), var(--font-inter), sans-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 a {
-  color: var(--accent-2);
+  color: var(--accent-text);
 }
 
 input, button, textarea, select {
@@ -72,92 +79,127 @@ input, button, textarea, select {
   background: var(--accent-soft);
 }
 
-/* ── Glass panel: the core "section" building block ─────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ── Surfaces ─────────────────────────────────────────────────────────── */
 .vb-panel {
-  background: var(--glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .vb-panel-strong {
-  background: var(--glass-strong);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  box-shadow: var(--accent-glow), 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow);
 }
 
-/* A page section: label + panel, with consistent breathing room so
-   sections are visually distinct from each other, not just stacked text. */
+.vb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+a.vb-card:hover,
+button.vb-card:hover:not(:disabled),
+label.vb-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
 .vb-section {
-  margin-block: 28px;
+  margin-block: 32px;
 }
 
 .vb-section-label {
-  font-family: "Sora", sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-faint);
   margin: 0 0 10px 2px;
 }
 
-.vb-divider {
-  height: 1px;
-  background: linear-gradient(90deg, var(--glass-border), transparent);
-  margin-block: 28px;
-  border: none;
+/* ── Page header (staff pages) ───────────────────────────────────────── */
+.vb-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vb-page-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.vb-page-meta {
+  color: var(--text-dim);
+  font-size: 13.5px;
+  margin: 4px 0 0;
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
 .vb-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 10px;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   font-weight: 600;
   font-size: 13.5px;
-  font-family: inherit;
+  line-height: 1.2;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-}
-
-.vb-btn:active {
-  transform: scale(0.98);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .vb-btn:disabled {
   opacity: 0.5;
   cursor: default;
-  transform: none;
 }
 
 .vb-btn-primary {
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  background: var(--accent);
   color: #fff;
-  box-shadow: var(--accent-glow);
 }
 
 .vb-btn-primary:hover:not(:disabled) {
-  box-shadow: var(--accent-glow-lg);
+  background: var(--accent-hover);
 }
 
 .vb-btn-ghost {
-  background: transparent;
-  border-color: var(--glass-border);
+  background: var(--surface-2);
+  border-color: var(--border);
   color: var(--text);
 }
 
 .vb-btn-ghost:hover:not(:disabled) {
-  border-color: var(--glass-border-strong);
-  background: var(--accent-soft);
+  background: var(--surface-3);
+  border-color: var(--border-strong);
 }
 
 .vb-btn-quiet {
@@ -167,30 +209,47 @@ input, button, textarea, select {
 
 .vb-btn-quiet:hover:not(:disabled) {
   color: var(--text);
+  background: var(--surface-2);
 }
 
 .vb-btn-danger {
   background: var(--danger-soft);
   color: var(--danger);
-  border-color: rgba(248, 113, 113, 0.3);
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+.vb-btn-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
 }
 
 .vb-btn-success {
   background: var(--success-soft);
   color: var(--success);
-  border-color: rgba(74, 222, 128, 0.3);
+  border-color: rgba(52, 211, 153, 0.28);
+}
+
+.vb-btn-success:hover:not(:disabled) {
+  background: rgba(52, 211, 153, 0.2);
 }
 
 .vb-btn-warn {
   background: var(--warn-soft);
   color: var(--warn);
-  border-color: rgba(251, 191, 36, 0.3);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.vb-btn-warn:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.2);
 }
 
 .vb-btn-muted {
-  background: rgba(56, 189, 248, 0.14);
-  color: #7dd3fc;
-  border-color: rgba(56, 189, 248, 0.3);
+  background: var(--info-soft);
+  color: var(--info);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.vb-btn-muted:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.2);
 }
 
 /* ── Inputs ───────────────────────────────────────────────────────────── */
@@ -200,249 +259,546 @@ input, button, textarea, select {
   width: 100%;
   padding: 9px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  background: var(--bg);
   color: var(--text);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vb-input::placeholder,
+.vb-textarea::placeholder {
+  color: var(--text-faint);
 }
 
 .vb-input:focus,
 .vb-textarea:focus,
 .vb-select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: var(--accent-ring);
 }
 
 .vb-textarea {
   resize: vertical;
-  font-family: inherit;
 }
 
 .vb-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 12.5px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text-dim);
   margin-bottom: 14px;
 }
 
-/* ── Pills / badges ───────────────────────────────────────────────────── */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+/* ── Pills ────────────────────────────────────────────────────────────── */
 .vb-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: ui-monospace, monospace;
-  font-size: 11.5px;
-  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 9px;
   border-radius: 999px;
   background: var(--accent-soft);
-  color: var(--accent-2);
-  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: var(--accent-text);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  white-space: nowrap;
 }
 
-.vb-pill-success { background: var(--success-soft); color: var(--success); border-color: rgba(74, 222, 128, 0.25); }
-.vb-pill-warn { background: var(--warn-soft); color: var(--warn); border-color: rgba(251, 191, 36, 0.25); }
-.vb-pill-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(248, 113, 113, 0.25); }
-.vb-pill-neutral { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border-color: var(--glass-border); }
+a.vb-pill {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11.5px;
+}
+
+.vb-pill-success { background: var(--success-soft); color: var(--success); border-color: rgba(52, 211, 153, 0.28); }
+.vb-pill-warn { background: var(--warn-soft); color: var(--warn); border-color: rgba(251, 191, 36, 0.28); }
+.vb-pill-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(248, 113, 113, 0.28); }
+.vb-pill-neutral { background: var(--surface-2); color: var(--text-dim); border-color: var(--border); }
 
 /* ── Table ────────────────────────────────────────────────────────────── */
 .vb-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 .vb-table th {
   text-align: left;
   color: var(--text-faint);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--glass-border);
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  white-space: nowrap;
 }
 
 .vb-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(168, 130, 255, 0.08);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.vb-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .vb-table tr:last-child td {
   border-bottom: none;
 }
 
-/* ── Cards in a grid (players, templates) ────────────────────────────── */
-.vb-card {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+@media (max-width: 860px) {
+  .vb-table {
+    min-width: 640px;
+  }
+
+  .vb-table td {
+    white-space: nowrap;
+  }
 }
 
-a.vb-card:hover, button.vb-card:hover {
-  border-color: var(--glass-border-strong);
-  box-shadow: var(--accent-glow);
-  transform: translateY(-1px);
+/* ── Public site chrome ──────────────────────────────────────────────── */
+.vb-site {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 1000px 480px at 50% -120px, rgba(139, 92, 246, 0.16), transparent 70%),
+    var(--bg);
 }
 
-[hidden] {
-  display: none !important;
+.vb-site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px 24px;
 }
 
-/* ── Rendered Markdown (rules page, settings preview) ────────────────── */
-.vb-markdown {
-  font-size: 14.5px;
-  line-height: 1.7;
-}
-
-.vb-markdown > *:first-child {
-  margin-top: 0;
-}
-
-.vb-markdown h1,
-.vb-markdown h2,
-.vb-markdown h3 {
-  font-family: var(--font-sora), var(--font-inter), sans-serif;
+.vb-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--text);
-  text-wrap: balance;
-}
-
-.vb-markdown h1 {
-  font-size: 24px;
-  margin: 32px 0 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.vb-markdown h2 {
-  font-size: 18px;
-  margin: 30px 0 12px;
-  color: var(--accent-2);
-}
-
-.vb-markdown h3 {
-  font-size: 14.5px;
-  margin: 20px 0 8px;
+  text-decoration: none;
+  font-family: var(--font-sora), sans-serif;
   font-weight: 600;
+  font-size: 16px;
 }
 
-.vb-markdown p {
-  margin: 0 0 12px;
+.vb-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.vb-brand-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.vb-site-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vb-site-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.vb-site-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 64px;
+}
+
+.vb-site-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 24px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.vb-site-footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.vb-site-footer a:hover {
   color: var(--text);
 }
 
-.vb-markdown strong {
-  color: var(--text);
-  font-weight: 600;
+/* ── Landing ──────────────────────────────────────────────────────────── */
+.vb-hero {
+  text-align: center;
+  padding: 72px 0 48px;
+  max-width: 680px;
+  margin: 0 auto;
 }
 
-.vb-markdown a {
-  color: var(--accent-2);
-}
-
-.vb-markdown ul,
-.vb-markdown ol {
-  margin: 0 0 14px;
-  padding-left: 22px;
-}
-
-.vb-markdown li {
-  margin-bottom: 5px;
-  color: var(--text);
-}
-
-.vb-markdown li::marker {
-  color: var(--accent);
-}
-
-.vb-markdown li > ul,
-.vb-markdown li > ol {
-  margin-top: 5px;
-  margin-bottom: 0;
-}
-
-.vb-markdown blockquote {
-  margin: 0 0 14px;
-  padding: 10px 16px;
-  border-left: 3px solid var(--accent);
+.vb-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent-text);
   background: var(--accent-soft);
-  border-radius: 0 8px 8px 0;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 20px;
+}
+
+.vb-hero-title {
+  font-size: clamp(32px, 5.5vw, 50px);
+  font-weight: 700;
+  line-height: 1.08;
+  margin: 0 0 16px;
+}
+
+.vb-hero-sub {
+  font-size: 16.5px;
+  color: var(--text-dim);
+  margin: 0 auto 32px;
+  max-width: 520px;
+}
+
+.vb-lookup {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.vb-lookup .vb-input {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 12px 12px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.03em;
+}
+
+.vb-lookup .vb-input:focus {
+  box-shadow: none;
+}
+
+.vb-lookup .vb-btn {
+  padding: 12px 22px;
+  font-size: 15px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vb-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.vb-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.vb-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.vb-step h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.vb-step p {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ── Public content pages (ban, rules, legal) ────────────────────────── */
+.vb-doc {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 32px;
+}
+
+.vb-doc-title {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.vb-doc-meta {
+  color: var(--text-faint);
+  font-size: 13.5px;
+  margin: 0 0 28px;
+}
+
+.vb-prose {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.vb-prose h2 {
+  font-size: 17px;
+  margin: 28px 0 8px;
+}
+
+.vb-prose p,
+.vb-prose ul {
+  margin: 0 0 12px;
   color: var(--text-dim);
 }
 
-.vb-markdown hr {
-  border: none;
-  height: 1px;
-  background: var(--glass-border);
-  margin: 24px 0;
+.vb-prose li {
+  margin-bottom: 6px;
 }
 
-.vb-markdown code {
-  font-family: ui-monospace, monospace;
-  font-size: 0.9em;
-  background: var(--surface-solid);
-  border: 1px solid var(--glass-border);
-  border-radius: 4px;
-  padding: 1px 6px;
+.vb-kv {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  row-gap: 14px;
+  column-gap: 16px;
+  font-size: 14.5px;
+  margin: 0;
 }
 
-.vb-markdown pre {
-  background: var(--surface-solid);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  overflow-x: auto;
-  margin: 0 0 14px;
+.vb-kv dt {
+  color: var(--text-faint);
 }
 
-.vb-markdown pre code {
-  background: none;
-  border: none;
-  padding: 0;
+.vb-kv dd {
+  margin: 0;
 }
 
-.vb-markdown table {
+@media (max-width: 520px) {
+  .vb-kv {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
+  }
+
+  .vb-kv dd {
+    margin-bottom: 10px;
+  }
+}
+
+/* ── Auth pages (staff login, link account) ──────────────────────────── */
+.vb-auth {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 800px 420px at 50% 0%, rgba(139, 92, 246, 0.14), transparent 70%),
+    var(--bg);
+}
+
+.vb-auth-card {
   width: 100%;
-  border-collapse: collapse;
-  margin: 0 0 16px;
-  font-size: 13.5px;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
 }
 
-.vb-markdown th,
-.vb-markdown td {
-  text-align: left;
-  padding: 8px 12px;
-  border: 1px solid var(--glass-border);
+.vb-auth-card h1 {
+  font-size: 21px;
+  margin: 0;
 }
 
-.vb-markdown th {
-  background: var(--accent-soft);
-  color: var(--accent-2);
-  font-weight: 600;
+.vb-discord-btn {
+  width: 100%;
+  justify-content: center;
+  background: #5865f2;
+  color: #fff;
+  padding: 11px 16px;
+  font-size: 14.5px;
 }
 
-.vb-markdown img {
-  max-width: 100%;
-  border-radius: var(--radius-sm);
+.vb-discord-btn:hover {
+  background: #4752c4;
 }
 
-/* ── Responsive dashboard shell ──────────────────────────────────────── */
-/* Below this width the sidebar nav is a slide-in drawer instead of a
-   permanent 216px column — on a phone that column alone was eating over
-   half the screen, permanently, on every dashboard page. */
+/* ── Staff shell ──────────────────────────────────────────────────────── */
 .vb-shell {
   display: flex;
   min-height: 100dvh;
 }
 
-.vb-nav-toggle {
+.vb-nav {
+  width: 244px;
+  flex-shrink: 0;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 18px 12px 14px;
+}
+
+.vb-nav-brand {
+  padding: 2px 8px 20px;
+}
+
+.vb-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.vb-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vb-nav-link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.vb-nav-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.vb-nav-link[aria-current="page"] svg {
+  color: var(--accent-text);
+}
+
+.vb-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 2px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.vb-nav-user img {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.vb-nav-user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vb-nav-user-role {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.vb-shell-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vb-main {
+  width: 100%;
+  max-width: 1160px;
+  padding: 32px 40px 56px;
+}
+
+.vb-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 40px;
+  background: var(--warn-soft);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+  color: var(--warn);
+  font-size: 13.5px;
+}
+
+.vb-banner a {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.vb-topbar {
+  display: none;
+}
+
+.vb-nav-toggle,
+.vb-nav-close {
   display: none;
 }
 
@@ -455,25 +811,30 @@ a.vb-card:hover, button.vb-card:hover {
     display: block;
   }
 
-  .vb-nav-toggle {
+  .vb-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 10px 14px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vb-nav-toggle,
+  .vb-nav-close {
     display: inline-flex;
   }
 
-  /* !important throughout: StaffNav sets width/margin/position/top as
-     inline styles for the desktop layout, which otherwise always beat a
-     stylesheet rule regardless of specificity. */
   .vb-nav {
-    position: fixed !important;
+    position: fixed;
     inset: 0 auto 0 0;
-    top: 0 !important;
     z-index: 50;
-    width: min(78vw, 280px) !important;
-    margin: 0 !important;
-    border-radius: 0;
-    height: 100dvh;
+    width: min(80vw, 280px);
     transform: translateX(-100%);
     transition: transform 0.2s ease;
-    overflow-y: auto;
   }
 
   .vb-nav[data-open="true"] {
@@ -485,47 +846,77 @@ a.vb-card:hover, button.vb-card:hover {
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.6);
   }
 
   .vb-main {
-    max-width: 100% !important;
-    padding: 16px 14px 32px !important;
+    padding: 20px 16px 40px;
   }
 
-  .vb-header {
-    margin: 12px 12px 0 !important;
-    padding: 10px 12px !important;
-    flex-wrap: wrap;
+  .vb-banner {
+    padding: 10px 16px;
+  }
+}
+
+/* ── Settings layout ─────────────────────────────────────────────────── */
+.vb-setting {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--border);
+}
+
+.vb-setting:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.vb-setting-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.vb-setting-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.vb-setting-body {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .vb-setting {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 
 /* ── Player profile: sticky identity rail + scrolling history ───────── */
 .vb-profile {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
   align-items: start;
 }
 
 .vb-profile-rail {
-  background: var(--glass-strong);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border-strong);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   padding: 22px 18px;
   position: sticky;
-  top: 16px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  top: 24px;
 }
 
-/* Active punishment gets a visible red glow on the whole rail, not just a
-   small pill buried in a badge row — the one thing staff must not miss. */
+/* Active punishment tints the whole rail red — the one thing staff must
+   not miss when opening a profile. */
 .vb-profile-rail-flagged {
   border-color: rgba(248, 113, 113, 0.45);
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3), 0 0 40px rgba(248, 113, 113, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.18), 0 0 32px rgba(248, 113, 113, 0.08);
 }
 
 .vb-profile-identity {
@@ -534,6 +925,10 @@ a.vb-card:hover, button.vb-card:hover {
   align-items: center;
   text-align: center;
   gap: 10px;
+}
+
+.vb-profile-identity img {
+  border-radius: 8px !important;
 }
 
 .vb-profile-badges {
@@ -545,23 +940,17 @@ a.vb-card:hover, button.vb-card:hover {
 }
 
 .vb-profile-stats {
-  margin-top: 16px;
-  padding-top: 4px;
+  margin-top: 18px;
 }
 
 .vb-profile-main {
   min-width: 0;
 }
 
-/* Punishment rows: a colored left border carries status at a glance —
-   red while active, dim once it's over — instead of a plain table row
-   staff have to read to tell apart. */
 .vb-punishment-row {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-left: 3px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
 }
@@ -571,7 +960,7 @@ a.vb-card:hover, button.vb-card:hover {
 }
 
 .vb-punishment-row[data-status="inactive"] {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 @media (max-width: 860px) {
@@ -585,10 +974,6 @@ a.vb-card:hover, button.vb-card:hover {
     padding: 18px;
   }
 
-  /* The rail is full page-width here, not a narrow sidebar column, so
-     stop pretending it's one: avatar and name sit side by side instead
-     of stacked and centered, which is what made the card read as
-     mostly-empty space around a small centered block. */
   .vb-profile-identity {
     flex-direction: row;
     align-items: center;
@@ -610,14 +995,11 @@ a.vb-card:hover, button.vb-card:hover {
     gap: 10px 20px;
   }
 
-  /* Stack label over value instead of side by side — a label plus a
-     longer value (e.g. a full date) doesn't fit gracefully split across
-     half of an already-narrow column. */
   .vb-profile-stats > div {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    border-top: none;
-    padding: 0;
+    border-top: none !important;
+    padding: 0 !important;
   }
 }

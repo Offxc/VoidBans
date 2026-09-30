@@ -12,6 +12,7 @@ import { IntegrationsEditor } from "@/components/IntegrationsEditor";
 import { SiteIconEditor } from "@/components/SiteIconEditor";
 import { PunishmentModesEditor } from "@/components/PunishmentModesEditor";
 import { DiscordWebhookEditor } from "@/components/DiscordWebhookEditor";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -34,82 +35,74 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Settings</h1>
+      <PageHeader title="Settings" />
 
-      <div className="vb-section">
-        <div className="vb-section-label">Roles &amp; permissions</div>
-        <div className="vb-panel" style={{ padding: 18 }}>
-          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-            Map a Discord role to what it can see and do on the site. Someone&apos;s effective permissions are
-            the union across every mapped role they currently hold in Discord, re-checked on every login.
-          </p>
-          <RolePermissionEditor
-            allPermissions={PERMISSION_KEYS}
-            roles={roles.map((r) => ({
-              id: r.id.toString(),
-              discordRoleId: r.discordRoleId,
-              displayName: r.displayName,
-              permissions: r.permissions.map((p) => p.permissionKey),
-            }))}
-          />
-        </div>
-      </div>
+      <SettingSection title="Roles & permissions" desc="Map Discord roles to what they can see and do. Re-checked on every login.">
+        <RolePermissionEditor
+          allPermissions={PERMISSION_KEYS}
+          roles={roles.map((r) => ({
+            id: r.id.toString(),
+            discordRoleId: r.discordRoleId,
+            displayName: r.displayName,
+            permissions: r.permissions.map((p) => p.permissionKey),
+          }))}
+        />
+      </SettingSection>
 
-      <div className="vb-section">
-        <div className="vb-section-label">Appeal questions</div>
-        <div className="vb-panel" style={{ padding: 18 }}>
-          <AppealQuestionEditor
-            questions={questions.map((q) => ({
-              id: q.id.toString(),
-              prompt: q.prompt,
-              required: q.required,
-              active: q.active,
-              sortOrder: q.sortOrder,
-            }))}
-          />
-        </div>
-      </div>
+      <SettingSection title="Punishing" desc="Which ways staff can fill in a punishment reason. Manual is always available.">
+        <PunishmentModesEditor
+          templatesEnabled={punishmentModes.templatesEnabled}
+          rulesEnabled={punishmentModes.rulesEnabled}
+        />
+      </SettingSection>
 
-      <div className="vb-section">
-        <div className="vb-section-label">Integrations</div>
-        <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-          Optional third-party plugins the dashboard can pull extra data from. Turning one off hides
-          its UI everywhere without deleting anything already recorded.
-        </p>
+      <SettingSection title="Appeal questions" desc="Shown to players on the appeal form.">
+        <AppealQuestionEditor
+          questions={questions.map((q) => ({
+            id: q.id.toString(),
+            prompt: q.prompt,
+            required: q.required,
+            active: q.active,
+            sortOrder: q.sortOrder,
+          }))}
+        />
+      </SettingSection>
+
+      <SettingSection title="Discord webhook" desc="Post events to a Discord channel. Leave the URL blank to turn it off.">
+        <DiscordWebhookEditor url={webhookConfig.url} events={webhookConfig.events} />
+      </SettingSection>
+
+      <SettingSection title="Integrations" desc="Turning one off hides it everywhere without deleting recorded data." bare>
         <IntegrationsEditor vulcanEnabled={vulcanEnabled} />
-      </div>
+      </SettingSection>
 
-      <div className="vb-section">
-        <div className="vb-section-label">Punishing</div>
-        <div className="vb-panel" style={{ padding: 18 }}>
-          <PunishmentModesEditor
-            templatesEnabled={punishmentModes.templatesEnabled}
-            rulesEnabled={punishmentModes.rulesEnabled}
-          />
-        </div>
-      </div>
-
-      <div className="vb-section">
-        <div className="vb-section-label">Discord webhook</div>
-        <div className="vb-panel" style={{ padding: 18 }}>
-          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-            Post a message to a Discord channel when any of the events below happen. Leave the URL
-            blank to turn this off entirely.
-          </p>
-          <DiscordWebhookEditor url={webhookConfig.url} events={webhookConfig.events} />
-        </div>
-      </div>
-
-      <div className="vb-section">
-        <div className="vb-section-label">Site icon</div>
-        <div className="vb-panel" style={{ padding: 18 }}>
-          <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 0 }}>
-            Direct image link from postimages.org only (right-click the image there → Copy image
-            address). 256×256 preferred. Shown top-left on the homepage and staff dashboard.
-          </p>
-          <SiteIconEditor iconUrl={iconUrl} />
-        </div>
-      </div>
+      <SettingSection title="Site icon" desc="A direct i.postimg.cc image link, 256×256 preferred.">
+        <SiteIconEditor iconUrl={iconUrl} />
+      </SettingSection>
     </div>
+  );
+}
+
+function SettingSection({
+  title,
+  desc,
+  bare,
+  children,
+}: {
+  title: string;
+  desc: string;
+  bare?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="vb-setting">
+      <div>
+        <h2 className="vb-setting-title">{title}</h2>
+        <p className="vb-setting-desc">{desc}</p>
+      </div>
+      <div className="vb-setting-body">
+        {bare ? children : <div className="vb-panel" style={{ padding: 20 }}>{children}</div>}
+      </div>
+    </section>
   );
 }

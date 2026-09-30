@@ -3,6 +3,7 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { TemplateEditor } from "@/components/TemplateEditor";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function TemplatesPage() {
   const principal = await getStaffPrincipal();
@@ -14,7 +15,7 @@ export default async function TemplatesPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Templates</h1>
+      <PageHeader title="Templates" meta={`${templates.length} saved`} />
 
       <TemplateEditor
         canCreate={canCreate}

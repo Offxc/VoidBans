@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { getPunishmentModes } from "@/lib/punishment-modes";
 import { StaffNav } from "@/components/StaffNav";
-import { StaffHeader } from "@/components/StaffHeader";
+import Link from "next/link";
 
 export default async function StaffDashboardLayout({ children }: { children: React.ReactNode }) {
   const principal = await getStaffPrincipal();
@@ -53,16 +53,24 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
 
   return (
     <div className="vb-shell">
-      <StaffNav items={nav} iconUrl={iconUrl} />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <StaffHeader
-          username={principal.username}
-          discordId={principal.discordId}
-          avatarHash={principal.avatarHash}
-          isOwner={principal.isOwner}
-          needsMinecraftLink={!staffUser?.minecraftUuid}
-        />
-        <main className="vb-main" style={{ flex: 1, padding: "24px 32px 40px", maxWidth: 1100 }}>{children}</main>
+      <StaffNav
+        items={nav}
+        iconUrl={iconUrl}
+        user={{
+          username: principal.username,
+          discordId: principal.discordId,
+          avatarHash: principal.avatarHash,
+          isOwner: principal.isOwner,
+        }}
+      />
+      <div className="vb-shell-main">
+        {!staffUser?.minecraftUuid && (
+          <div className="vb-banner">
+            <span>Your Minecraft account isn&apos;t linked yet.</span>
+            <Link href="/staff/link-account">Link it now</Link>
+          </div>
+        )}
+        <main className="vb-main">{children}</main>
       </div>
     </div>
   );

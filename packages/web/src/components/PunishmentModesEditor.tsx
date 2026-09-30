@@ -33,15 +33,12 @@ export function PunishmentModesEditor({
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
         <input type="checkbox" checked={templatesEnabled} onChange={(e) => setTemplatesEnabled(e.target.checked)} />
-        Templates — staff can pick a saved template when punishing
+        Templates
       </label>
       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
         <input type="checkbox" checked={rulesEnabled} onChange={(e) => setRulesEnabled(e.target.checked)} />
-        Rule-based — staff can pick one or more rules (from Rules) when punishing
+        Rule-based (pick from the rulebook)
       </label>
-      <p style={{ color: "var(--text-dim)", fontSize: 12.5, margin: 0 }}>
-        Both can be on at once. Manual entry is always available regardless of these settings.
-      </p>
       <button onClick={save} disabled={saving} className="vb-btn vb-btn-primary" style={{ alignSelf: "flex-start" }}>
         {saving ? "Saving…" : "Save"}
       </button>

@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { isValidBanIdFormat } from "@/lib/ban-id";
 import { AppealPanel } from "@/components/AppealPanel";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
+import { LocalTime } from "@/components/LocalTime";
+import { SiteShell } from "@/components/SiteShell";
+
+export const dynamic = "force-dynamic";
+
+const TYPE_LABEL: Record<string, string> = { BAN: "Ban", MUTE: "Mute", KICK: "Kick", WARN: "Warning" };
 
 export default async function BanPage({ params }: { params: { banId: string } }) {
   const banId = params.banId.toUpperCase();
@@ -19,63 +24,69 @@ export default async function BanPage({ params }: { params: { banId: string } })
 
   if (!punishment) notFound();
 
-  return (
-    <main style={{ maxWidth: 560, margin: "0 auto", padding: "56px 24px" }}>
-      <Link href="/" style={{ fontSize: 13, color: "var(--text-dim)" }}>
-        ← Back
-      </Link>
+  const typeLabel = `${punishment.expiresAt ? "Temporary " : ""}${TYPE_LABEL[punishment.type] ?? punishment.type}`;
 
-      <div className="vb-panel" style={{ padding: 28, marginTop: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <h1 style={{ fontSize: 22, margin: 0 }}>{punishment.type}</h1>
-          <span className="vb-pill">{punishment.publicBanId}</span>
+  return (
+    <SiteShell>
+      <div className="vb-doc">
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+          <span className="vb-pill" style={{ fontFamily: "ui-monospace, monospace" }}>
+            {punishment.publicBanId}
+          </span>
           <PunishmentStatus active={punishment.active} expiresAt={punishment.expiresAt?.toISOString() ?? null} />
         </div>
+        <h1 className="vb-doc-title">{typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1).toLowerCase()}</h1>
+        <p className="vb-doc-meta">
+          Issued <LocalTime iso={punishment.issuedAt.toISOString()} />
+        </p>
 
-        <dl style={{ display: "grid", gridTemplateColumns: "120px 1fr", rowGap: 12, fontSize: 14, marginTop: 24 }}>
-          <dt style={{ color: "var(--text-dim)" }}>Reason</dt>
-          <dd style={{ margin: 0 }}>{punishment.reason}</dd>
-
-          <dt style={{ color: "var(--text-dim)" }}>Issued</dt>
-          <dd style={{ margin: 0 }} suppressHydrationWarning>
-            {new Date(punishment.issuedAt).toLocaleString()}
-          </dd>
-        </dl>
+        <div className="vb-panel" style={{ padding: 24 }}>
+          <dl className="vb-kv">
+            <dt>Reason</dt>
+            <dd>{punishment.reason}</dd>
+            <dt>Ends</dt>
+            <dd>{punishment.expiresAt ? <LocalTime iso={punishment.expiresAt.toISOString()} /> : "Never"}</dd>
+            <dt>Appealable</dt>
+            <dd>{punishment.appealable ? "Yes" : "No"}</dd>
+          </dl>
+        </div>
 
         {punishment.ruleLinks.length > 0 && (
-          <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--glass-border)" }}>
-            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 10 }}>
-              Rule{punishment.ruleLinks.length > 1 ? "s" : ""} broken
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {punishment.ruleLinks.map(({ rule }) => (
-                <div key={rule.code}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>
-                    {rule.code} — {rule.title}
+          <div className="vb-section">
+            <div className="vb-section-label">Rule{punishment.ruleLinks.length > 1 ? "s" : ""} broken</div>
+            <div className="vb-panel">
+              {punishment.ruleLinks.map(({ rule }, i) => (
+                <div
+                  key={rule.code}
+                  style={{ padding: "16px 20px", borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>
+                    <span style={{ color: "var(--accent-text)", marginRight: 8 }}>{rule.code}</span>
+                    {rule.title}
                   </div>
                   {rule.description && (
-                    <div style={{ fontSize: 13.5, color: "var(--text-dim)", marginTop: 2 }}>{rule.description}</div>
+                    <div style={{ fontSize: 14, color: "var(--text-dim)", marginTop: 4 }}>{rule.description}</div>
                   )}
                 </div>
               ))}
             </div>
           </div>
         )}
-      </div>
 
-      {punishment.appealable && (
-        <AppealPanel
-          banId={punishment.publicBanId}
-          existingAppeal={
-            punishment.appeal
-              ? {
-                  status: punishment.appeal.status,
-                  staffResponse: punishment.appeal.staffResponse,
-                }
-              : null
-          }
-        />
-      )}
-    </main>
+        {punishment.appealable && (
+          <div className="vb-section">
+            <div className="vb-section-label">Appeal</div>
+            <AppealPanel
+              banId={punishment.publicBanId}
+              existingAppeal={
+                punishment.appeal
+                  ? { status: punishment.appeal.status, staffResponse: punishment.appeal.staffResponse }
+                  : null
+              }
+            />
+          </div>
+        )}
+      </div>
+    </SiteShell>
   );
 }

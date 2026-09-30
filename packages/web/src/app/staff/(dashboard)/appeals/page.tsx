@@ -3,6 +3,7 @@ import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { AppealResolveCard } from "@/components/AppealResolveCard";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function AppealsPage() {
   const principal = await getStaffPrincipal();
@@ -21,12 +22,9 @@ export default async function AppealsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>Appeals</h1>
-      <p style={{ color: "var(--text-dim)", fontSize: 14, marginTop: 0 }}>
-        {appeals.length} pending.
-      </p>
+      <PageHeader title="Appeals" meta={`${appeals.length} pending`} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {appeals.map((a) => (
           <AppealResolveCard
             key={a.id.toString()}

@@ -15,18 +15,19 @@ export function BanLookupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, width: "100%" }}>
+    <form onSubmit={handleSubmit} className="vb-lookup">
       <input
         id="ban-id-input"
         className="vb-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Enter Ban ID"
+        placeholder="VB-XXXXXXXX"
         aria-label="Ban ID"
-        style={{ padding: "12px 14px", fontSize: 15 }}
+        autoComplete="off"
+        spellCheck={false}
       />
-      <button type="submit" className="vb-btn vb-btn-primary" style={{ padding: "12px 22px", fontSize: 15 }}>
-        View
+      <button type="submit" className="vb-btn vb-btn-primary">
+        Look up
       </button>
     </form>
   );

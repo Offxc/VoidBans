@@ -13,10 +13,10 @@ interface Props {
   existingAppeal: { status: "PENDING" | "ACCEPTED" | "DENIED"; staffResponse: string | null } | null;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Your appeal is pending review.",
-  ACCEPTED: "Your appeal was accepted.",
-  DENIED: "Your appeal was denied.",
+const STATUS: Record<string, { label: string; pill: string }> = {
+  PENDING: { label: "Pending review", pill: "vb-pill-warn" },
+  ACCEPTED: { label: "Accepted", pill: "vb-pill-success" },
+  DENIED: { label: "Denied", pill: "vb-pill-danger" },
 };
 
 export function AppealPanel({ banId, existingAppeal }: Props) {
@@ -28,11 +28,18 @@ export function AppealPanel({ banId, existingAppeal }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   if (existingAppeal) {
+    const status = STATUS[existingAppeal.status]!;
     return (
-      <div className="vb-panel" style={{ marginTop: 24, padding: 20 }}>
-        <strong>{STATUS_LABEL[existingAppeal.status]}</strong>
+      <div className="vb-panel" style={{ padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <strong style={{ fontSize: 14.5 }}>Your appeal</strong>
+          <span className={`vb-pill ${status.pill}`}>{status.label}</span>
+        </div>
         {existingAppeal.staffResponse && (
-          <p style={{ marginTop: 8, color: "var(--text-dim)" }}>{existingAppeal.staffResponse}</p>
+          <p style={{ margin: "12px 0 0", color: "var(--text-dim)", fontSize: 14 }}>
+            <span style={{ color: "var(--text-faint)" }}>Staff response: </span>
+            {existingAppeal.staffResponse}
+          </p>
         )}
       </div>
     );
@@ -40,10 +47,13 @@ export function AppealPanel({ banId, existingAppeal }: Props) {
 
   if (submitted) {
     return (
-      <div className="vb-panel" style={{ marginTop: 24, padding: 20 }}>
-        <strong>Appeal submitted.</strong>
-        <p style={{ marginTop: 8, color: "var(--text-dim)" }}>
-          Staff will review it. Check back on this page for a response.
+      <div className="vb-panel" style={{ padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <strong style={{ fontSize: 14.5 }}>Appeal submitted</strong>
+          <span className="vb-pill vb-pill-warn">Pending review</span>
+        </div>
+        <p style={{ margin: "10px 0 0", color: "var(--text-dim)", fontSize: 14 }}>
+          Check back on this page for a response.
         </p>
       </div>
     );
@@ -79,14 +89,17 @@ export function AppealPanel({ banId, existingAppeal }: Props) {
 
   if (!open) {
     return (
-      <button onClick={openForm} className="vb-btn vb-btn-primary" style={{ marginTop: 24 }}>
-        Appeal this punishment
-      </button>
+      <div className="vb-panel" style={{ padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <span style={{ color: "var(--text-dim)", fontSize: 14 }}>You can appeal this once.</span>
+        <button onClick={openForm} className="vb-btn vb-btn-primary">
+          Start appeal
+        </button>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={submit} className="vb-panel" style={{ marginTop: 24, padding: 20 }}>
+    <form onSubmit={submit} className="vb-panel" style={{ padding: 20 }}>
       {!questions && <p style={{ color: "var(--text-dim)" }}>Loading questions…</p>}
       {questions?.map((q) => (
         <label key={q.id} style={{ display: "block", marginBottom: 14, fontSize: 14 }}>

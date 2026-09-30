@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSiteIconUrl } from "@/lib/site-icon";
 import { LinkAccountForm } from "@/components/LinkAccountForm";
+import { Brand } from "@/components/Brand";
 
 export default async function LinkAccountPage() {
   const principal = await getStaffPrincipal();
@@ -10,30 +12,13 @@ export default async function LinkAccountPage() {
   const staffUser = await prisma.staffUser.findUnique({ where: { discordId: principal.discordId } });
   if (staffUser?.minecraftUuid) redirect("/staff");
 
+  const iconUrl = await getSiteIconUrl();
+
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-      <div
-        className="vb-panel-strong"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 18,
-          padding: "40px 36px",
-          maxWidth: 400,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        <h1 style={{ fontSize: 22, margin: 0 }}>Link your Minecraft account</h1>
+    <main className="vb-auth">
+      <div className="vb-auth-card">
+        <Brand iconUrl={iconUrl} />
+        <h1>Link your Minecraft account</h1>
         <LinkAccountForm />
       </div>
     </main>

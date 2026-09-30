@@ -4,6 +4,7 @@ import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { LivePlayerRoster } from "@/components/LivePlayerRoster";
 import { PreBanLookup } from "@/components/PreBanLookup";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function PlayersPage() {
   const principal = await getStaffPrincipal();
@@ -25,7 +26,7 @@ export default async function PlayersPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Players</h1>
+      <PageHeader title="Players" />
 
       {hasPermission(principal, "players.pre_ban") && <PreBanLookup canCreate />}
 

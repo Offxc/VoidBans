@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { isRulesPageEnabled } from "@/lib/rules";
 import { RuleCategoryEditor } from "@/components/RuleCategoryEditor";
 import { RulesPageToggle } from "@/components/RulesPageToggle";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function RulesPage() {
   const principal = await getStaffPrincipal();
@@ -23,7 +24,10 @@ export default async function RulesPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Rules</h1>
+      <PageHeader
+        title="Rules"
+        meta={`${categories.reduce((n, c) => n + c.rules.length, 0)} rules in ${categories.length} categories`}
+      />
 
       {principal.isOwner && (
         <div className="vb-panel" style={{ padding: 18, marginBottom: 20 }}>

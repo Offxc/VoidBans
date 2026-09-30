@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
 import { RevokeButton } from "@/components/RevokeButton";
+import { PageHeader } from "@/components/PageHeader";
 
 const PAGE_SIZE = 50;
 
@@ -35,7 +36,7 @@ export default async function PunishmentsListPage({
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>Punishments</h1>
+      <PageHeader title="Punishments" meta={`${total.toLocaleString()} total`} />
 
       <div className="vb-panel" style={{ overflowX: "auto" }}>
         <table className="vb-table">

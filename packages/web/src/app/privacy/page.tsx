@@ -1,15 +1,14 @@
-import Link from "next/link";
+import { SiteShell } from "@/components/SiteShell";
+
+export const dynamic = "force-dynamic";
 
 export default function PrivacyPage() {
   return (
-    <main style={{ maxWidth: 680, margin: "0 auto", padding: "56px 24px" }}>
-      <Link href="/" style={{ fontSize: 13, color: "var(--text-dim)" }}>
-        ← Back
-      </Link>
-
-      <div className="vb-panel" style={{ padding: 32, marginTop: 20, lineHeight: 1.7 }}>
-        <h1 style={{ marginTop: 0 }}>Privacy Policy</h1>
-        <p style={{ color: "var(--text-dim)" }}>Last updated: 28 September 2026.</p>
+    <SiteShell>
+      <div className="vb-doc">
+        <h1 className="vb-doc-title">Privacy Policy</h1>
+        <p className="vb-doc-meta">Last updated: 28 September 2026.</p>
+        <div className="vb-prose">
 
         <h2>What we collect</h2>
         <ul>
@@ -57,6 +56,7 @@ export default function PrivacyPage() {
           <a href="mailto:contact@your-domain.example">contact@your-domain.example</a>.
         </p>
       </div>
-    </main>
+      </div>
+    </SiteShell>
   );
 }
