@@ -1,6 +1,7 @@
 {
   "name": "voidbans",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "scripts": {
     "dev": "pnpm --filter @voidbans/web dev",
     "build": "pnpm --filter @voidbans/web build",

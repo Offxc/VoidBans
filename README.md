@@ -283,4 +283,6 @@ and throws `P2022: column does not exist` on deploy. `SessionListener.java`'s
 
 ## License
 
-TBD.
+[PolyForm Noncommercial 1.0.0](LICENSE). You can use, modify and share VoidBans for any
+noncommercial purpose, including running it for your own community. You can't sell it or use it to
+make money. See the license for the full terms.
