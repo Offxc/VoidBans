@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { discordAvatarUrl } from "@/lib/discord-avatar";
+import { APP_VERSION } from "@/lib/version";
 
 interface NavItem {
   href: string;
@@ -146,6 +147,8 @@ export function StaffNav({ items, iconUrl, user }: { items: NavItem[]; iconUrl: 
             );
           })}
         </div>
+
+        <div className="vb-nav-version">VoidBans v{APP_VERSION}</div>
 
         <div className="vb-nav-user">
           {/* eslint-disable-next-line @next/next/no-img-element */}

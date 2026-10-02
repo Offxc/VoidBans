@@ -1,5 +1,12 @@
+import { readFileSync } from "node:fs";
+
+// Single source of truth for the site version is package.json; it is baked
+// in at build time so the footer and staff sidebar can show it.
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: { NEXT_PUBLIC_APP_VERSION: version },
   reactStrictMode: true,
   output: "standalone",
   // Security headers (including a nonce-based CSP) are set in

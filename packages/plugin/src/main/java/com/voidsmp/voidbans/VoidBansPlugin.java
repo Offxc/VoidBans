@@ -63,7 +63,7 @@ public final class VoidBansPlugin extends JavaPlugin {
         this.heartbeatTask = new HeartbeatTask(this, database);
         heartbeatTask.runTaskTimerAsynchronously(this, 0L, 30L * 20L);
 
-        getLogger().info("VoidBans enabled, site-url: " + getConfig().getString("site-url"));
+        getLogger().info("VoidBans v" + getDescription().getVersion() + " enabled, site-url: " + getConfig().getString("site-url"));
     }
 
     @Override

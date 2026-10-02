@@ -15,6 +15,7 @@ import { PunishmentModesEditor } from "@/components/PunishmentModesEditor";
 import { DiscordWebhookEditor } from "@/components/DiscordWebhookEditor";
 import { PageHeader } from "@/components/PageHeader";
 import { PluginConnection } from "@/components/PluginConnection";
+import { APP_VERSION } from "@/lib/version";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -40,7 +41,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <PageHeader title="Settings" />
+      <PageHeader title="Settings" meta={`Site v${APP_VERSION}`} />
 
       <SettingSection
         title="Plugin connection"

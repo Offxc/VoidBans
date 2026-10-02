@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_VERSION } from "@/lib/version";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { isRulesPageEnabled } from "@/lib/rules";
 import { Brand } from "@/components/Brand";
@@ -26,7 +27,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
       <footer className="vb-site-footer">
         <div className="vb-site-footer-inner">
-          <span>© VoidSMP</span>
+          <span>© VoidSMP · v{APP_VERSION}</span>
           <div style={{ display: "flex", gap: 20 }}>
             {rulesEnabled && <Link href="/rules">Rules</Link>}
             <Link href="/privacy">Privacy</Link>

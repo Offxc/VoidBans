@@ -676,6 +676,12 @@ a.vb-pill {
   color: var(--accent-text);
 }
 
+.vb-nav-version {
+  padding: 0 12px 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
 .vb-nav-user {
   display: flex;
   align-items: center;

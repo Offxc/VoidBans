@@ -318,6 +318,8 @@ multi-tenancy: one deployment for one server.
 
 ## Contributing
 
+Bump the version of whatever you change (see [CHANGELOG.md](CHANGELOG.md)) and add a line to it.
+
 ```bash
 pnpm install
 cp packages/web/.env.example packages/web/.env
