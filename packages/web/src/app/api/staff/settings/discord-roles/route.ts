@@ -24,7 +24,7 @@ export async function GET() {
   if (!res.ok) {
     // Surface Discord's actual response (e.g. "50001 Missing Access" if the
     // bot was never invited to this guild, "401 Unauthorized" for a bad
-    // token) instead of a generic message — this is exactly the kind of
+    // token) instead of a generic message, this is exactly the kind of
     // credential mixup that's already bitten OAuth login twice.
     const detail = await res.text().catch(() => "");
     console.error(`Discord guild roles fetch failed: ${res.status} ${detail}`);

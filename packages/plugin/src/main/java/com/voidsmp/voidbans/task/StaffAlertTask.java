@@ -16,9 +16,9 @@ import java.time.Instant;
 /**
  * Polls the punishments table for rows created since the last check and
  * broadcasts a chat alert to online players holding the configured
- * permission (grant it via LuckPerms — see the README). This is how a
+ * permission (grant it via LuckPerms, see the README). This is how a
  * punishment issued through the WEB dashboard also produces an in-game
- * alert, not just ones issued with /vban — the plugin has no live
+ * alert, not just ones issued with /vban, the plugin has no live
  * connection back from the website, so polling is the simplest way for it
  * to notice a row it didn't write itself.
  */
@@ -36,7 +36,7 @@ public final class StaffAlertTask extends BukkitRunnable {
         this.db = db;
         this.messages = messages;
         // Start from "now" so a restart never replays old punishments as
-        // fresh alerts — only ones issued after the plugin came up.
+        // fresh alerts, only ones issued after the plugin came up.
         this.lastSeenIssuedAt = Instant.now();
         this.lastSeenId = 0L;
     }

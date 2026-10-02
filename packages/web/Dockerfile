@@ -1,9 +1,9 @@
-# Multi-stage build — the final image only contains Next.js's standalone
+# Multi-stage build, the final image only contains Next.js's standalone
 # output plus the Prisma client, not the full node_modules tree or source.
 
 FROM node:20-alpine AS base
 # Prisma's query/schema engines need OpenSSL and Alpine's node image
-# doesn't ship it — without this, prisma generate/migrate fail with an
+# doesn't ship it, without this, prisma generate/migrate fail with an
 # unhelpful "Could not parse schema engine response" instead of an
 # actual libssl error.
 RUN apk add --no-cache openssl
@@ -27,7 +27,7 @@ RUN pnpm --filter @voidbans/web build
 
 # ---- migrate: one-off container that applies pending Prisma migrations
 # before the app starts. Deliberately NOT part of the slim runtime image
-# below — Next's standalone output tracing prunes node_modules down to
+# below, Next's standalone output tracing prunes node_modules down to
 # only what the running server imports, which excludes the Prisma CLI
 # (a dev dependency), so migrations have to run from this fuller stage.
 FROM build AS migrate
@@ -44,7 +44,7 @@ RUN apk add --no-cache openssl
 RUN addgroup -S voidbans && adduser -S voidbans -G voidbans
 
 # .next/standalone already contains a pruned node_modules with exactly
-# what's needed to run (Next's output tracing) — no separate node_modules
+# what's needed to run (Next's output tracing), no separate node_modules
 # copy required.
 COPY --from=build /app/packages/web/.next/standalone ./
 COPY --from=build /app/packages/web/.next/static ./packages/web/.next/static

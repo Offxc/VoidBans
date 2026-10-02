@@ -14,7 +14,7 @@ export default function TermsPage() {
         <h2>What this site is</h2>
         <p>
           This site is a ban lookup and moderation dashboard for the Minecraft server it&apos;s
-          attached to. It isn&apos;t a game service itself — playing on the server is governed by
+          attached to. It isn&apos;t a game service itself. Playing on the server is governed by
           its own rules (see the server&apos;s <Link href="/rules">rules page</Link>, where
           enabled), and this site exists to make punishment records visible and appealable.
         </p>
@@ -23,14 +23,14 @@ export default function TermsPage() {
         <p>
           Every punishment issued gets a ban ID, which anyone can look up on this site to see the
           reason, type, and status. Issuing, revoking, or editing a punishment is entirely at the
-          discretion of the server&apos;s staff, based on the server&apos;s own rules — this site
+          discretion of the server&apos;s staff, based on the server&apos;s own rules. This site
           only records and displays that decision, it doesn&apos;t make it.
         </p>
 
         <h2>Appeals</h2>
         <p>
           A punishment marked appealable can be appealed once from its ban ID page. Submitting an
-          appeal means giving a truthful, good-faith account — appeals submitted in bad faith
+          appeal means giving a truthful, good-faith account. Appeals submitted in bad faith
           (false statements, spam, harassment of staff) may be denied without further review and
           can affect how a future appeal from the same account is handled. Staff decisions on
           appeals are final; there is no further appeal process beyond what&apos;s offered here.

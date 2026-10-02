@@ -68,7 +68,7 @@ export async function fetchDiscordUser(accessToken: string): Promise<DiscordUser
 
 export interface GuildMember {
   roles: string[];
-  // Per-server nickname, if the member has set one — null otherwise.
+  // Per-server nickname, if the member has set one, null otherwise.
   // This is what staff actually recognize each other by in the server,
   // as opposed to a global Discord username, which can be a handle
   // nobody in the server context would recognize.
@@ -78,7 +78,7 @@ export interface GuildMember {
 /**
  * Role IDs (and server nickname) for this user within the configured
  * guild. A bare `identify` scope token cannot see this, so it calls the
- * guild member endpoint with the bot token instead — the bot must be a
+ * guild member endpoint with the bot token instead, the bot must be a
  * member of DISCORD_GUILD_ID with permission to view members.
  */
 export async function fetchGuildMember(discordUserId: string): Promise<GuildMember> {

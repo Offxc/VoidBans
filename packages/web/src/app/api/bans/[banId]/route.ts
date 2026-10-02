@@ -31,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: { banId: strin
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  // Public projection only — never leak internal DB ids, the player's
+  // Public projection only, never leak internal DB ids, the player's
   // UUID/username, or staff identity beyond what's meant to be public.
   return NextResponse.json({
     banId: punishment.publicBanId,

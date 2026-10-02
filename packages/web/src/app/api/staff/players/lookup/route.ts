@@ -6,7 +6,7 @@ import { hasPermission } from "@/lib/permissions";
 import { resolveMojangUsername, resolveMojangUuid, isUuidLike, normalizeUuid } from "@/lib/mojang";
 
 /**
- * Resolves a UUID or username to a player for the pre-ban flow — a player
+ * Resolves a UUID or username to a player for the pre-ban flow, a player
  * this server has never seen has no local `players` row to look up, so
  * this falls back to Mojang once the local lookup misses. Read-only: it
  * never creates anything, so it doesn't need the stronger
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (!query) return NextResponse.json({ error: "Missing q" }, { status: 400 });
 
   // No `mode: "insensitive"` needed here (that's a Postgres-only Prisma
-  // option) — this schema's MySQL columns already use a case-insensitive
+  // option), this schema's MySQL columns already use a case-insensitive
   // collation (utf8mb4_unicode_ci) throughout, so a plain equals already
   // matches regardless of case.
   const local = await prisma.player.findFirst({
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Bedrock (Geyser/Floodgate) players show up with a "." prefix and a
-  // Floodgate-generated UUID that Mojang has never heard of — there's no
+  // Floodgate-generated UUID that Mojang has never heard of, there's no
   // public API to resolve a not-yet-joined Bedrock player's username to a
   // UUID the way Mojang does for Java, so a username search for one can
   // only ever find a local row (i.e. they've joined before). Say that
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
   if (query.startsWith(".") && !isUuidLike(query)) {
     return NextResponse.json({
       found: "none",
-      hint: "Bedrock players can't be looked up by name before they've joined — search by UUID instead (from a past session or player report).",
+      hint: "Bedrock players can't be looked up by name before they've joined. Search by UUID instead (from a past session or player report).",
     });
   }
 
@@ -54,6 +54,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ found: "mojang", uuid: profile.uuid, username: profile.username });
   } catch (err) {
     console.error("Mojang lookup failed:", err);
-    return NextResponse.json({ error: "Mojang lookup failed — try again shortly." }, { status: 502 });
+    return NextResponse.json({ error: "Mojang lookup failed. Try again shortly." }, { status: 502 });
   }
 }

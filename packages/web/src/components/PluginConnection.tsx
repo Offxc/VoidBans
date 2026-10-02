@@ -26,7 +26,6 @@ export async function PluginConnection() {
           <th>Status</th>
           <th>Plugin</th>
           <th>Platform</th>
-          <th>Last seen</th>
         </tr>
       </thead>
       <tbody>
@@ -36,15 +35,19 @@ export async function PluginConnection() {
             <tr key={i.serverId}>
               <td style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5 }}>{i.serverId}</td>
               <td>
-                <span className={online ? "vb-pill vb-pill-success" : "vb-pill vb-pill-danger"}>
-                  {online ? "Connected" : "Not reporting"}
-                </span>
+                {online ? (
+                  <span className="vb-pill vb-pill-success">Connected</span>
+                ) : (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>
+                    <span className="vb-pill vb-pill-danger">Not reporting</span>
+                    <span style={{ color: "var(--text-dim)", fontSize: 12.5 }}>
+                      last seen <LocalTime iso={i.lastSeenAt.toISOString()} relative />
+                    </span>
+                  </span>
+                )}
               </td>
               <td>{i.pluginVersion}</td>
               <td style={{ color: "var(--text-dim)" }}>{i.platform}</td>
-              <td>
-                <LocalTime iso={i.lastSeenAt.toISOString()} relative />
-              </td>
             </tr>
           );
         })}

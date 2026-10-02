@@ -16,7 +16,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 /**
- * Blocks chat for a player with an active MUTE punishment — issuing a mute
+ * Blocks chat for a player with an active MUTE punishment, issuing a mute
  * from the web dashboard or /vban previously only wrote a punishments row;
  * nothing actually stopped the player from talking. Checked per-message
  * (not cached) so a mute or unmute takes effect on the very next message,
@@ -48,7 +48,7 @@ public final class ChatListener implements Listener {
             }
         } catch (SQLException e) {
             plugin.getLogger().warning("Mute check failed for " + uuid + ": " + e.getMessage());
-            // Fail open — a DB hiccup should not silently mute the whole server.
+            // Fail open, a DB hiccup should not silently mute the whole server.
         }
     }
 

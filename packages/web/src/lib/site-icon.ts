@@ -2,12 +2,12 @@ import { prisma } from "@/lib/prisma";
 
 const SITE_ICON_KEY = "site.icon_url";
 
-// The only accepted host for the site icon — deliberately not "any https
+// The only accepted host for the site icon, deliberately not "any https
 // URL": this value gets embedded as an <img src> on every public and
 // staff page, so accepting an arbitrary URL would mean any owner-level
 // mistake (or a compromised owner account) could point every page at an
 // attacker-controlled image host. i.postimg.cc is also the only host
-// allow-listed in the CSP's img-src for this purpose — keep both in sync.
+// allow-listed in the CSP's img-src for this purpose, keep both in sync.
 const ALLOWED_HOST = "i.postimg.cc";
 
 export function isValidPostimagesUrl(value: string): boolean {

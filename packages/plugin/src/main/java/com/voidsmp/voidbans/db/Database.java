@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * Thin connection-pool wrapper over the schema Prisma owns (see
  * packages/web/prisma/schema.prisma). This plugin reads/writes rows in
- * that schema — it never runs migrations or DDL; the web/API side owns
+ * that schema, it never runs migrations or DDL; the web/API side owns
  * the schema's shape.
  */
 public final class Database {

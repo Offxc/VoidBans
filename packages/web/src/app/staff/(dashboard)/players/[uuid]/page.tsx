@@ -115,10 +115,12 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
 
   const activePunishment = punishments.find((p) => p.active && (!p.expiresAt || p.expiresAt.getTime() > Date.now()));
 
+  const showClient = sessions.some((s) => s.clientBrand);
+
   return (
     <div className="vb-profile">
       {/* Left rail: identity, risk signals, stats, and the punish action
-          all stay in view while the right column scrolls — staff never
+          all stay in view while the right column scrolls, staff never
           lose sight of who they're looking at or their current status
           while reading through punishment history. */}
       <aside className={`vb-profile-rail ${activePunishment ? "vb-profile-rail-flagged" : ""}`}>
@@ -179,6 +181,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
           <div style={{ marginTop: 16 }}>
             <PunishmentPanel
               playerUuid={player.uuid}
+              playerName={player.username}
               templates={templates.map((t) => ({
                 id: t.id.toString(),
                 name: t.name,
@@ -294,33 +297,54 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         {canViewSessions && (
           <div className="vb-section">
             <div className="vb-section-label">Recent sessions</div>
-            <div className="vb-panel" style={{ padding: "4px 18px" }}>
-              {sessions.length === 0 && <p style={{ color: "var(--text-dim)", fontSize: 14 }}>No sessions recorded.</p>}
-              {sessions.map((s) => (
-                <div
-                  key={s.id.toString()}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "10px 0",
-                    borderTop: "1px solid rgba(168, 130, 255, 0.08)",
-                    fontSize: 14,
-                  }}
-                >
-                  <span>
-                    <LocalTime iso={s.loginAt.toISOString()} />
-                    {s.clientBrand && (
-                      <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.clientBrand}</span>
-                    )}
-                    {canViewIp && s.ipAddress && (
-                      <span style={{ color: "var(--text-dim)", fontSize: 12 }}> · {s.ipAddress}</span>
-                    )}
-                  </span>
-                  <span style={{ color: "var(--text-dim)" }}>
-                    {s.durationSeconds ? formatDuration(s.durationSeconds) : "In progress"}
-                  </span>
-                </div>
-              ))}
+            <div className="vb-panel" style={{ overflowX: "auto" }}>
+              {sessions.length === 0 ? (
+                <p style={{ color: "var(--text-dim)", fontSize: 14, margin: 0, padding: "14px 18px" }}>No sessions recorded.</p>
+              ) : (
+                <table className="vb-table vb-table-compact">
+                  <thead>
+                    <tr>
+                      <th>Joined</th>
+                      {showClient && <th>Client</th>}
+                      {canViewIp && <th>IP</th>}
+                      <th style={{ textAlign: "right" }}>Length</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessions.map((s, i) => {
+                      // A session only counts as live if it's the newest one and
+                      // the player really is online. Any other session with no
+                      // logout was cut off (crash, restart) and never closed, so
+                      // its length is unknown rather than "in progress".
+                      const live = s.logoutAt === null && i === 0 && player.isOnline;
+                      return (
+                        <tr key={s.id.toString()}>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            <LocalTime iso={s.loginAt.toISOString()} />
+                          </td>
+                          {showClient && <td style={{ color: "var(--text-dim)" }}>{s.clientBrand ?? "-"}</td>}
+                          {canViewIp && (
+                            <td style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5, color: "var(--text-dim)" }}>
+                              {s.ipAddress ?? "-"}
+                            </td>
+                          )}
+                          <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                            {s.durationSeconds !== null ? (
+                              formatDuration(s.durationSeconds)
+                            ) : live ? (
+                              <span className="vb-pill vb-pill-success">Online now</span>
+                            ) : (
+                              <span style={{ color: "var(--text-faint)" }} title="The server stopped before this session was closed">
+                                Not recorded
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}
@@ -358,6 +382,7 @@ function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function formatDuration(totalSeconds: number): string {
+  if (totalSeconds > 0 && totalSeconds < 60) return `${totalSeconds}s`;
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   if (hours === 0) return `${minutes}m`;

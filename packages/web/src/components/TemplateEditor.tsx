@@ -13,7 +13,7 @@ interface Template {
   defaultAppealable: boolean;
 }
 
-// Mirrors PunishmentPanel's ACTIONS — templates are stored by raw
+// Mirrors PunishmentPanel's ACTIONS, templates are stored by raw
 // PunishmentType + an optional duration, but staff pick "Temp Ban" vs
 // "Ban" explicitly here rather than a bare type dropdown plus an implied
 // "blank duration means permanent" convention, which wasn't discoverable

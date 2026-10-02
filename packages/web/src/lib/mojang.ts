@@ -14,7 +14,7 @@ export interface MojangProfile {
  * Resolves a Minecraft username to its UUID via Mojang's public API, for
  * pre-banning a player who has never joined this server (so there's no
  * local players row to look up). Returns null for an unknown/invalid name
- * rather than throwing — "not found" is an expected, common result here,
+ * rather than throwing, "not found" is an expected, common result here,
  * not an error condition.
  */
 export async function resolveMojangUsername(username: string): Promise<MojangProfile | null> {

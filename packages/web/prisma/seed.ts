@@ -114,7 +114,7 @@ async function main() {
     data: {
       punishmentId: appealedBan.id,
       answers: {
-        [questions[0]!.id.toString()]: "I didn't realize that plot was claimed — genuinely thought it was abandoned.",
+        [questions[0]!.id.toString()]: "I didn't realize that plot was claimed, genuinely thought it was abandoned.",
         [questions[1]!.id.toString()]: "I'll check /plot info before building anywhere that isn't obviously mine.",
       },
       status: "PENDING",

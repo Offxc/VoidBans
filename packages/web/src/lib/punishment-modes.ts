@@ -11,7 +11,7 @@ export interface PunishmentModes {
 /**
  * Owner-controlled, site-wide toggles for which punishment-selection modes
  * show up in the punish panel (manual entry is always available). Both can
- * be on at once — templates and rules are allowed to overlap; the owner
+ * be on at once, templates and rules are allowed to overlap; the owner
  * decides what staff see. Templates defaults ON since it's the existing,
  * already-in-use behavior; rules defaults OFF since it's new and opt-in,
  * same "off until the owner turns it on" convention as the Vulcan toggle.

@@ -18,7 +18,7 @@ import { PluginConnection } from "@/components/PluginConnection";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
-  // Settings is owner-only, not permission-gated — role/permission edits
+  // Settings is owner-only, not permission-gated, role/permission edits
   // here can grant any permission to anyone, so only the owner identity
   // (tied to a Discord ID, not a reassignable role) is trusted with that.
   if (!principal?.isOwner) {

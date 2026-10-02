@@ -23,5 +23,5 @@ permissions:
     description: >
       Receive an in-game chat alert whenever a punishment is issued, from
       /vban or the web dashboard. Intended to be granted per-rank via
-      LuckPerms rather than left at its Bukkit default — see the README.
+      LuckPerms rather than left at its Bukkit default, see the README.
     default: op

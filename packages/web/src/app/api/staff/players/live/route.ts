@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // Server-Sent Events stream of the online player roster. Polls the DB on a
 // short interval from inside this single long-lived connection (not once
 // per client) and only pushes a message when the online set actually
-// changed — one Node process, one `web` container, no Redis/pub-sub
+// changed, one Node process, one `web` container, no Redis/pub-sub
 // needed at this scale. The plugin writes players.isOnline directly on
 // join/quit; this just notices the row changed and tells the browser
 // without the browser having to poll or the staff member refreshing.
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
             send("online", current);
           }
         } catch {
-          // Transient DB hiccup — skip this tick, try again next interval.
+          // Transient DB hiccup, skip this tick, try again next interval.
         }
       }, POLL_INTERVAL_MS);
 

@@ -69,7 +69,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!category) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // onDelete: Cascade on PunishmentRule.category would silently wipe
-  // every rule in it — refuse instead, so deleting a category is never
+  // every rule in it, refuse instead, so deleting a category is never
   // an accidental mass-delete of rules.
   if (category._count.rules > 0) {
     return NextResponse.json(

@@ -15,7 +15,7 @@ const createSchema = z.object({
  * Creates a placeholder `players` row for a UUID that has never actually
  * connected to the server, so staff can issue a punishment ahead of a
  * player's first join. The plugin's own login upsert (ON DUPLICATE KEY
- * UPDATE) absorbs this into a real row — setting hasJoined back to TRUE —
+ * UPDATE) absorbs this into a real row, setting hasJoined back to TRUE,
  * the moment they actually connect, so nothing here needs to be reconciled
  * later.
  */

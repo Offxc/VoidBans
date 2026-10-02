@@ -23,8 +23,8 @@ interface Category {
 }
 
 // "None" is the default: most real rules don't dictate a fixed
-// punishment — severity is a staff judgment call made after seeing the
-// player's history — so a rule only suggests a type if the owner
+// punishment, severity is a staff judgment call made after seeing the
+// player's history, so a rule only suggests a type if the owner
 // deliberately picks one.
 const SUGGESTED_KINDS = [
   { key: "none", label: "No suggestion", type: null, hasDuration: false },
@@ -80,7 +80,7 @@ export function RuleCategoryEditor({
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
 
-  // Rule create/edit — ruleFormFor tracks which category a new/edited rule belongs to
+  // Rule create/edit, ruleFormFor tracks which category a new/edited rule belongs to
   const [ruleFormCategoryId, setRuleFormCategoryId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | "new" | null>(null);
   const [ruleForm, setRuleForm] = useState<RuleFormState>(EMPTY_RULE_FORM);
@@ -417,13 +417,13 @@ function RuleForm({
       />
       <input
         className="vb-input"
-        placeholder="Title — kept short, this is what shows on the kick/mute screen"
+        placeholder="Title (short, shown on the kick and mute screen)"
         value={form.title}
         onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
       />
       <textarea
         className="vb-textarea"
-        placeholder="Description — full detail, shown on the dashboard and public rules page only"
+        placeholder="Description (full detail, shown on the dashboard and public rules page only)"
         value={form.description}
         onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
         rows={2}

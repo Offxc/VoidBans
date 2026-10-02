@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const input = parsed.data;
 
   // Staff without bans.issue but with bans.request get the identical UI
-  // routed to a request instead of a direct punishment — same endpoint,
+  // routed to a request instead of a direct punishment, same endpoint,
   // different write, so the client never has to special-case this itself.
   const canIssue = hasPermission(principal, "bans.issue");
   const canRequest = hasPermission(principal, "bans.request");
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     return denyAccess(principal);
   }
 
-  // Staff can't punish another staff member's linked Minecraft account —
+  // Staff can't punish another staff member's linked Minecraft account,
   // the owner is exempt, since they're the ultimate authority on the
   // panel and may genuinely need to act against a compromised or rogue
   // staff account.

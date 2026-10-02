@@ -15,11 +15,11 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
   }
 
   // Enforced for every staff member, including one who logged in before
-  // this requirement existed — there is no minecraftUuid backfill, so the
+  // this requirement existed, there is no minecraftUuid backfill, so the
   // gate is "does this row have one yet", checked on every dashboard load.
   // minecraftLinkSkippedAt lets someone who has never actually joined the
   // server (so linking is genuinely impossible right now) through once
-  // they've tried and explicitly chosen to continue without it — they
+  // they've tried and explicitly chosen to continue without it, they
   // still get nudged to finish linking from the dashboard header.
   const staffUser = await prisma.staffUser.findUnique({
     where: { discordId: principal.discordId },
@@ -46,7 +46,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
       show: hasPermission(principal, "rules.view") && punishmentModes.rulesEnabled,
     },
     { href: "/staff/audit", label: "Audit log", show: hasPermission(principal, "audit.view") },
-    // Owner-only, not permission-gated — /staff/settings itself redirects
+    // Owner-only, not permission-gated, /staff/settings itself redirects
     // any non-owner regardless, so showing this to a non-owner would just
     // be a nav link that bounces them straight back.
     { href: "/staff/settings", label: "Settings", show: principal.isOwner },

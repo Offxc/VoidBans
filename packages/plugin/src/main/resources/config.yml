@@ -1,5 +1,5 @@
 # VoidBans plugin configuration.
-# This connects to the SAME MySQL database as the web app — see
+# This connects to the SAME MySQL database as the web app. See
 # packages/web/.env's DATABASE_URL for the connection this must match.
 
 database:
@@ -10,7 +10,7 @@ database:
   password: ""
 
 # Must match SITE_URL in the web app's .env. Used only for the {site_url}
-# placeholder below — changing where the site is deployed is a one-line
+# placeholder below: changing where the site is deployed is a one-line
 # edit here and in the web app's .env, never a plugin rebuild.
 site-url: "https://your-domain.example"
 
@@ -21,10 +21,10 @@ server-id: "survival"
 # Minecraft color codes.
 chat-prefix: "&8[&cVoidBans&8] &r"
 
-# Staff alert broadcast whenever a punishment is issued — from an in-game
+# Staff alert broadcast whenever a punishment is issued. From an in-game
 # command OR the web dashboard. Only sent to players holding
 # staff-alert-permission (set this up as a LuckPerms permission and grant
-# it to whichever ranks should see it — see the README for the exact
+# it to whichever ranks should see it. See the README for the exact
 # LuckPerms command).
 staff-alerts:
   enabled: true

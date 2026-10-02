@@ -90,7 +90,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const existing = await prisma.punishmentRule.findUnique({ where: { id }, select: { code: true } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // onDelete: Cascade on PunishmentRuleLink — deleting a rule removes the
+  // onDelete: Cascade on PunishmentRuleLink, deleting a rule removes the
   // link rows to any past punishment that cited it, but the punishment
   // itself (and its own recorded reason/type/duration) is untouched.
   await prisma.punishmentRule.delete({ where: { id } });

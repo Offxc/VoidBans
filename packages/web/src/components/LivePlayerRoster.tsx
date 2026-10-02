@@ -22,7 +22,7 @@ interface LiveOnlinePlayer {
  * Renders the Online/Offline split, seeded from the server-rendered initial
  * lists (so the page works with no JS and paints instantly), then
  * subscribes to /api/staff/players/live (SSE) to move players between the
- * two lists in real time — a fresh join or a quit shows up without a
+ * two lists in real time, a fresh join or a quit shows up without a
  * refresh, which matters here specifically because staff need to see a
  * player the moment they connect, not N seconds later on a poll.
  */
@@ -54,7 +54,7 @@ export function LivePlayerRoster({
       );
 
       // Anyone in the previous snapshot but not the new one just went
-      // offline — move them into the offline list, timestamped now (the
+      // offline, move them into the offline list, timestamped now (the
       // exact lastLogout will catch up next time this page does a full
       // server render, but "now" is accurate enough for a live view).
       const justWentOffline = [...previousOnline.current.values()]

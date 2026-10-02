@@ -35,7 +35,7 @@ function defaultEvents(): Record<WebhookEventKey, boolean> {
 /**
  * Discord webhook config (URL + which events post to it), owner-editable
  * in Settings. Stored in site_settings like every other toggle in this
- * app — never exposed through any non-owner-gated route, same trust
+ * app, never exposed through any non-owner-gated route, same trust
  * boundary as DISCORD_BOT_TOKEN, since the URL alone grants posting
  * rights to whatever channel it points at.
  */
@@ -100,7 +100,7 @@ interface NotifyOptions {
 
 /**
  * Fire-and-forget: posts a Discord embed for a given event, if a webhook
- * URL is configured and that event is enabled. Never throws — a webhook
+ * URL is configured and that event is enabled. Never throws, a webhook
  * failure (bad URL, Discord outage, rate limit) must never break the
  * staff action that triggered it, so every call site can just await this
  * without a try/catch of its own.

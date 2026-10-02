@@ -3,8 +3,8 @@ package com.voidsmp.voidbans.util;
 import java.security.SecureRandom;
 
 /**
- * Must stay in lockstep with packages/web/src/lib/ban-id.ts — same
- * alphabet, same length, same "VB-" prefix — since IDs generated here
+ * Must stay in lockstep with packages/web/src/lib/ban-id.ts, same
+ * alphabet, same length, same "VB-" prefix, since IDs generated here
  * are looked up through that web app's validator.
  */
 public final class BanIdGenerator {

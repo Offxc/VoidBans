@@ -22,7 +22,7 @@ function pickUnit(totalSeconds: number): { unit: UnitKey; amount: string } {
 
 /**
  * Amount + unit duration picker. Reports the result as whole seconds via
- * onChange(null when empty) — plain "hours" forced 5-minute durations to be
+ * onChange(null when empty), plain "hours" forced 5-minute durations to be
  * entered as 0.0833, so this lets staff pick the unit that actually fits.
  */
 export function DurationInput({

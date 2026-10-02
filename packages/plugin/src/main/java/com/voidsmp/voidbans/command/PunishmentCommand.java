@@ -17,14 +17,14 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 /**
- * Implements /vban and /vunban — declared in plugin.yml from the start but
+ * Implements /vban and /vunban, declared in plugin.yml from the start but
  * never actually wired to a CommandExecutor, so both commands have silently
  * done nothing until now. Issues a permanent ban only (no duration syntax,
  * matching the usage string in plugin.yml); a temp ban or mute has to come
  * from the web dashboard, which already supports both. Works against an
  * offline target too (looked up in the players table by username, so this
  * also covers Bedrock ".name" players and anyone pre-created via the
- * staff dashboard's "find a player who hasn't joined" lookup) — the target
+ * staff dashboard's "find a player who hasn't joined" lookup), the target
  * doesn't need to be online.
  */
 public final class PunishmentCommand implements CommandExecutor {
@@ -78,7 +78,7 @@ public final class PunishmentCommand implements CommandExecutor {
                 }
             } catch (SQLException e) {
                 plugin.getLogger().warning("/vban failed: " + e.getMessage());
-                sender.sendMessage(Component.text("Ban failed — check the console."));
+                sender.sendMessage(Component.text("Ban failed, check the console."));
             }
         });
 
@@ -108,7 +108,7 @@ public final class PunishmentCommand implements CommandExecutor {
                         : target.username + " has no active ban."));
             } catch (SQLException e) {
                 plugin.getLogger().warning("/vunban failed: " + e.getMessage());
-                sender.sendMessage(Component.text("Unban failed — check the console."));
+                sender.sendMessage(Component.text("Unban failed, check the console."));
             }
         });
 
@@ -119,7 +119,7 @@ public final class PunishmentCommand implements CommandExecutor {
 
     /**
      * Online players first (so a live nickname/UUID is authoritative), then
-     * falls back to the players table for anyone offline — covers Bedrock
+     * falls back to the players table for anyone offline, covers Bedrock
      * players and anyone pre-created via the dashboard's pre-ban lookup,
      * neither of which Bukkit.getPlayer(String) alone would find.
      */

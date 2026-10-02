@@ -86,7 +86,7 @@ function requestContext(): { ipAddress: string | null; userAgent: string | null 
       userAgent: ua ? cleanString(ua, 255) : null,
     };
   } catch {
-    // Called outside a request (a script, a build step) — nothing to record.
+    // Called outside a request (a script, a build step), nothing to record.
     return { ipAddress: null, userAgent: null };
   }
 }

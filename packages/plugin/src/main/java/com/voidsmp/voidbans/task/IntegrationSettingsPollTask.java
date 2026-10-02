@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 /**
  * Polls site_settings for the owner-controlled integration toggles set
- * from the web dashboard (Settings > Integrations) and applies them —
+ * from the web dashboard (Settings > Integrations) and applies them,
  * so flipping a switch there takes effect within one poll interval,
  * without requiring a plugin restart.
  */

@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 
-// Crockford base32 minus ambiguous chars — no 0/O/1/I/L — kept short but
+// Crockford base32 minus ambiguous chars, no 0/O/1/I/L, kept short but
 // still >40 bits of entropy, so IDs aren't guessable or enumerable.
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 const LENGTH = 8;

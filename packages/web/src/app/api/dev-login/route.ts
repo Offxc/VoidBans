@@ -5,7 +5,7 @@ import { createSession } from "@/lib/session";
 const DEV_OWNER_DISCORD_ID = "000000000000000001";
 
 // Forces per-request evaluation instead of Next statically prerendering
-// this route at build time — without this, the NODE_ENV check below runs
+// this route at build time, without this, the NODE_ENV check below runs
 // once during `next build` and gets baked into a cached static response,
 // rather than being re-checked on every real request.
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 /**
  * Dev-only shortcut around Discord OAuth so the staff dashboard can be
  * previewed without a real Discord app configured. Hard-gated on
- * NODE_ENV so this route does not exist at all outside `next dev` —
+ * NODE_ENV so this route does not exist at all outside `next dev`,
  * production builds 404 here regardless of any env var misconfiguration.
  */
 export async function GET(req: NextRequest) {

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { isRulesPageEnabled, getRulesByCategory } from "@/lib/rules";
 import { SiteShell } from "@/components/SiteShell";
 
-// Reads site_settings + rule/category rows live — must not be statically
+// Reads site_settings + rule/category rows live, must not be statically
 // prerendered at build time (no DATABASE_URL available then).
 export const dynamic = "force-dynamic";
 

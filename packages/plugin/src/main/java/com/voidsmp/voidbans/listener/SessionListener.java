@@ -2,6 +2,7 @@ package com.voidsmp.voidbans.listener;
 
 import com.voidsmp.voidbans.VoidBansPlugin;
 import com.voidsmp.voidbans.db.Database;
+import com.voidsmp.voidbans.db.SessionCloser;
 import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.message.MessageTemplate;
 import org.bukkit.entity.Player;
@@ -21,7 +22,7 @@ import java.time.Instant;
 
 /**
  * Tracks players/sessions rows on join and quit. Runs DB work off the
- * main thread — session bookkeeping must never add latency to login/quit.
+ * main thread, session bookkeeping must never add latency to login/quit.
  */
 public final class SessionListener implements Listener {
 
@@ -40,7 +41,7 @@ public final class SessionListener implements Listener {
     /**
      * Blocks the connection if either the incoming IP matches an active
      * IP-banned punishment (stops alt accounts, unlike a UUID-only ban) or
-     * the connecting UUID itself has an active BAN — the actual "you are
+     * the connecting UUID itself has an active BAN, the actual "you are
      * banned" enforcement, previously entirely missing: punishments issued
      * from the web dashboard or /vban were recorded but never stopped
      * anyone from playing. Runs synchronously on PlayerLoginEvent (not
@@ -71,7 +72,7 @@ public final class SessionListener implements Listener {
             }
         } catch (SQLException e) {
             plugin.getLogger().warning("Ban check failed for " + uuid + ": " + e.getMessage());
-            // Fail open — a DB hiccup should not lock out the whole server.
+            // Fail open, a DB hiccup should not lock out the whole server.
         }
     }
 
@@ -125,6 +126,9 @@ public final class SessionListener implements Listener {
             public void run() {
                 try (var conn = db.getConnection()) {
                     upsertPlayerOnLogin(conn, uuid, name);
+                    // A leftover open session here means the last quit never
+                    // landed (crash, race), close it before starting this one.
+                    SessionCloser.closeForPlayer(conn, uuid, serverId);
                     insertSessionStart(conn, uuid, serverId, ip);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record login for " + name + ": " + e.getMessage());
@@ -135,7 +139,7 @@ public final class SessionListener implements Listener {
         if (vulcanIntegration.isActive()) {
             // Client brand is negotiated over a plugin message channel
             // shortly after join, so it usually isn't populated yet on
-            // PlayerJoinEvent itself — read it a few seconds later instead
+            // PlayerJoinEvent itself, read it a few seconds later instead
             // of racing it. Must run on the main thread (Vulcan's API
             // reads from Bukkit's own player/channel state).
             new BukkitRunnable() {
@@ -178,12 +182,13 @@ public final class SessionListener implements Listener {
         Player player = event.getPlayer();
         String uuid = player.getUniqueId().toString();
         String name = player.getName();
+        String serverId = plugin.getConfig().getString("server-id", "default");
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 try (var conn = db.getConnection()) {
-                    closeOpenSession(conn, uuid);
+                    SessionCloser.closeForPlayer(conn, uuid, serverId);
                     markOffline(conn, uuid);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record logout for " + name + ": " + e.getMessage());
@@ -195,7 +200,7 @@ public final class SessionListener implements Listener {
     private void upsertPlayerOnLogin(java.sql.Connection conn, String uuid, String name) throws SQLException {
         String previousName = fetchLastSeenUsername(conn, uuid);
 
-        // ON DUPLICATE KEY intentionally does not overwrite firstJoined —
+        // ON DUPLICATE KEY intentionally does not overwrite firstJoined,
         // for a real returning player that's correct (keep their true
         // first-join date), and for a staff-pre-created placeholder row
         // (hasJoined = FALSE, firstJoined = whenever staff created it) this
@@ -220,7 +225,7 @@ public final class SessionListener implements Listener {
         }
 
         // First-ever login (previousName == null) isn't a rename, so it
-        // doesn't get a history row — only actual changes do.
+        // doesn't get a history row, only actual changes do.
         if (previousName != null && !previousName.equals(name)) {
             insertUsernameHistory(conn, uuid, name);
         }
@@ -252,30 +257,6 @@ public final class SessionListener implements Listener {
             ps.setString(2, serverId);
             ps.setString(3, ip);
             ps.executeUpdate();
-        }
-    }
-
-    private void closeOpenSession(java.sql.Connection conn, String uuid) throws SQLException {
-        String selectSql = """
-            SELECT id, loginAt FROM sessions
-            WHERE playerUuid = ? AND logoutAt IS NULL
-            ORDER BY loginAt DESC LIMIT 1
-            """;
-        try (PreparedStatement select = conn.prepareStatement(selectSql)) {
-            select.setString(1, uuid);
-            try (ResultSet rs = select.executeQuery()) {
-                if (!rs.next()) return;
-                long sessionId = rs.getLong("id");
-                Timestamp loginAt = rs.getTimestamp("loginAt");
-                long durationSeconds = (Instant.now().toEpochMilli() - loginAt.getTime()) / 1000;
-
-                String updateSql = "UPDATE sessions SET logoutAt = NOW(), durationSeconds = ? WHERE id = ?";
-                try (PreparedStatement update = conn.prepareStatement(updateSql)) {
-                    update.setLong(1, durationSeconds);
-                    update.setLong(2, sessionId);
-                    update.executeUpdate();
-                }
-            }
         }
     }
 

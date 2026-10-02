@@ -70,7 +70,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const existing = await prisma.punishmentTemplate.findUnique({ where: { id }, select: { name: true } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // onDelete: SetNull on Punishment.template — any past punishment issued
+  // onDelete: SetNull on Punishment.template, any past punishment issued
   // from this template keeps its own recorded reason/duration and just
   // loses the back-reference, so deleting a template never touches
   // punishment history.

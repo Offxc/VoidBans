@@ -40,13 +40,13 @@ export default function PrivacyPage() {
         <p>
           While you&apos;re an active player, we hold your session, punishment, and (if applicable)
           appeal and anticheat data for as long as you continue playing. We also keep this as
-          historical record after you stop playing — this is what lets staff look up your prior
+          historical record after you stop playing. This is what lets staff look up your prior
           activity or punishment history if you return later, and lets a punishment or appeal stay
           resolvable and reviewable indefinitely rather than silently disappearing.
         </p>
         <p>
           If you&apos;d like your historical data reviewed, corrected, or deleted, contact us using
-          the method below and we&apos;ll handle it directly — there&apos;s no automated
+          the method below and we&apos;ll handle it directly. There&apos;s no automated
           self-service deletion tool at this time.
         </p>
 

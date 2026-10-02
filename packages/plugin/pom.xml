@@ -43,6 +43,24 @@
 
   <build>
     <finalName>VoidBans</finalName>
+    <resources>
+      <!-- Only plugin.yml is filtered, so its ${project.version} resolves.
+           config.yml is copied as-is so nothing in it is ever substituted. -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>plugin.yml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>plugin.yml</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

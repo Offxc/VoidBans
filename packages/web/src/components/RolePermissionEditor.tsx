@@ -168,7 +168,7 @@ export function RolePermissionEditor({
           {roles.length === 0 && (
             <tr>
               <td colSpan={3} style={{ color: "var(--text-dim)" }}>
-                No roles mapped yet — select one above to grant it permissions.
+                No roles mapped yet. Select one above to grant it permissions.
               </td>
             </tr>
           )}

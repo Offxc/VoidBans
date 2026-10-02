@@ -31,7 +31,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
 
 export function clientIpFromHeaders(headers: Headers): string {
   // When Cloudflare proxies traffic (orange cloud), it sets CF-Connecting-IP
-  // to the real client IP — trust that first since it's harder to spoof
+  // to the real client IP, trust that first since it's harder to spoof
   // than X-Forwarded-For once Cloudflare is in front. Falls back to
   // X-Forwarded-For's first hop for a direct-to-Caddy deployment with no
   // CDN in front at all.

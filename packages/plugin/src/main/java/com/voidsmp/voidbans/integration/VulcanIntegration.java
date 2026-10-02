@@ -15,12 +15,12 @@ import java.util.UUID;
 
 /**
  * Optional, reflection-only integration with Vulcan Anticheat. VoidBans
- * has no compile-time dependency on Vulcan at all — not even a soft one —
+ * has no compile-time dependency on Vulcan at all, not even a soft one,
  * because this integration is meant to be a site-owner-toggleable feature
  * that most servers running this plugin will never have installed. All
  * classes below are Vulcan's own (me.frep.vulcan.api.*), loaded from
  * Vulcan's jar at runtime only if that plugin is actually present, via
- * Class.forName against the server's own classloader — this class never
+ * Class.forName against the server's own classloader, this class never
  * imports anything from Vulcan.
  *
  * Toggled on/off from the web dashboard's Settings > Integrations panel
@@ -53,7 +53,7 @@ public final class VulcanIntegration implements Listener {
 
         if (!vulcanPresent) {
             if (enabledInSettings) {
-                plugin.getLogger().info("Vulcan integration is enabled in settings, but the Vulcan plugin isn't installed — nothing to hook into.");
+                plugin.getLogger().info("Vulcan integration is enabled in settings, but the Vulcan plugin isn't installed, nothing to hook into.");
             }
             return;
         }
@@ -70,9 +70,9 @@ public final class VulcanIntegration implements Listener {
             registerReflectiveEvent(FLAG_EVENT_CLASS, this::handleFlagEvent);
             registerReflectiveEvent(PUNISH_EVENT_CLASS, this::handlePunishEvent);
             registered = true;
-            plugin.getLogger().info("Vulcan integration active — listening for flags and punishments.");
+            plugin.getLogger().info("Vulcan integration active, listening for flags and punishments.");
         } catch (ReflectiveOperationException e) {
-            plugin.getLogger().warning("Failed to hook into Vulcan (unexpected API shape — Vulcan version may be incompatible): " + e.getMessage());
+            plugin.getLogger().warning("Failed to hook into Vulcan (unexpected API shape, Vulcan version may be incompatible): " + e.getMessage());
         }
     }
 
@@ -91,7 +91,7 @@ public final class VulcanIntegration implements Listener {
                     }
                 }
             } catch (ReflectiveOperationException | ClassCastException ignored) {
-                // Vulcan absent or shape changed — nothing to unregister.
+                // Vulcan absent or shape changed, nothing to unregister.
             }
         }
         registered = false;
@@ -177,7 +177,7 @@ public final class VulcanIntegration implements Listener {
     /**
      * Reflectively reads the player's current client brand from Vulcan's
      * IPlayerData, if Vulcan is present and the integration is enabled.
-     * Returns null otherwise — callers should treat that as "no data",
+     * Returns null otherwise, callers should treat that as "no data",
      * not as an error.
      */
     public String getClientBrand(Player player) {

@@ -53,7 +53,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const existing = await prisma.appealQuestion.findUnique({ where: { id }, select: { id: true, prompt: true } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // No FK from Appeal to AppealQuestion — answers are stored as a free-form
+  // No FK from Appeal to AppealQuestion, answers are stored as a free-form
   // {questionId: text} JSON blob, so a deleted question just falls back to
   // showing its raw id in a past appeal's answer list instead of the
   // prompt text. Nothing to cascade or reconcile.

@@ -8,7 +8,7 @@ export function LinkAccountForm() {
   const [username, setUsername] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Only offered after a real, failed lookup — not a way to skip without
+  // Only offered after a real, failed lookup, not a way to skip without
   // ever trying, since most staff have joined the server and should link
   // immediately.
   const [hasFailedAttempt, setHasFailedAttempt] = useState(false);
@@ -60,7 +60,7 @@ export function LinkAccountForm() {
           style={{ padding: "12px 14px", fontSize: 15, textAlign: "center" }}
         />
         <p style={{ color: "var(--text-dim)", fontSize: 12, margin: 0 }}>
-          On Bedrock (Geyser/Floodgate)? Put a <code>.</code> at the start — e.g. <code>.Steve</code>.
+          On Bedrock (Geyser/Floodgate)? Put a <code>.</code> at the start, e.g. <code>.Steve</code>.
         </p>
         {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>{error}</p>}
         <button type="submit" disabled={submitting} className="vb-btn vb-btn-primary" style={{ padding: "12px 22px" }}>

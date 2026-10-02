@@ -36,7 +36,7 @@ export function ViolationHistory({ events }: { events: ViolationEventView[] }) {
               </td>
               <td>{e.category}</td>
               <td style={{ fontFamily: "ui-monospace, monospace" }}>{e.violationLevel}</td>
-              <td style={{ color: "var(--text-dim)" }}>{e.info ?? "—"}</td>
+              <td style={{ color: "var(--text-dim)" }}>{e.info ?? "-"}</td>
               <td>
                 <LocalTime iso={e.occurredAt} relative />
               </td>

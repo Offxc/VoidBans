@@ -8,7 +8,7 @@ function getSigningKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error(
-      "SESSION_SECRET is missing or too short (need >=32 chars). Set it in .env — see .env.example.",
+      "SESSION_SECRET is missing or too short (need >=32 chars). Set it in .env, see .env.example.",
     );
   }
   return new TextEncoder().encode(secret);
@@ -43,7 +43,7 @@ export async function readSession(): Promise<SessionPayload | null> {
     const { payload } = await jwtVerify(token, getSigningKey());
     return payload as SessionPayload;
   } catch {
-    // Expired or tampered — treat as logged out rather than throwing,
+    // Expired or tampered, treat as logged out rather than throwing,
     // so a stale cookie never surfaces as a 500.
     return null;
   }

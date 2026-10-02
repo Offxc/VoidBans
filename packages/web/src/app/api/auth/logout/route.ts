@@ -14,7 +14,7 @@ export async function POST() {
     });
   }
   destroySession();
-  // 303 so the browser follows with a GET — the default 307 would replay
+  // 303 so the browser follows with a GET, the default 307 would replay
   // this POST against the landing page.
   return NextResponse.redirect(siteUrl("/"), 303);
 }

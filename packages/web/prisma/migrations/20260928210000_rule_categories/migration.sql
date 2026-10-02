@@ -10,12 +10,12 @@ CREATE TABLE `rule_categories` (
 
 -- Seed a placeholder category so any existing punishment_rules row (from
 -- testing this feature before categories existed) has somewhere to land
--- — the owner can rename/delete it from Settings once real categories
+--, the owner can rename/delete it from Settings once real categories
 -- are created.
 INSERT INTO `rule_categories` (`name`, `sortOrder`) VALUES ('Uncategorized', 0);
 
 -- AlterTable: add categoryId (backfilled to the placeholder above), make
--- type optional and rename it to suggestedType — most rules don't
+-- type optional and rename it to suggestedType, most rules don't
 -- dictate a fixed punishment, severity is a staff judgment call at
 -- punish time.
 ALTER TABLE `punishment_rules`

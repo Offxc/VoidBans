@@ -1,6 +1,7 @@
 package com.voidsmp.voidbans;
 
 import com.voidsmp.voidbans.db.Database;
+import com.voidsmp.voidbans.db.SessionCloser;
 import com.voidsmp.voidbans.command.PunishmentCommand;
 import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.listener.ChatListener;
@@ -26,6 +27,14 @@ public final class VoidBansPlugin extends JavaPlugin {
 
         this.database = new Database(getConfig(), getLogger());
         this.messages = new MessageTemplate(getConfig());
+
+        // Heal sessions a previous run left open. Has to happen before the
+        // first heartbeat below overwrites the last-seen time it relies on.
+        try (var conn = database.getConnection()) {
+            SessionCloser.reconcileAfterRestart(conn, getConfig().getString("server-id", "default"));
+        } catch (java.sql.SQLException e) {
+            getLogger().warning("Failed to close sessions left open by the last run: " + e.getMessage());
+        }
         this.vulcanIntegration = new VulcanIntegration(this, database);
 
         getServer().getPluginManager().registerEvents(
@@ -54,7 +63,7 @@ public final class VoidBansPlugin extends JavaPlugin {
         this.heartbeatTask = new HeartbeatTask(this, database);
         heartbeatTask.runTaskTimerAsynchronously(this, 0L, 30L * 20L);
 
-        getLogger().info("VoidBans enabled — site-url: " + getConfig().getString("site-url"));
+        getLogger().info("VoidBans enabled, site-url: " + getConfig().getString("site-url"));
     }
 
     @Override
@@ -69,6 +78,21 @@ public final class VoidBansPlugin extends JavaPlugin {
             heartbeatTask.cancel();
         }
         if (database != null) {
+            // Players still online as the server stops never fire a quit
+            // event this plugin can act on, so close their sessions here.
+            String serverId = getConfig().getString("server-id", "default");
+            try (var conn = database.getConnection()) {
+                for (org.bukkit.entity.Player p : getServer().getOnlinePlayers()) {
+                    String uuid = p.getUniqueId().toString();
+                    SessionCloser.closeForPlayer(conn, uuid, serverId);
+                    try (var ps = conn.prepareStatement("UPDATE players SET isOnline = FALSE, lastLogout = NOW() WHERE uuid = ?")) {
+                        ps.setString(1, uuid);
+                        ps.executeUpdate();
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                getLogger().warning("Failed to close sessions on shutdown: " + e.getMessage());
+            }
             database.close();
         }
     }

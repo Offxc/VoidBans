@@ -4,7 +4,7 @@ const RULES_PAGE_ENABLED_KEY = "rules.page_enabled";
 
 /**
  * Whether the public /rules page shows a "Server Rules" button on the
- * homepage — independent of punishing.rules_enabled (whether staff can
+ * homepage, independent of punishing.rules_enabled (whether staff can
  * cite a rule when punishing), since a server might want one without the
  * other. Off by default so a fresh deploy doesn't show an empty page
  * before any rules exist.
@@ -23,7 +23,7 @@ export async function setRulesPageEnabled(enabled: boolean): Promise<void> {
 }
 
 /**
- * Rules grouped by category, in display order — the single source both
+ * Rules grouped by category, in display order, the single source both
  * the public /rules page and the staff punish-panel rule picker render
  * from. Only active rules and only within their category's sortOrder,
  * then each rule's own sortOrder.

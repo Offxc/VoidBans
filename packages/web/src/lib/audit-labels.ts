@@ -1,7 +1,7 @@
 /**
  * Display names for audit actions. Kept free of server-only imports so both
  * the viewer page and the CSV export can share it. An action missing from
- * here still renders — it just falls back to its raw key.
+ * here still renders, it just falls back to its raw key.
  */
 export const ACTION_LABELS: Record<string, string> = {
   "auth.login": "Signed in",

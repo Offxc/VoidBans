@@ -2,7 +2,7 @@ generator client {
   provider      = "prisma-client-js"
   // "native" covers local dev on whatever platform that happens to be;
   // the linux-musl targets are required for the node:20-alpine Docker
-  // image (Alpine uses musl libc, not glibc — Prisma's engine binaries
+  // image (Alpine uses musl libc, not glibc, Prisma's engine binaries
   // are platform+libc specific and won't run across that boundary).
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
@@ -23,7 +23,7 @@ model Player {
   lastLogout         DateTime?
   isOnline           Boolean  @default(false)
   // False only for a row staff pre-created (via the pre-ban lookup) for a
-  // UUID that has never actually connected — firstJoined on such a row is
+  // UUID that has never actually connected, firstJoined on such a row is
   // just the time it was created, not a real join, so the UI must not show
   // it as one. The plugin's own INSERT ... ON DUPLICATE KEY UPDATE on
   // login always sets this back to TRUE, absorbing the placeholder into a
@@ -42,7 +42,7 @@ model Player {
   @@map("players")
 }
 
-// Append-only — a new row whenever a login's reported username differs
+// Append-only, a new row whenever a login's reported username differs
 // from players.lastSeenUsername, so staff can recognize a renamed player.
 model UsernameHistory {
   id         BigInt   @id @default(autoincrement())
@@ -56,8 +56,8 @@ model UsernameHistory {
   @@map("username_history")
 }
 
-// Freeform, non-punishment staff notes on a player — e.g. "suspected alt
-// of X, watching" — distinct from a punishment: it's not an action taken
+// Freeform, non-punishment staff notes on a player, e.g. "suspected alt
+// of X, watching", distinct from a punishment: it's not an action taken
 // against the player, just context for other staff.
 model PlayerNote {
   id             BigInt   @id @default(autoincrement())
@@ -75,7 +75,7 @@ model PlayerNote {
 
 // Staff-uploaded PNG evidence, attached to a player generally or to one
 // specific punishment. Image bytes live in the row (bytesSize is capped at
-// upload time) — this app has no file storage/volume, and evidence images
+// upload time), this app has no file storage/volume, and evidence images
 // from staff are small enough that a DB blob avoids needing one.
 model PlayerAttachment {
   id              BigInt   @id @default(autoincrement())
@@ -106,7 +106,7 @@ model Session {
   ipAddress       String?   @db.VarChar(45)
   // Reported client brand at login (e.g. "vanilla", "lunarclient",
   // "feather"). Sourced from Vulcan's IPlayerData.getClientBrand() when
-  // the Vulcan integration is enabled — null if Vulcan isn't installed
+  // the Vulcan integration is enabled, null if Vulcan isn't installed
   // or the integration is turned off in Settings.
   clientBrand     String?   @db.VarChar(64)
 
@@ -120,7 +120,7 @@ model Session {
 
 // One row per Vulcan flag (a detected, possibly-not-yet-punishable
 // violation) or punish action, populated by the plugin's VulcanIntegration
-// listener. Exists independently of Vulcan being currently installed —
+// listener. Exists independently of Vulcan being currently installed,
 // history already recorded stays visible even if the integration is later
 // disabled, only new rows stop being written.
 model ViolationEvent {
@@ -227,7 +227,7 @@ model PunishmentTemplate {
   @@map("punishment_templates")
 }
 
-// A category grouping rules — "Chat Rules", "Severe Rules", etc. Drives
+// A category grouping rules, "Chat Rules", "Severe Rules", etc. Drives
 // both the public /rules page (grouped sections, in sortOrder) and the
 // rule picker when punishing. This replaced a hand-written Markdown page
 // as the single source of truth: editing a rule here updates both places
@@ -245,8 +245,8 @@ model RuleCategory {
 
 // A rule from the server's rulebook, selectable when issuing a punishment
 // and shown publicly on /rules under its category. Most real rules don't
-// dictate a fixed punishment — severity is a staff judgment call made
-// after seeing the player's history — so type/duration/appealable are
+// dictate a fixed punishment, severity is a staff judgment call made
+// after seeing the player's history, so type/duration/appealable are
 // optional per rule rather than required the way a template's are: a
 // rule can suggest a default if the owner wants, but citing one at
 // punish time never forces a specific action or length.
@@ -320,13 +320,13 @@ model StaffUser {
   isOwner       Boolean  @default(false)
   lastLoginAt   DateTime?
   // Self-linked Minecraft account, required before the dashboard is
-  // usable (enforced at /staff/link-account) — this is what lets the
+  // usable (enforced at /staff/link-account), this is what lets the
   // punishment API refuse to let staff action another staff member's
   // Player row. Nullable only because it doesn't exist until the staff
   // member completes that one-time step; every login re-checks for null.
   minecraftUuid String?  @unique @db.Char(36)
   // Set once this staff member has tried to link (their first lookup
-  // failed — they've genuinely never joined the server) AND chosen to
+  // failed, they've genuinely never joined the server) AND chosen to
   // continue without linking for now. Lets the dashboard gate let them
   // through unlinked rather than stuck at /staff/link-account forever,
   // while still nudging them to finish linking once they have joined.
@@ -336,7 +336,7 @@ model StaffUser {
 }
 
 // Append-only record of who did what. Nothing in the app updates or
-// deletes these rows — there is deliberately no route or UI that can.
+// deletes these rows, there is deliberately no route or UI that can.
 // actorDiscordId is null for events with no authenticated actor (a failed
 // login, a public appeal submission). actorUsername is a snapshot taken at
 // write time, because staff nicknames change and the record has to keep

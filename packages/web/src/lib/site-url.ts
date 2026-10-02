@@ -1,6 +1,6 @@
 /**
  * Absolute URL on the public site, built from SITE_URL and never from
- * req.url — behind a reverse proxy, req.url reflects whatever address
+ * req.url, behind a reverse proxy, req.url reflects whatever address
  * Next's own server is bound to (e.g. 0.0.0.0, or a Docker-internal
  * hostname), not the public domain the request actually arrived through,
  * since nothing forwards the original Host into how Next constructs

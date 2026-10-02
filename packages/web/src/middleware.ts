@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Nonce-based CSP, generated fresh per request. A static `script-src 'self'`
 // (the previous approach, in next.config.mjs) blocks every inline <script>
-// Next.js itself emits for React hydration data — App Router pages always
+// Next.js itself emits for React hydration data, App Router pages always
 // have at least one, and pages with more client components (like the
 // appeals queue, one AppealResolveCard per pending appeal) emit several.
 // That was silently breaking hydration and could crash a whole page. A
@@ -28,7 +28,7 @@ export function middleware(req: NextRequest) {
   const csp = buildCsp(nonce);
 
   // Next reads x-nonce off the *request* headers to tag its own inline
-  // scripts — has to be forwarded this way, not just set on the response.
+  // scripts, has to be forwarded this way, not just set on the response.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
@@ -51,7 +51,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip Next's static assets and image optimizer — no need to
+    // Skip Next's static assets and image optimizer, no need to
     // recompute a nonce per request for files that don't hydrate.
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],

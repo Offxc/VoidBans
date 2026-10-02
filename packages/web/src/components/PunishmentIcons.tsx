@@ -2,7 +2,7 @@ interface IconProps {
   size?: number;
 }
 
-// Small inline icons for punishment action buttons — deliberately plain
+// Small inline icons for punishment action buttons, deliberately plain
 // line icons (no icon library dependency for five glyphs) that read
 // clearly at button size and pick up currentColor so they follow each
 // button's severity color automatically.
@@ -58,7 +58,7 @@ export function HammerIcon({ size = 16 }: IconProps) {
 
 // Hammer with a small clock dot badge, for the "temporary" variant of an
 // otherwise-permanent action. The badge is a filled currentColor dot with
-// a tiny cut-out clock hand — simplest reliable way to layer two glyphs
+// a tiny cut-out clock hand, simplest reliable way to layer two glyphs
 // without a second color reference that could go stale.
 export function TempHammerIcon({ size = 16 }: IconProps) {
   return (

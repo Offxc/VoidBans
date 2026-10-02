@@ -91,7 +91,7 @@ export function StaffNav({ items, iconUrl, user }: { items: NavItem[]; iconUrl: 
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Close the drawer on every navigation — otherwise picking a page from
+  // Close the drawer on every navigation, otherwise picking a page from
   // the mobile menu leaves the overlay covering the page it just opened.
   useEffect(() => {
     setOpen(false);

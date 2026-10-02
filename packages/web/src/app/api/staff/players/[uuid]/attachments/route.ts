@@ -74,7 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: { uuid: strin
   const bytes = Buffer.from(await file.arrayBuffer());
 
   // Trust the actual file bytes, not the browser-supplied MIME type or
-  // filename extension — both are client-controlled and trivially spoofed.
+  // filename extension, both are client-controlled and trivially spoofed.
   if (bytes.length < 8 || !bytes.subarray(0, 8).equals(PNG_MAGIC)) {
     return NextResponse.json({ error: "File is not a valid PNG" }, { status: 400 });
   }

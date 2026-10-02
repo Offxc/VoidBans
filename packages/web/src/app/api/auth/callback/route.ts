@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     // Logged in full server-side so the real cause (bad client secret,
     // redirect URI mismatch, bot token issue, etc.) is visible in
-    // `docker compose logs web` — the redirect itself only ever shows the
+    // `docker compose logs web`, the redirect itself only ever shows the
     // player a generic error, on purpose.
     console.error("Discord OAuth callback failed:", err);
     await recordAudit(attempted, {

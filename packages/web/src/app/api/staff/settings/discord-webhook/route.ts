@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     action: "settings.discord_webhook.update",
     targetType: "site_setting",
     targetId: "discord_webhook",
-    // Never log the URL itself — it's a bearer credential for posting
+    // Never log the URL itself, it's a bearer credential for posting
     // to that channel, same reasoning as not logging DISCORD_BOT_TOKEN.
     details: { configured: Boolean(parsed.data.url), events: parsed.data.events },
   });

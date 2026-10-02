@@ -1,6 +1,6 @@
 /**
  * The full set of permission keys the site understands. This list is the
- * actual authorization surface of the API — every route that guards a
+ * actual authorization surface of the API, every route that guards a
  * sensitive action must check one of these server-side. The staff UI only
  * hides controls the viewer lacks; it never substitutes for this check.
  */

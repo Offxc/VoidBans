@@ -5,7 +5,7 @@
  *   cd packages/web
  *   pnpm exec tsx prisma/seed-rules.ts
  *
- * Safe to re-run — categories are matched by name and rules by code, so
+ * Safe to re-run, categories are matched by name and rules by code, so
  * re-running updates existing rows instead of duplicating them.
  */
 import { PrismaClient } from "@prisma/client";

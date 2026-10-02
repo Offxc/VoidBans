@@ -13,7 +13,7 @@ type LookupResult =
  * who has never joined this server, then creates a placeholder players
  * row so a punishment can be issued against them ahead of their first
  * connection. Search accepts a Java username (resolved via Mojang), a raw
- * UUID (Java via Mojang, or a Floodgate UUID staff already has on hand —
+ * UUID (Java via Mojang, or a Floodgate UUID staff already has on hand,
  * Mojang won't recognize those, so username must be typed in manually),
  * or a Bedrock ".name" (which can only ever match a local row, since
  * there's no public API to resolve a not-yet-joined Bedrock player's name
@@ -100,7 +100,7 @@ export function PreBanLookup({ canCreate }: { canCreate: boolean }) {
       {result?.found === "local" && (
         <div style={{ marginTop: 12, fontSize: 13 }}>
           <p style={{ margin: "0 0 8px" }}>
-            {result.username} has already been seen on this server — go to their existing profile.
+            {result.username} has already been seen on this server. Open their existing profile.
           </p>
           <button onClick={() => router.push(`/staff/players/${result.uuid}`)} className="vb-btn vb-btn-primary">
             Open profile
@@ -111,7 +111,7 @@ export function PreBanLookup({ canCreate }: { canCreate: boolean }) {
       {result?.found === "mojang" && (
         <div style={{ marginTop: 12, fontSize: 13 }}>
           <p style={{ margin: "0 0 8px" }}>
-            Found on Mojang: <strong>{result.username}</strong> ({result.uuid}) — hasn&apos;t joined this server
+            Found on Mojang: <strong>{result.username}</strong> ({result.uuid}). They haven&apos;t joined this server
             yet.
           </p>
           {canCreate ? (
@@ -146,7 +146,7 @@ export function PreBanLookup({ canCreate }: { canCreate: boolean }) {
                 onClick={() => createAndGo(query.trim(), manualUsername.trim())}
                 disabled={creating || !manualUsername.trim()}
                 className="vb-btn vb-btn-primary"
-                title="Only works if what you searched was a UUID — a username can't be pre-created without a Mojang match"
+                title="Only works if what you searched was a UUID. A username can't be pre-created without a Mojang match"
               >
                 {creating ? "Creating…" : "Create with this UUID"}
               </button>

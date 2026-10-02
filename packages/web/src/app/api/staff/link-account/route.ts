@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const parsed = linkSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid username." }, { status: 400 });
 
-  // Must be a player who has actually joined the server at least once —
+  // Must be a player who has actually joined the server at least once,
   // this can't be an arbitrary typed username, since the whole point is
   // linking to a real, known Player row so the punishment route can
   // recognize "this UUID belongs to staff."

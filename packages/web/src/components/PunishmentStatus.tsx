@@ -7,7 +7,7 @@ interface Props {
 
 /**
  * "Active" alone doesn't tell staff or a player when a temp punishment
- * actually lifts — this always resolves to one of: Inactive, Active
+ * actually lifts, this always resolves to one of: Inactive, Active
  * (permanent), or Active until <time>, so the expiry is never hidden
  * behind a bare "Active" pill.
  */

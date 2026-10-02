@@ -4,7 +4,7 @@ const VULCAN_SETTING_KEY = "integrations.vulcan.enabled";
 
 /**
  * Whether the Vulcan violation-history UI should render at all. This is a
- * site-wide, owner-controlled toggle stored in site_settings — separate
+ * site-wide, owner-controlled toggle stored in site_settings, separate
  * from any per-staff permission (players.view_violations), which controls
  * who can see it once it's on. Disabling this hides the UI everywhere;
  * it does not delete already-recorded ViolationEvent rows.
