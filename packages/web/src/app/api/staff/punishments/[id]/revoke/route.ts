@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -12,7 +13,7 @@ const revokeSchema = z.object({
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "bans.revoke")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -42,14 +43,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "punishment.revoke",
-      targetType: "punishment",
-      targetId: id.toString(),
-      details: { publicBanId: punishment.publicBanId },
-    },
+  await recordAudit(principal, {
+    action: "punishment.revoke",
+    targetType: "punishment",
+    targetId: id.toString(),
+    details: { publicBanId: punishment.publicBanId },
   });
 
   notifyDiscordWebhook("punishment_lifted", {

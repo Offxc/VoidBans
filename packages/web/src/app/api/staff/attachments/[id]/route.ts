@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -6,7 +7,7 @@ import { hasPermission } from "@/lib/permissions";
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "players.add_attachments")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -21,14 +22,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   await prisma.playerAttachment.delete({ where: { id } });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "player.attachment.delete",
-      targetType: "player",
-      targetId: attachment.playerUuid,
-      details: { attachmentId: id.toString() },
-    },
+  await recordAudit(principal, {
+    action: "player.attachment.delete",
+    targetType: "player",
+    targetId: attachment.playerUuid,
+    details: { attachmentId: id.toString() },
   });
 
   return NextResponse.json({ ok: true });

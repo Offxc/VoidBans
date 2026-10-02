@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { buildAuditData, denyAccess } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -14,7 +15,7 @@ const resolveSchema = z.object({
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "appeals.resolve")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const parsed = resolveSchema.safeParse(await req.json().catch(() => null));
@@ -59,13 +60,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         ]
       : []),
     prisma.auditLog.create({
-      data: {
-        actorDiscordId: principal.discordId,
+      data: buildAuditData(principal, {
         action: `appeal.${decision.toLowerCase()}`,
         targetType: "appeal",
         targetId: appeal.id.toString(),
-        details: { autoRevoked: willRevoke },
-      },
+        details: { publicBanId: appeal.punishment.publicBanId, autoRevoked: willRevoke },
+      }),
     }),
   ]);
 

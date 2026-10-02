@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -15,7 +16,7 @@ const templateSchema = z.object({
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "templates.create")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const parsed = templateSchema.safeParse(await req.json().catch(() => null));
@@ -33,14 +34,11 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "template.create",
-      targetType: "punishment_template",
-      targetId: template.id.toString(),
-      details: { name: template.name },
-    },
+  await recordAudit(principal, {
+    action: "template.create",
+    targetType: "punishment_template",
+    targetId: template.id.toString(),
+    details: { name: template.name },
   });
 
   return NextResponse.json({ id: template.id.toString() }, { status: 201 });

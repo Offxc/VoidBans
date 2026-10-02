@@ -51,6 +51,12 @@ const ICON_PATHS: Record<string, React.ReactNode> = {
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </>
   ),
+  "/staff/audit": (
+    <>
+      <path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6z" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
   "/staff/settings": (
     <>
       <circle cx="12" cy="12" r="3" />

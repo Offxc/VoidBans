@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -15,7 +16,7 @@ const updateSchema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "templates.edit")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -43,14 +44,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "template.update",
-      targetType: "punishment_template",
-      targetId: id.toString(),
-      details: { name: input.name },
-    },
+  await recordAudit(principal, {
+    action: "template.update",
+    targetType: "punishment_template",
+    targetId: id.toString(),
+    details: { name: input.name },
   });
 
   return NextResponse.json({ ok: true });
@@ -59,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "templates.edit")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -78,14 +76,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   // punishment history.
   await prisma.punishmentTemplate.delete({ where: { id } });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "template.delete",
-      targetType: "punishment_template",
-      targetId: id.toString(),
-      details: { name: existing.name },
-    },
+  await recordAudit(principal, {
+    action: "template.delete",
+    targetType: "punishment_template",
+    targetId: id.toString(),
+    details: { name: existing.name },
   });
 
   return NextResponse.json({ ok: true });

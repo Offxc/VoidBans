@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { denyAccess } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 
 interface DiscordRole {
@@ -9,7 +10,7 @@ interface DiscordRole {
 
 export async function GET() {
   const principal = await getStaffPrincipal();
-  if (!principal?.isOwner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!principal?.isOwner) return denyAccess(principal);
 
   const guildId = process.env.DISCORD_GUILD_ID;
   const botToken = process.env.DISCORD_BOT_TOKEN;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -14,7 +15,7 @@ import { resolveMojangUsername, resolveMojangUuid, isUuidLike, normalizeUuid } f
 export async function GET(req: NextRequest) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "players.view_roster")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const query = req.nextUrl.searchParams.get("q")?.trim();

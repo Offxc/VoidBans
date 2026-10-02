@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -12,7 +13,7 @@ const createSchema = z.object({
 export async function POST(req: NextRequest, { params }: { params: { uuid: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "players.notes")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
@@ -27,14 +28,11 @@ export async function POST(req: NextRequest, { params }: { params: { uuid: strin
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "player.note.create",
-      targetType: "player",
-      targetId: params.uuid,
-      details: { noteId: note.id.toString() },
-    },
+  await recordAudit(principal, {
+    action: "player.note.create",
+    targetType: "player",
+    targetId: params.uuid,
+    details: { noteId: note.id.toString() },
   });
 
   const player = await prisma.player.findUnique({ where: { uuid: params.uuid }, select: { username: true } });

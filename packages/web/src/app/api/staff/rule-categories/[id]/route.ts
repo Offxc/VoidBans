@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -13,7 +14,7 @@ const updateSchema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "rules.edit")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -26,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const parsed = updateSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const existing = await prisma.ruleCategory.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.ruleCategory.findUnique({ where: { id }, select: { id: true, name: true } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   await prisma.ruleCategory.update({
@@ -38,13 +39,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
   });
 
+  await recordAudit(principal, {
+    action: "rule_category.update",
+    targetType: "rule_category",
+    targetId: id.toString(),
+    details: { from: existing.name, to: parsed.data.name },
+  });
+
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "rules.edit")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   let id: bigint;
@@ -56,7 +64,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   const category = await prisma.ruleCategory.findUnique({
     where: { id },
-    select: { _count: { select: { rules: true } } },
+    select: { name: true, _count: { select: { rules: true } } },
   });
   if (!category) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -71,5 +79,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 
   await prisma.ruleCategory.delete({ where: { id } });
+  await recordAudit(principal, {
+    action: "rule_category.delete",
+    targetType: "rule_category",
+    targetId: id.toString(),
+    details: { name: category.name },
+  });
   return NextResponse.json({ ok: true });
 }

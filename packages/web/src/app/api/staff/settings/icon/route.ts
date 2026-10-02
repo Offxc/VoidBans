@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { getStaffPrincipal } from "@/lib/auth";
 import { setSiteIconUrl, isValidPostimagesUrl } from "@/lib/site-icon";
@@ -10,7 +11,7 @@ const updateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal?.isOwner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!principal?.isOwner) return denyAccess(principal);
 
   const parsed = updateSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
@@ -25,14 +26,11 @@ export async function POST(req: NextRequest) {
 
   await setSiteIconUrl(url);
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "settings.icon.update",
-      targetType: "site_setting",
-      targetId: "site.icon_url",
-      details: { url },
-    },
+  await recordAudit(principal, {
+    action: "settings.icon.update",
+    targetType: "site_setting",
+    targetId: "site.icon_url",
+    details: { url },
   });
 
   return NextResponse.json({ ok: true });

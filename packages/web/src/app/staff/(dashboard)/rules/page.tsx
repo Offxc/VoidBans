@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { recordDenied } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,10 @@ import { PageHeader } from "@/components/PageHeader";
 
 export default async function RulesPage() {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "rules.view")) redirect("/staff");
+  if (!principal || !hasPermission(principal, "rules.view")) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const canCreate = hasPermission(principal, "rules.create");
   const canEdit = hasPermission(principal, "rules.edit");

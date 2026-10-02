@@ -32,6 +32,11 @@ export function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
+  // Route handlers can't see their own path or method through next/headers,
+  // and the audit log needs both to record where an access denial happened.
+  // Set here (overwriting anything the client sent) so it can't be spoofed.
+  requestHeaders.set("x-audit-path", req.nextUrl.pathname);
+  requestHeaders.set("x-audit-method", req.method);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 

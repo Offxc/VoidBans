@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { recordDenied } from "@/lib/audit";
 import Link from "next/link";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -16,7 +17,10 @@ export default async function PunishmentsListPage({
   searchParams: { page?: string };
 }) {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "bans.view")) redirect("/staff");
+  if (!principal || !hasPermission(principal, "bans.view")) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const canRevoke = hasPermission(principal, "bans.revoke");
 

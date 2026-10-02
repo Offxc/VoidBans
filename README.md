@@ -47,6 +47,7 @@ never runs migrations.
   takes effect the moment they connect
 - Revoke or edit any punishment, template, or rule after the fact
 - Per-Discord-role permissions, checked server-side on every request — not "op or not"
+- Audit log (`audit.view`): filterable, paginated, CSV export — see [Audit log](#audit-log)
 - Discord webhook notifications (punishment issued/lifted, note or attachment added, appeal
   submitted/resolved), each event toggled independently
 
@@ -231,6 +232,37 @@ licensed plugin).
 AntiSpoof Pro was evaluated for detected-plugin data and dropped — its jar exposes no API, Bukkit
 events, or PlaceholderAPI hooks to read from.
 
+## Audit log
+
+Staff with `audit.view` (and the owner) get an **Audit log** page: filter by area, outcome, actor
+or target, page through it, export the current filter as CSV. Each row records who, what, the
+target, success/denied/failure, when, and the source IP and user agent.
+
+What gets recorded: punishments issued and revoked, appeals (submitted and resolved), notes,
+attachments, pre-bans, templates, rules and categories, appeal questions, role permissions, every
+settings change, sign-ins and sign-outs (including failed ones), requests refused for missing
+permission, and public rate-limit hits.
+
+Written with the [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+in mind:
+
+- **Append-only.** No route or page edits or deletes entries. Back the table up and keep the
+  database user's access tight; anyone with direct SQL access can still alter it.
+- **No secrets.** Credentials (the webhook URL, tokens) are never passed in, and values under
+  keys like `token`, `secret`, `password` or `webhook_url` are replaced with `[redacted]`.
+- **Log injection.** Control characters and newlines are stripped from every value, details are
+  stored as structured JSON, and the page renders them as plain text.
+- **Bounded.** Values, arrays and nesting are capped, and denials from signed-out visitors are
+  rate limited per IP so they can't flood the table.
+- **CSV injection.** Exported cells starting with `=`, `+`, `-` or `@` are prefixed so a
+  spreadsheet won't run them as formulas.
+- **Never blocks the action.** A failed audit write is reported to the server log (action name
+  only) and the request carries on.
+- Actor names are snapshotted when the entry is written, so renames don't rewrite history.
+
+The IP address comes from `CF-Connecting-IP`, then `X-Forwarded-For`, so it is only as trustworthy
+as your proxy setup. Entries are kept indefinitely; there's no retention job.
+
 ## Security
 
 - Permissions checked server-side on every route, not just hidden in the UI
@@ -241,8 +273,8 @@ events, or PlaceholderAPI hooks to read from.
 - Rate limiting on public lookup/appeal endpoints, keyed off real client IP
 - Parameterized queries throughout (Prisma) — no raw string-built SQL
 - CSP and other security headers on every response (`packages/web/src/middleware.ts`)
-- Audit log on every sensitive action — punishments, notes, attachments, roles/permissions,
-  templates, rules, settings changes, appeal resolution — against the acting staff member
+- Audit log covering staff actions, sign-ins, access denials and rate-limit hits — see
+  [Audit log](#audit-log)
 
 Report a vulnerability via a security advisory on the repo, not a public issue.
 

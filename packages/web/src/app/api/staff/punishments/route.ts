@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -19,7 +20,7 @@ const issueSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!principal) return denyAccess(principal, 401);
 
   const parsed = issueSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   const canIssue = hasPermission(principal, "bans.issue");
   const canRequest = hasPermission(principal, "bans.request");
   if (!canIssue && !canRequest) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   // Staff can't punish another staff member's linked Minecraft account —
@@ -46,6 +47,13 @@ export async function POST(req: NextRequest) {
       select: { discordId: true },
     });
     if (targetIsStaff) {
+      await recordAudit(principal, {
+        action: "access.denied",
+        targetType: "player",
+        targetId: input.playerUuid,
+        outcome: "denied",
+        details: { reason: "target_is_staff", type: input.type },
+      });
       return NextResponse.json({ error: "This player is a staff member and cannot be punished here." }, { status: 403 });
     }
   }
@@ -64,6 +72,13 @@ export async function POST(req: NextRequest) {
   if (wantsIpBan && !hasPermission(principal, "players.view_ip")) {
     // IP-banning requires resolving the player's IP, which is the same
     // sensitive-data boundary as viewing it on a profile.
+    await recordAudit(principal, {
+      action: "access.denied",
+      targetType: "player",
+      targetId: input.playerUuid,
+      outcome: "denied",
+      details: { reason: "ip_ban_without_view_ip" },
+    });
     return NextResponse.json({ error: "Missing players.view_ip permission for IP bans" }, { status: 403 });
   }
 
@@ -97,14 +112,11 @@ export async function POST(req: NextRequest) {
     include: { player: { select: { username: true } } },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "punishment.issue",
-      targetType: "punishment",
-      targetId: punishment.id.toString(),
-      details: { type: input.type, publicBanId: punishment.publicBanId, ipBanned: punishment.ipBanned },
-    },
+  await recordAudit(principal, {
+    action: "punishment.issue",
+    targetType: "punishment",
+    targetId: punishment.id.toString(),
+    details: { type: input.type, publicBanId: punishment.publicBanId, ipBanned: punishment.ipBanned },
   });
 
   notifyDiscordWebhook("punishment_issued", {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { buildAuditData, denyAccess } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -14,7 +15,7 @@ const upsertSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal?.isOwner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!principal?.isOwner) return denyAccess(principal);
 
   const parsed = upsertSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -34,13 +35,12 @@ export async function POST(req: NextRequest) {
       data: validKeys.map((key) => ({ roleId: role.id, permissionKey: key })),
     }),
     prisma.auditLog.create({
-      data: {
-        actorDiscordId: principal.discordId,
+      data: buildAuditData(principal, {
         action: "role.permissions.update",
         targetType: "staff_role",
         targetId: role.id.toString(),
         details: { discordRoleId, permissions: validKeys },
-      },
+      }),
     }),
   ]);
 

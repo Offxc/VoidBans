@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { recordDenied } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,10 @@ import { PageHeader } from "@/components/PageHeader";
 
 export default async function PlayersPage() {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "players.view_roster")) redirect("/staff");
+  if (!principal || !hasPermission(principal, "players.view_roster")) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const [online, offline] = await Promise.all([
     prisma.player.findMany({

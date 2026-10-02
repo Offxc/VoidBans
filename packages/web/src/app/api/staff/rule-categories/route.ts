@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -13,7 +14,7 @@ const categorySchema = z.object({
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "rules.create")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const parsed = categorySchema.safeParse(await req.json().catch(() => null));
@@ -25,6 +26,13 @@ export async function POST(req: NextRequest) {
       description: parsed.data.description || null,
       sortOrder: parsed.data.sortOrder,
     },
+  });
+
+  await recordAudit(principal, {
+    action: "rule_category.create",
+    targetType: "rule_category",
+    targetId: category.id.toString(),
+    details: { name: category.name },
   });
 
   return NextResponse.json({ id: category.id.toString() }, { status: 201 });

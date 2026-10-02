@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isValidBanIdFormat } from "@/lib/ban-id";
@@ -13,6 +14,12 @@ export async function POST(req: NextRequest, { params }: { params: { banId: stri
   const ip = clientIpFromHeaders(req.headers);
   const limit = rateLimit(`appeal-submit:${ip}`, 5, 60 * 60_000);
   if (!limit.allowed) {
+    await recordAudit(null, {
+      action: "ratelimit.exceeded",
+      targetType: "route",
+      targetId: "appeal-submit",
+      outcome: "denied",
+    });
     return NextResponse.json({ error: "Too many appeal attempts. Try again later." }, { status: 429 });
   }
 
@@ -56,11 +63,18 @@ export async function POST(req: NextRequest, { params }: { params: { banId: stri
     }
   }
 
-  await prisma.appeal.create({
+  const appeal = await prisma.appeal.create({
     data: {
       punishmentId: punishment.id,
       answers: parsed.data.answers,
     },
+  });
+
+  await recordAudit(null, {
+    action: "appeal.submit",
+    targetType: "appeal",
+    targetId: appeal.id.toString(),
+    details: { publicBanId: punishment.publicBanId },
   });
 
   notifyDiscordWebhook("appeal_submitted", {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { isValidBanIdFormat } from "@/lib/ban-id";
 import { rateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
@@ -7,6 +8,12 @@ export async function GET(req: NextRequest, { params }: { params: { banId: strin
   const ip = clientIpFromHeaders(req.headers);
   const limit = rateLimit(`ban-lookup:${ip}`, 30, 60_000);
   if (!limit.allowed) {
+    await recordAudit(null, {
+      action: "ratelimit.exceeded",
+      targetType: "route",
+      targetId: "ban-lookup",
+      outcome: "denied",
+    });
     return NextResponse.json({ error: "Too many requests. Try again shortly." }, { status: 429 });
   }
 

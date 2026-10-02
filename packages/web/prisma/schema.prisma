@@ -335,17 +335,30 @@ model StaffUser {
   @@map("staff_users")
 }
 
+// Append-only record of who did what. Nothing in the app updates or
+// deletes these rows — there is deliberately no route or UI that can.
+// actorDiscordId is null for events with no authenticated actor (a failed
+// login, a public appeal submission). actorUsername is a snapshot taken at
+// write time, because staff nicknames change and the record has to keep
+// saying who the person was when it happened.
 model AuditLog {
   id             BigInt   @id @default(autoincrement())
-  actorDiscordId String   @db.VarChar(32)
+  actorDiscordId String?  @db.VarChar(32)
+  actorUsername  String?  @db.VarChar(64)
   action         String   @db.VarChar(64)
   targetType     String   @db.VarChar(64)
   targetId       String   @db.VarChar(64)
+  // success | denied | failure
+  outcome        String   @default("success") @db.VarChar(16)
   details        Json?
+  ipAddress      String?  @db.VarChar(45)
+  userAgent      String?  @db.VarChar(255)
   createdAt      DateTime @default(now())
 
   @@index([actorDiscordId])
   @@index([createdAt])
+  @@index([action])
+  @@index([targetType, targetId])
   @@map("audit_log")
 }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { getStaffPrincipal } from "@/lib/auth";
 import { setDiscordWebhookConfig, WEBHOOK_EVENT_KEYS } from "@/lib/discord-webhook";
@@ -11,7 +12,7 @@ const updateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal?.isOwner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!principal?.isOwner) return denyAccess(principal);
 
   const parsed = updateSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
@@ -25,16 +26,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid webhook." }, { status: 400 });
   }
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "settings.discord_webhook.update",
-      targetType: "site_setting",
-      targetId: "discord_webhook",
-      // Never log the URL itself — it's a bearer credential for posting
-      // to that channel, same reasoning as not logging DISCORD_BOT_TOKEN.
-      details: { configured: Boolean(parsed.data.url), events: parsed.data.events },
-    },
+  await recordAudit(principal, {
+    action: "settings.discord_webhook.update",
+    targetType: "site_setting",
+    targetId: "discord_webhook",
+    // Never log the URL itself — it's a bearer credential for posting
+    // to that channel, same reasoning as not logging DISCORD_BOT_TOKEN.
+    details: { configured: Boolean(parsed.data.url), events: parsed.data.events },
   });
 
   return NextResponse.json({ ok: true });

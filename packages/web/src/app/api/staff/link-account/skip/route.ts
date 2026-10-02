@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 
@@ -12,11 +13,17 @@ import { getStaffPrincipal } from "@/lib/auth";
  */
 export async function POST() {
   const principal = await getStaffPrincipal();
-  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!principal) return denyAccess(principal, 401);
 
   await prisma.staffUser.update({
     where: { discordId: principal.discordId },
     data: { minecraftLinkSkippedAt: new Date() },
+  });
+
+  await recordAudit(principal, {
+    action: "staff.link_skip",
+    targetType: "staff_user",
+    targetId: principal.discordId,
   });
 
   return NextResponse.json({ ok: true });

@@ -1,3 +1,4 @@
+import { recordDenied } from "@/lib/audit";
 import { redirect, notFound } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -15,7 +16,10 @@ import { ViolationHistory } from "@/components/ViolationHistory";
 
 export default async function PlayerProfilePage({ params }: { params: { uuid: string } }) {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "players.view_roster")) redirect("/staff");
+  if (!principal || !hasPermission(principal, "players.view_roster")) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const player = await prisma.player.findUnique({ where: { uuid: params.uuid } });
   if (!player) notFound();

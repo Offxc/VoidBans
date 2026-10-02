@@ -45,6 +45,7 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
       label: "Rules",
       show: hasPermission(principal, "rules.view") && punishmentModes.rulesEnabled,
     },
+    { href: "/staff/audit", label: "Audit log", show: hasPermission(principal, "audit.view") },
     // Owner-only, not permission-gated — /staff/settings itself redirects
     // any non-owner regardless, so showing this to a non-owner would just
     // be a nav link that bounces them straight back.

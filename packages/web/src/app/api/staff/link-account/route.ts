@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
@@ -9,7 +10,7 @@ const linkSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!principal) return denyAccess(principal, 401);
 
   const parsed = linkSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid username." }, { status: 400 });
@@ -39,14 +40,11 @@ export async function POST(req: NextRequest) {
     data: { minecraftUuid: player.uuid },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "staff.link_account",
-      targetType: "player",
-      targetId: player.uuid,
-      details: { username: player.username },
-    },
+  await recordAudit(principal, {
+    action: "staff.link_account",
+    targetType: "player",
+    targetId: player.uuid,
+    details: { username: player.username },
   });
 
   return NextResponse.json({ ok: true, username: player.username });

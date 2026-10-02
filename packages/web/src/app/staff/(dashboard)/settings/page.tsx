@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { recordDenied } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PERMISSION_KEYS } from "@/lib/permissions";
@@ -19,7 +20,10 @@ export default async function SettingsPage() {
   // Settings is owner-only, not permission-gated — role/permission edits
   // here can grant any permission to anyone, so only the owner identity
   // (tied to a Discord ID, not a reassignable role) is trusted with that.
-  if (!principal?.isOwner) redirect("/staff");
+  if (!principal?.isOwner) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const [roles, questions, vulcanEnabled, iconUrl, punishmentModes, webhookConfig] = await Promise.all([
     prisma.staffRole.findMany({

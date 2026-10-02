@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -10,7 +11,7 @@ const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 export async function GET(req: NextRequest, { params }: { params: { uuid: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "players.view_attachments")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const attachments = await prisma.playerAttachment.findMany({
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { uuid: string
 export async function POST(req: NextRequest, { params }: { params: { uuid: string } }) {
   const principal = await getStaffPrincipal();
   if (!principal || !hasPermission(principal, "players.add_attachments")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return denyAccess(principal);
   }
 
   const form = await req.formData().catch(() => null);
@@ -94,14 +95,11 @@ export async function POST(req: NextRequest, { params }: { params: { uuid: strin
     select: { id: true },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "player.attachment.create",
-      targetType: "player",
-      targetId: params.uuid,
-      details: { attachmentId: attachment.id.toString(), punishmentId: punishmentId?.toString() ?? null },
-    },
+  await recordAudit(principal, {
+    action: "player.attachment.create",
+    targetType: "player",
+    targetId: params.uuid,
+    details: { attachmentId: attachment.id.toString(), punishmentId: punishmentId?.toString() ?? null },
   });
 
   notifyDiscordWebhook("attachment_added", {

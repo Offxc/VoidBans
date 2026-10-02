@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { getStaffPrincipal } from "@/lib/auth";
 import { setPunishmentModes } from "@/lib/punishment-modes";
@@ -11,21 +12,18 @@ const updateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
-  if (!principal?.isOwner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!principal?.isOwner) return denyAccess(principal);
 
   const parsed = updateSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   await setPunishmentModes(parsed.data);
 
-  await prisma.auditLog.create({
-    data: {
-      actorDiscordId: principal.discordId,
-      action: "settings.punishment_modes.update",
-      targetType: "site_setting",
-      targetId: "punishment_modes",
-      details: parsed.data,
-    },
+  await recordAudit(principal, {
+    action: "settings.punishment_modes.update",
+    targetType: "site_setting",
+    targetId: "punishment_modes",
+    details: parsed.data,
   });
 
   return NextResponse.json({ ok: true });

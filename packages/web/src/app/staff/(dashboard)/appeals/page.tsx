@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { recordDenied } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +8,10 @@ import { PageHeader } from "@/components/PageHeader";
 
 export default async function AppealsPage() {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "appeals.view")) redirect("/staff");
+  if (!principal || !hasPermission(principal, "appeals.view")) {
+    await recordDenied(principal);
+    redirect("/staff");
+  }
 
   const appeals = await prisma.appeal.findMany({
     where: { status: "PENDING" },
