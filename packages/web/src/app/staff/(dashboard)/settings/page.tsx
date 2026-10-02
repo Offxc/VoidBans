@@ -14,6 +14,7 @@ import { SiteIconEditor } from "@/components/SiteIconEditor";
 import { PunishmentModesEditor } from "@/components/PunishmentModesEditor";
 import { DiscordWebhookEditor } from "@/components/DiscordWebhookEditor";
 import { PageHeader } from "@/components/PageHeader";
+import { PluginConnection } from "@/components/PluginConnection";
 
 export default async function SettingsPage() {
   const principal = await getStaffPrincipal();
@@ -40,6 +41,16 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" />
+
+      <SettingSection
+        title="Plugin connection"
+        desc="Servers running the plugin against this database. Each reports in every 30 seconds."
+        bare
+      >
+        <div className="vb-panel" style={{ padding: 20, overflowX: "auto" }}>
+          <PluginConnection />
+        </div>
+      </SettingSection>
 
       <SettingSection title="Roles & permissions" desc="Map Discord roles to what they can see and do. Re-checked on every login.">
         <RolePermissionEditor

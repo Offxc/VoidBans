@@ -109,6 +109,33 @@ JAVA_HOME=<path-to-jdk-17> mvn package
 Jar lands at `target/VoidBans.jar` — drop it in the Paper server's `plugins/` folder and point its
 generated `config.yml` at the same database.
 
+## How the plugin and site connect
+
+They share one MySQL database and nothing else. There is no HTTP API, webhook or API key between
+them. The link is the `database:` block in the plugin's `config.yml`, which has to point at the
+same database as the site's `DATABASE_URL`.
+
+| Direction | What moves |
+| --- | --- |
+| Plugin writes, site reads | Players, sessions, IPs, username history, online status, Vulcan violations, punishments issued in-game with `/vban`, a heartbeat |
+| Site writes, plugin reads | Punishments (checked on every login and chat message), integration toggles |
+
+The site owns the schema and runs the migrations. The plugin never changes the schema, so deploy
+the site (and its migration) before updating the plugin.
+
+**Check the link:** once the plugin starts, **Settings > Plugin connection** lists the server
+under its `server-id` with its plugin version and last-seen time. It reports in every 30 seconds
+and shows "Not reporting" after about 90 seconds of silence. If nothing appears, the plugin is
+pointed at a different database.
+
+**Installing the plugin from this repo does not connect anyone to your site.** The jar contains no
+credentials. Each install talks only to the database in its own `config.yml`, so someone else's
+server can't write to your panel unless they have your database password. For that reason:
+
+- Don't publish the MySQL port to the internet. Bind it to localhost or a private network.
+- Give the plugin its own MySQL user with access to this one database only.
+- Treat `config.yml` like a secret, since it holds that password.
+
 ## Self-hosting
 
 [`deploy/DEPLOYMENT.md`](deploy/DEPLOYMENT.md) covers the Discord app/bot setup, DNS, Docker on a

@@ -6,6 +6,7 @@ import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.listener.ChatListener;
 import com.voidsmp.voidbans.listener.SessionListener;
 import com.voidsmp.voidbans.message.MessageTemplate;
+import com.voidsmp.voidbans.task.HeartbeatTask;
 import com.voidsmp.voidbans.task.IntegrationSettingsPollTask;
 import com.voidsmp.voidbans.task.StaffAlertTask;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +18,7 @@ public final class VoidBansPlugin extends JavaPlugin {
     private StaffAlertTask staffAlertTask;
     private VulcanIntegration vulcanIntegration;
     private IntegrationSettingsPollTask integrationSettingsPollTask;
+    private HeartbeatTask heartbeatTask;
 
     @Override
     public void onEnable() {
@@ -47,6 +49,11 @@ public final class VoidBansPlugin extends JavaPlugin {
         this.integrationSettingsPollTask = new IntegrationSettingsPollTask(this, database, vulcanIntegration);
         integrationSettingsPollTask.runTaskTimerAsynchronously(this, 0L, 20L * 20L);
 
+        // First beat right away so Settings > Plugin connection shows this
+        // server as soon as it starts, then every 30s.
+        this.heartbeatTask = new HeartbeatTask(this, database);
+        heartbeatTask.runTaskTimerAsynchronously(this, 0L, 30L * 20L);
+
         getLogger().info("VoidBans enabled — site-url: " + getConfig().getString("site-url"));
     }
 
@@ -57,6 +64,9 @@ public final class VoidBansPlugin extends JavaPlugin {
         }
         if (integrationSettingsPollTask != null) {
             integrationSettingsPollTask.cancel();
+        }
+        if (heartbeatTask != null) {
+            heartbeatTask.cancel();
         }
         if (database != null) {
             database.close();
