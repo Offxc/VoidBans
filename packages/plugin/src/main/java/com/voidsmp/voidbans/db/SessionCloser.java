@@ -7,20 +7,27 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 /**
- * Closes sessions the normal quit event never got to, a crash, a restart,
- * a player rejoining before their last quit was processed. Without this a
- * session keeps logoutAt = NULL forever and the dashboard shows it as
- * still running.
+ * Keeps the sessions table honest when the normal join/quit events aren't
+ * the whole story: a crash, a restart, a player rejoining before their last
+ * quit was processed.
+ *
+ * A session that is left open has no known end, and it must never be given
+ * one by guessing from "now" later on: that is how an old session from last
+ * week ends up with a 150 hour length. Such sessions are marked ended with
+ * logoutAt = loginAt and a NULL duration. The dashboard shows that as "Not
+ * recorded" and playtime totals skip it.
  */
 public final class SessionCloser {
 
+    /** A session still open at startup is only trusted if it began this recently before the last heartbeat. */
+    private static final long MAX_CRASHED_SESSION_SECONDS = 24 * 3600;
+
     private SessionCloser() {}
 
-    /** Closes every open session this player has on this server. */
-    public static void closeForPlayer(Connection conn, String uuid, String serverId) throws SQLException {
+    /** Marks every open session this player has on this server as ended at an unknown time. */
+    public static void abandonOpen(Connection conn, String uuid, String serverId) throws SQLException {
         String sql = """
-            UPDATE sessions
-            SET logoutAt = NOW(), durationSeconds = GREATEST(0, TIMESTAMPDIFF(SECOND, loginAt, NOW()))
+            UPDATE sessions SET logoutAt = loginAt, durationSeconds = NULL
             WHERE playerUuid = ? AND serverId = ? AND logoutAt IS NULL
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -31,13 +38,57 @@ public final class SessionCloser {
     }
 
     /**
-     * Runs once at startup, before this server's first heartbeat. Anything
+     * A player is leaving. Their newest open session is the one that just
+     * ended and gets a real end time. Any older open session can't still be
+     * running, so it is abandoned rather than closed with today's date.
+     */
+    public static void closeOnQuit(Connection conn, String uuid, String serverId) throws SQLException {
+        long newestId = -1;
+        String newest = """
+            SELECT id FROM sessions
+            WHERE playerUuid = ? AND serverId = ? AND logoutAt IS NULL
+            ORDER BY loginAt DESC, id DESC LIMIT 1
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(newest)) {
+            ps.setString(1, uuid);
+            ps.setString(2, serverId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) newestId = rs.getLong("id");
+            }
+        }
+        if (newestId < 0) return;
+
+        String abandonOlder = """
+            UPDATE sessions SET logoutAt = loginAt, durationSeconds = NULL
+            WHERE playerUuid = ? AND serverId = ? AND logoutAt IS NULL AND id <> ?
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(abandonOlder)) {
+            ps.setString(1, uuid);
+            ps.setString(2, serverId);
+            ps.setLong(3, newestId);
+            ps.executeUpdate();
+        }
+
+        String close = """
+            UPDATE sessions
+            SET logoutAt = NOW(), durationSeconds = GREATEST(0, TIMESTAMPDIFF(SECOND, loginAt, NOW()))
+            WHERE id = ?
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(close)) {
+            ps.setLong(1, newestId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Runs once at startup, before this server's first heartbeat. Whatever is
      * still open for this server belongs to a previous run that stopped
-     * without closing it. The last heartbeat the old run sent is the best
-     * available end time (accurate to ~30s). Sessions with no heartbeat to
-     * go on, or that began after it, stay open with an unknown end rather
-     * than being given an invented one, the dashboard shows those as
-     * "Not recorded".
+     * without closing it. The last heartbeat that run sent is the best
+     * available end time (accurate to about 30 seconds), but only for sessions
+     * that began shortly before it. Anything older was already stale long
+     * before that run ended, and anything newer than the heartbeat has no
+     * reliable end at all, so those are abandoned. After this, nothing is
+     * left open for this server.
      */
     public static void reconcileAfterRestart(Connection conn, String serverId) throws SQLException {
         Timestamp lastSeen = null;
@@ -65,15 +116,27 @@ public final class SessionCloser {
             String close = """
                 UPDATE sessions
                 SET logoutAt = ?, durationSeconds = GREATEST(0, TIMESTAMPDIFF(SECOND, loginAt, ?))
-                WHERE serverId = ? AND logoutAt IS NULL AND loginAt <= ?
+                WHERE serverId = ? AND logoutAt IS NULL
+                  AND loginAt <= ? AND loginAt >= TIMESTAMPADD(SECOND, ?, ?)
                 """;
             try (PreparedStatement ps = conn.prepareStatement(close)) {
                 ps.setTimestamp(1, lastSeen);
                 ps.setTimestamp(2, lastSeen);
                 ps.setString(3, serverId);
                 ps.setTimestamp(4, lastSeen);
+                ps.setLong(5, -MAX_CRASHED_SESSION_SECONDS);
+                ps.setTimestamp(6, lastSeen);
                 ps.executeUpdate();
             }
+        }
+
+        String abandon = """
+            UPDATE sessions SET logoutAt = loginAt, durationSeconds = NULL
+            WHERE serverId = ? AND logoutAt IS NULL
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(abandon)) {
+            ps.setString(1, serverId);
+            ps.executeUpdate();
         }
     }
 }

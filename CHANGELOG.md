@@ -8,6 +8,15 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Plugin 0.2.1
+
+- Fixed session lengths being inflated. 0.2.0 closed every old, never-closed session with
+  the current time, so a session from last week could show a length of days and push the
+  30 day playtime into the hundreds of hours. Sessions with no recorded end are now marked
+  "Not recorded" and skipped in playtime totals instead of being given an invented end.
+- To fix sessions already damaged by 0.2.0, run `deploy/repair-sessions.sql` (preview first,
+  see the comments at the top of the file).
+
 ## Site 0.2.0 / Plugin 0.2.0
 
 Site

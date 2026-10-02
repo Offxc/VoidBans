@@ -84,7 +84,7 @@ public final class VoidBansPlugin extends JavaPlugin {
             try (var conn = database.getConnection()) {
                 for (org.bukkit.entity.Player p : getServer().getOnlinePlayers()) {
                     String uuid = p.getUniqueId().toString();
-                    SessionCloser.closeForPlayer(conn, uuid, serverId);
+                    SessionCloser.closeOnQuit(conn, uuid, serverId);
                     try (var ps = conn.prepareStatement("UPDATE players SET isOnline = FALSE, lastLogout = NOW() WHERE uuid = ?")) {
                         ps.setString(1, uuid);
                         ps.executeUpdate();

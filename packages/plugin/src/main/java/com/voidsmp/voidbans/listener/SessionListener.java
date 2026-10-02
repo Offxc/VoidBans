@@ -127,8 +127,9 @@ public final class SessionListener implements Listener {
                 try (var conn = db.getConnection()) {
                     upsertPlayerOnLogin(conn, uuid, name);
                     // A leftover open session here means the last quit never
-                    // landed (crash, race), close it before starting this one.
-                    SessionCloser.closeForPlayer(conn, uuid, serverId);
+                    // landed (crash, race). Its end is unknown, so it is
+                    // abandoned, never closed with the current time.
+                    SessionCloser.abandonOpen(conn, uuid, serverId);
                     insertSessionStart(conn, uuid, serverId, ip);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record login for " + name + ": " + e.getMessage());
@@ -188,7 +189,7 @@ public final class SessionListener implements Listener {
             @Override
             public void run() {
                 try (var conn = db.getConnection()) {
-                    SessionCloser.closeForPlayer(conn, uuid, serverId);
+                    SessionCloser.closeOnQuit(conn, uuid, serverId);
                     markOffline(conn, uuid);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record logout for " + name + ": " + e.getMessage());
