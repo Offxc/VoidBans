@@ -226,6 +226,12 @@ Log in yourself right after deploying, before telling anyone the URL exists.
 Everyone else's access comes from the owner mapping Discord roles to permissions in Settings.
 Holding a role in Discord grants nothing on its own.
 
+Punishing is split per action, so a role can be allowed to mute but not ban: permanent ban,
+temporary ban, permanent mute, temporary mute and kick are each their own permission, and so is
+revoking bans, mutes and kick records. A role that can't issue something sees no button for it,
+and the server refuses the request either way. `bans.request` lets a role ask for any action it
+can't issue itself.
+
 **Every staff member, owner included, links their Minecraft account** at `/staff/link-account`
 before the dashboard works: checked on every load, not just first login. This is what lets the
 punishment API recognize "this target is staff" and block the action; non-owner staff can't

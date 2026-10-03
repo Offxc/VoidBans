@@ -3,7 +3,7 @@ import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, issueKeyFor } from "@/lib/permissions";
 import { generatePublicBanId } from "@/lib/ban-id";
 import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
@@ -28,13 +28,28 @@ export async function POST(req: NextRequest) {
   }
   const input = parsed.data;
 
-  // Staff without bans.issue but with bans.request get the identical UI
-  // routed to a request instead of a direct punishment, same endpoint,
-  // different write, so the client never has to special-case this itself.
-  const canIssue = hasPermission(principal, "bans.issue");
+  // Only bans and mutes can be temporary. A duration sent with a kick or
+  // warn is ignored rather than turned into an expiry.
+  const durationSeconds = input.type === "BAN" || input.type === "MUTE" ? input.durationSeconds : undefined;
+
+  // Each punishment type has its own permission, and a temporary ban or
+  // mute is separate from a permanent one. Which one applies is decided
+  // here from what was actually sent, never from what the UI offered.
+  // Staff without it but with bans.request get the identical UI routed to
+  // a request instead of a direct punishment, same endpoint, different
+  // write, so the client never has to special-case this itself.
+  const issueKey = issueKeyFor(input.type, Boolean(durationSeconds));
+  const canIssue = hasPermission(principal, issueKey);
   const canRequest = hasPermission(principal, "bans.request");
   if (!canIssue && !canRequest) {
-    return denyAccess(principal);
+    await recordAudit(principal, {
+      action: "access.denied",
+      targetType: "player",
+      targetId: input.playerUuid,
+      outcome: "denied",
+      details: { reason: "missing_permission", needs: issueKey },
+    });
+    return NextResponse.json({ error: "You don't have permission to issue this punishment." }, { status: 403 });
   }
 
   // Staff can't punish another staff member's linked Minecraft account,
@@ -58,9 +73,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const expiresAt = input.durationSeconds
-    ? new Date(Date.now() + input.durationSeconds * 1000)
-    : null;
+  const expiresAt = durationSeconds ? new Date(Date.now() + durationSeconds * 1000) : null;
 
   if (!canIssue) {
     // TODO: persist to a punishment_requests queue once that model lands;

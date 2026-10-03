@@ -86,7 +86,7 @@ export function PunishmentPanel({
   rules,
   templatesEnabled,
   rulesEnabled,
-  canIssueDirectly,
+  actionAccess,
 }: {
   playerUuid: string;
   playerName?: string;
@@ -94,7 +94,8 @@ export function PunishmentPanel({
   rules: Rule[];
   templatesEnabled: boolean;
   rulesEnabled: boolean;
-  canIssueDirectly: boolean;
+  /** Per action: "issue" to do it directly, "request" to ask for it. Missing means not allowed. */
+  actionAccess: Record<string, "issue" | "request">;
 }) {
   const router = useRouter();
   const [active, setActive] = useState<Action | null>(null);
@@ -121,6 +122,8 @@ export function PunishmentPanel({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const skipMethod = !rulesEnabled && !templatesEnabled;
+  const visibleActions = ACTIONS.filter((a) => actionAccess[a.key]);
+  const direct = active ? actionAccess[active.key] === "issue" : true;
 
   // Match on whether the template itself is permanent/temporary, not
   // just punishment type, a BAN template with no defaultDuration is
@@ -319,7 +322,7 @@ export function PunishmentPanel({
 
   const launchers = (
     <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-      {ACTIONS.map((action) => {
+      {visibleActions.map((action) => {
         const Icon = action.icon;
         return (
           <button
@@ -330,7 +333,7 @@ export function PunishmentPanel({
             style={{ justifyContent: "flex-start", width: "100%" }}
           >
             <Icon size={15} />
-            {canIssueDirectly ? action.label : `Request ${action.label.toLowerCase()}`}
+            {actionAccess[action.key] === "issue" ? action.label : `Request ${action.label.toLowerCase()}`}
           </button>
         );
       })}
@@ -340,7 +343,7 @@ export function PunishmentPanel({
   if (!active) return launchers;
 
   const Icon = active.icon;
-  const title = canIssueDirectly ? active.label : `Request ${active.label.toLowerCase()}`;
+  const title = direct ? active.label : `Request ${active.label.toLowerCase()}`;
   const titleId = "vb-wiz-title";
 
   // Progress: Method -> (Rules | Template) -> Details. Manual skips the
@@ -668,7 +671,7 @@ export function PunishmentPanel({
                 )}
                 {step === "details" && (
                   <button type="submit" className="vb-btn vb-btn-primary" disabled={submitting}>
-                    {submitting ? "Submitting…" : canIssueDirectly ? `Confirm ${active.label.toLowerCase()}` : "Send request"}
+                    {submitting ? "Submitting…" : direct ? `Confirm ${active.label.toLowerCase()}` : "Send request"}
                   </button>
                 )}
               </>

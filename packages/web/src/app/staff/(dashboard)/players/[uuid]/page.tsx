@@ -1,7 +1,7 @@
 import { recordDenied } from "@/lib/audit";
 import { redirect, notFound } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, ISSUE_KEY_BY_ACTION, revokeKeyFor } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getPunishmentModes } from "@/lib/punishment-modes";
@@ -37,9 +37,16 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const canViewAttachments = hasPermission(principal, "players.view_attachments");
   const canAddAttachments = hasPermission(principal, "players.add_attachments");
   const canViewViolations = hasPermission(principal, "players.view_violations");
-  const canIssue = hasPermission(principal, "bans.issue");
+  // Per action: issue it directly, request it, or not at all. A role can be
+  // allowed to mute but not ban, so this is decided button by button.
   const canRequest = hasPermission(principal, "bans.request");
-  const canRevoke = hasPermission(principal, "bans.revoke");
+  const actionAccess: Record<string, "issue" | "request"> = {};
+  for (const [action, key] of Object.entries(ISSUE_KEY_BY_ACTION)) {
+    if (hasPermission(principal, key)) actionAccess[action] = "issue";
+    else if (canRequest) actionAccess[action] = "request";
+  }
+  const canPunish = Object.keys(actionAccess).length > 0;
+  const canRevokeType = (type: "BAN" | "MUTE" | "KICK" | "WARN") => hasPermission(principal, revokeKeyFor(type));
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const vulcanEnabled = await isVulcanIntegrationEnabled();
@@ -71,10 +78,10 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
         orderBy: { issuedAt: "desc" },
         include: { appeal: true },
       }),
-      canIssue || canRequest
+      canPunish
         ? prisma.punishmentTemplate.findMany({ orderBy: { name: "asc" } })
         : Promise.resolve([]),
-      canIssue || canRequest
+      canPunish
         ? prisma.punishmentRule.findMany({
             where: { active: true },
             orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { code: "asc" }],
@@ -171,13 +178,13 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
           {canViewIp && uniqueIpCount !== null && <StatRow label="Distinct IPs" value={String(uniqueIpCount)} />}
         </div>
 
-        {(canIssue || canRequest) && !canPunishThisPlayer && (
+        {canPunish && !canPunishThisPlayer && (
           <p style={{ color: "var(--text-dim)", fontSize: 12.5, marginTop: 16, textAlign: "center" }}>
             {targetStaffUser?.username} is staff and can&apos;t be punished here.
           </p>
         )}
 
-        {(canIssue || canRequest) && canPunishThisPlayer && (
+        {canPunish && canPunishThisPlayer && (
           <div style={{ marginTop: 16 }}>
             <PunishmentPanel
               playerUuid={player.uuid}
@@ -199,7 +206,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
               }))}
               templatesEnabled={punishmentModes.templatesEnabled}
               rulesEnabled={punishmentModes.rulesEnabled}
-              canIssueDirectly={canIssue}
+              actionAccess={actionAccess}
             />
           </div>
         )}
@@ -244,7 +251,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                         Appeal: {p.appeal.status.toLowerCase()}
                       </span>
                     )}
-                    {canRevoke && p.active && (
+                    {canRevokeType(p.type) && p.active && (
                       <span style={{ marginLeft: "auto" }}>
                         <RevokeButton punishmentId={p.id.toString()} />
                       </span>

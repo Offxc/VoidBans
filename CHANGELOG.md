@@ -8,6 +8,15 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.3.0
+
+- Punishment permissions are now per action: permanent ban, temporary ban, permanent mute,
+  temporary mute and kick can each be granted separately, and so can revoking bans, mutes and
+  kick records. A role only sees the buttons it can use, and the server checks the exact action.
+- The role editor groups permissions under headings with plain names, with a select-all per group.
+- Replaces `bans.issue` and `bans.revoke`. A migration gives existing roles every new permission
+  they already had the old one for, so nobody gains or loses access on upgrade.
+
 ## Site 0.2.1
 
 - The contact address on the privacy and terms pages now comes from the `CONTACT_EMAIL`

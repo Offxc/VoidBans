@@ -3,7 +3,7 @@ import { denyAccess, recordAudit } from "@/lib/audit";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, revokeKeyFor, REVOKE_KEYS } from "@/lib/permissions";
 import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
 const revokeSchema = z.object({
@@ -12,7 +12,9 @@ const revokeSchema = z.object({
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const principal = await getStaffPrincipal();
-  if (!principal || !hasPermission(principal, "bans.revoke")) {
+  // Needs at least one revoke permission to get this far; which type of
+  // punishment it may be applied to is checked once the row is loaded.
+  if (!principal || !REVOKE_KEYS.some((key) => hasPermission(principal, key))) {
     return denyAccess(principal);
   }
 
@@ -32,6 +34,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   });
   if (!punishment) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (!punishment.active) return NextResponse.json({ error: "Already inactive" }, { status: 409 });
+
+  const needs = revokeKeyFor(punishment.type);
+  if (!hasPermission(principal, needs)) {
+    await recordAudit(principal, {
+      action: "access.denied",
+      targetType: "punishment",
+      targetId: id.toString(),
+      outcome: "denied",
+      details: { reason: "missing_permission", needs },
+    });
+    return NextResponse.json({ error: "You don't have permission to revoke this type of punishment." }, { status: 403 });
+  }
 
   await prisma.punishment.update({
     where: { id },

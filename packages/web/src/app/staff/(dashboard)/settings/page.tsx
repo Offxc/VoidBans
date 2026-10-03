@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { recordDenied } from "@/lib/audit";
 import { getStaffPrincipal } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PERMISSION_KEYS } from "@/lib/permissions";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { getPunishmentModes } from "@/lib/punishment-modes";
@@ -55,7 +54,6 @@ export default async function SettingsPage() {
 
       <SettingSection title="Roles & permissions" desc="Map Discord roles to what they can see and do. Re-checked on every login.">
         <RolePermissionEditor
-          allPermissions={PERMISSION_KEYS}
           roles={roles.map((r) => ({
             id: r.id.toString(),
             discordRoleId: r.discordRoleId,

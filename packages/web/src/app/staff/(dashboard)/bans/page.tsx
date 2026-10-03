@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { recordDenied } from "@/lib/audit";
 import Link from "next/link";
 import { getStaffPrincipal } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, revokeKeyFor, REVOKE_KEYS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
@@ -22,7 +22,7 @@ export default async function PunishmentsListPage({
     redirect("/staff");
   }
 
-  const canRevoke = hasPermission(principal, "bans.revoke");
+  const canRevoke = REVOKE_KEYS.some((key) => hasPermission(principal, key));
 
   const page = Math.max(1, Number(searchParams.page) || 1);
 
@@ -72,7 +72,9 @@ export default async function PunishmentsListPage({
                 <td>
                   <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
                 </td>
-                {canRevoke && <td>{p.active && <RevokeButton punishmentId={p.id.toString()} />}</td>}
+                {canRevoke && (
+                  <td>{p.active && hasPermission(principal, revokeKeyFor(p.type)) && <RevokeButton punishmentId={p.id.toString()} />}</td>
+                )}
               </tr>
             ))}
             {punishments.length === 0 && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PERMISSION_GROUPS, PERMISSION_LABELS, type PermissionKey } from "@/lib/permissions";
 
 interface DiscordRole {
   id: string;
@@ -16,13 +17,11 @@ interface MappedRole {
   permissions: string[];
 }
 
-export function RolePermissionEditor({
-  allPermissions,
-  roles,
-}: {
-  allPermissions: readonly string[];
-  roles: MappedRole[];
-}) {
+function labelFor(key: string): string {
+  return PERMISSION_LABELS[key as PermissionKey] ?? key;
+}
+
+export function RolePermissionEditor({ roles }: { roles: MappedRole[] }) {
   const router = useRouter();
   const [discordRoles, setDiscordRoles] = useState<DiscordRole[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -49,6 +48,18 @@ export function RolePermissionEditor({
     // Clicking "Edit" on a row further down the already-mapped-roles
     // table otherwise leaves the checkbox editor off-screen above it.
     requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  function toggleGroup(keys: readonly string[]) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      const allOn = keys.every((k) => next.has(k));
+      for (const k of keys) {
+        if (allOn) next.delete(k);
+        else next.add(k);
+      }
+      return next;
+    });
   }
 
   function toggle(key: string) {
@@ -118,21 +129,36 @@ export function RolePermissionEditor({
 
       {selectedDiscordRoleId && (
         <div ref={editorRef}>
-          <div
-            className="vb-panel"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-              gap: 8,
-              padding: 16,
-            }}
-          >
-            {allPermissions.map((key) => (
-              <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                <input type="checkbox" checked={checked.has(key)} onChange={() => toggle(key)} />
-                <code style={{ fontFamily: "ui-monospace, monospace" }}>{key}</code>
-              </label>
-            ))}
+          <div className="vb-panel" style={{ display: "flex", flexDirection: "column", gap: 20, padding: 16 }}>
+            {PERMISSION_GROUPS.map((group) => {
+              const allOn = group.keys.every((k) => checked.has(k));
+              return (
+                <section key={group.title}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{group.title}</h3>
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.keys)}
+                      className="vb-btn vb-btn-quiet"
+                      style={{ padding: "2px 8px", fontSize: 12 }}
+                    >
+                      {allOn ? "Clear" : "Select all"}
+                    </button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 4 }}>
+                    {group.keys.map((key) => (
+                      <label
+                        key={key}
+                        style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, padding: "6px 4px", minHeight: 36, cursor: "pointer" }}
+                      >
+                        <input type="checkbox" checked={checked.has(key)} onChange={() => toggle(key)} style={{ width: 16, height: 16, flexShrink: 0 }} />
+                        <span>{labelFor(key)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
           <button onClick={save} disabled={saving} className="vb-btn vb-btn-primary" style={{ marginTop: 10 }}>
             {saving ? "Saving…" : "Save role"}
@@ -153,7 +179,15 @@ export function RolePermissionEditor({
           {roles.map((r) => (
             <tr key={r.id}>
               <td>{r.displayName}</td>
-              <td style={{ color: "var(--text-dim)" }}>{r.permissions.join(", ") || "none"}</td>
+              <td style={{ color: "var(--text-dim)", maxWidth: 420 }}>
+                {r.permissions.length === 0 ? (
+                  "none"
+                ) : (
+                  <span title={r.permissions.map(labelFor).join("\n")}>
+                    {r.permissions.length} permission{r.permissions.length === 1 ? "" : "s"}
+                  </span>
+                )}
+              </td>
               <td>
                 <button
                   onClick={() => selectRole(r.discordRoleId)}
