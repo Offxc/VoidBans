@@ -182,6 +182,7 @@ server can't write to your panel unless they have your database password. For th
 | --- | --- | --- |
 | `DATABASE_URL` | `packages/web/.env` | MySQL connection string |
 | `SESSION_SECRET` | `packages/web/.env` | 32+ random chars, signs staff session cookies |
+| `CONTACT_EMAIL` | `packages/web/.env` | Contact address shown on the privacy and terms pages. Optional |
 | `SITE_URL` | `packages/web/.env` | Public URL. Must match `site-url` in the plugin config |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | `packages/web/.env` | Discord OAuth app |
 | `DISCORD_REDIRECT_URI` | `packages/web/.env` | `${SITE_URL}/api/auth/callback` |

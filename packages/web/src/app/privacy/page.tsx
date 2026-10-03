@@ -2,6 +2,9 @@ import { SiteShell } from "@/components/SiteShell";
 
 export const dynamic = "force-dynamic";
 
+// Set CONTACT_EMAIL in .env; it is deliberately not hardcoded in the repo.
+const contact = process.env.CONTACT_EMAIL;
+
 export default function PrivacyPage() {
   return (
     <SiteShell>
@@ -52,8 +55,14 @@ export default function PrivacyPage() {
 
         <h2>Contact</h2>
         <p>
-          For questions about your data, or to request a correction or deletion, email{" "}
-          <a href="mailto:contact@your-domain.example">contact@your-domain.example</a>.
+          For questions about your data, or to request a correction or deletion,{" "}
+          {contact ? (
+            <>
+              email <a href={`mailto:${contact}`}>{contact}</a>.
+            </>
+          ) : (
+            "contact the server staff."
+          )}
         </p>
       </div>
       </div>

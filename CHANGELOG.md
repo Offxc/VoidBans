@@ -8,6 +8,11 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.2.1
+
+- The contact address on the privacy and terms pages now comes from the `CONTACT_EMAIL`
+  setting instead of being written into the code. Without it the pages say "the server staff".
+
 ## Repository
 
 - Removed the deployment guide and the example Caddyfile. The README now covers building and
