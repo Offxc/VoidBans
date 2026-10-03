@@ -9,9 +9,9 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - voidbans-db:/var/lib/mysql
-    # Exposed on localhost only, so the VoidBans Paper plugin (running on
-    # the same host, outside Docker, under AMP) can connect to it — never
-    # exposed to the public internet.
+    # Published on localhost only, so the Paper plugin (running on the same
+    # machine, outside Docker) can connect to it. Never expose this to the
+    # public internet.
     ports:
       - "127.0.0.1:3307:3306"
     healthcheck:
@@ -21,9 +21,9 @@ services:
       retries: 10
 
   # One-off: applies pending Prisma migrations, then exits. Run explicitly
-  # before (re)starting `web` — see the deployment guide — rather than on
-  # every `docker compose up`, so a migration failure is visible on its
-  # own instead of silently blocking web's restart loop.
+  # before (re)starting `web` rather than on every `docker compose up`, so a
+  # migration failure is visible on its own instead of silently blocking
+  # web's restart loop.
   migrate:
     build:
       context: .
@@ -53,24 +53,12 @@ services:
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
       NODE_ENV: production
-    # No host port published at all. The reverse proxy in front of this
-    # (an existing Caddy belonging to another project on this host) reaches
-    # `web` directly over Docker's internal network by container name/alias
-    # instead — see the `caddy-reachable` network below. This is strictly
-    # tighter than a 127.0.0.1-only port publish: the app is never bound to
-    # any host network interface at all, not even loopback.
-    networks:
-      - default
-      - caddy-reachable
-
-networks:
-  default: {}
-  # Pre-existing network owned by the other project's Caddy — not created
-  # here, only joined. Its host reverse-proxy config points at this
-  # service's container name/alias on this network; see deploy/DEPLOYMENT.md.
-  caddy-reachable:
-    name: proxy_network
-    external: true
+    # Loopback only. Point your reverse proxy at 127.0.0.1:3300. To reach
+    # `web` over a Docker network instead (for example from a proxy running
+    # in another container), add a docker-compose.override.yml that joins it
+    # to that network. The override file is ignored by git.
+    ports:
+      - "127.0.0.1:3300:3300"
 
 volumes:
   voidbans-db:

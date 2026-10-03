@@ -8,6 +8,14 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Repository
+
+- Removed the deployment guide and the example Caddyfile. The README now covers building and
+  running only.
+- `docker-compose.yml` no longer joins another project's Docker network. `web` is published on
+  `127.0.0.1:3300`. A setup that needs a different network can use a `docker-compose.override.yml`,
+  which git ignores.
+
 ## Plugin 0.2.1
 
 - Fixed session lengths being inflated. 0.2.0 closed every old, never-closed session with

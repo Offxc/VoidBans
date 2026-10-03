@@ -12,6 +12,7 @@ dist/
 # Env
 .env
 .env.local
+docker-compose.override.yml
 .env.*.local
 !.env.example
 

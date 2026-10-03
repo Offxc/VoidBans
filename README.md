@@ -72,42 +72,82 @@ never runs migrations.
 | Database | MySQL/MariaDB + Prisma |
 | Auth | Discord OAuth2, signed session cookies |
 | Plugin | Java 17, Paper API, HikariCP |
-| Proxy/TLS | Caddy |
 | Deploy | Docker Compose |
 
 No Redis, no queue, no search service. The plugin and web app only ever meet at the database.
 
-## Quick start
+## Build and run
 
-Needs Node 20+, pnpm, a MySQL/MariaDB instance, and a Discord application.
+You need Node 20+ and pnpm, MySQL 8 or MariaDB (Docker Compose runs one for you), JDK 17 and
+Maven for the plugin, and a Discord application.
+
+### Discord application
+
+1. In the [Developer Portal](https://discord.com/developers/applications) create an application.
+   Under OAuth2, copy the Client ID and Client Secret and add
+   `https://your-domain.example/api/auth/callback` as a redirect.
+2. Under Bot, turn on **Server Members Intent** and copy the bot token.
+3. Invite the bot to your Discord server (scope `bot`, no permissions needed).
+4. In Discord, turn on Developer Mode, right-click your server and copy the Server ID.
+
+### Site (Docker)
 
 ```bash
 git clone git@github.com:Offxc/VoidBans.git
 cd VoidBans
-pnpm install
-cp packages/web/.env.example packages/web/.env
+cp .env.example .env     # fill in the secrets, the Discord values and SITE_URL
+docker compose build
+docker compose up -d db
+docker compose run --rm migrate
+docker compose up -d web
 ```
 
-Fill in `packages/web/.env`: `DATABASE_URL`, `SESSION_SECRET` (`openssl rand -base64 48`), the
-four `DISCORD_*` values.
+Generate the secrets with `openssl rand -base64 48`. The site listens on `127.0.0.1:3300`, so
+point a reverse proxy that handles TLS at it. The database is published on `127.0.0.1:3307` for a
+plugin on the same machine. Neither is reachable from the internet as shipped.
+
+Open the site and use Staff login. **The first account to sign in becomes the owner**, so do this
+before sharing the URL.
+
+To update: `git pull`, `docker compose build`, `docker compose run --rm migrate`,
+`docker compose up -d web`. If a new migration doesn't apply, rebuild with
+`docker compose build --no-cache migrate web`.
+
+### Site (local development)
 
 ```bash
+pnpm install
+cp packages/web/.env.example packages/web/.env
 cd packages/web
 pnpm exec prisma migrate dev
 pnpm dev
 ```
 
-Open <http://localhost:3000>, sign in via Staff Login. That first login becomes the owner.
+Fill in `packages/web/.env` first: `DATABASE_URL`, `SESSION_SECRET`, `SITE_URL` and the Discord
+values. The site runs on <http://localhost:3000>.
 
-Build the plugin separately:
+### Plugin
 
 ```bash
 cd packages/plugin
 JAVA_HOME=<path-to-jdk-17> mvn package
 ```
 
-Jar lands at `target/VoidBans.jar`: drop it in the Paper server's `plugins/` folder and point its
-generated `config.yml` at the same database.
+Copy `target/VoidBans.jar` into the Paper server's `plugins/` folder and start the server once to
+generate `plugins/VoidBans/config.yml`. Stop it and set:
+
+- `database.*`: the same database as the site. With the Compose file above that is host
+  `127.0.0.1`, port `3307`, name `voidbans`, user `voidbans` and your `MYSQL_PASSWORD`
+- `site-url`: the same as `SITE_URL`
+- `server-id`: a name for this server
+
+To give staff the in-game punishment alert, grant the permission with LuckPerms:
+
+```
+/lp group <group> permission set voidbans.alerts.punishments true
+```
+
+Start the server. Settings > Plugin connection on the site should list it within 30 seconds.
 
 ## How the plugin and site connect
 
@@ -135,25 +175,6 @@ server can't write to your panel unless they have your database password. For th
 - Don't publish the MySQL port to the internet. Bind it to localhost or a private network.
 - Give the plugin its own MySQL user with access to this one database only.
 - Treat `config.yml` like a secret, since it holds that password.
-
-## Self-hosting
-
-[`deploy/DEPLOYMENT.md`](deploy/DEPLOYMENT.md) covers the Discord app/bot setup, DNS, Docker on a
-fresh box, first boot, dropping into an existing Caddy instance, installing the plugin, and
-post-deploy checks.
-
-Short version:
-
-```bash
-cp .env.example .env     # fill in, then:
-docker compose build
-docker compose up -d db
-docker compose run --rm migrate
-docker compose up -d web
-```
-
-`db`, a one-shot `migrate`, and `web`. Neither `web` nor `db` is published on a public interface.
-Put a reverse proxy in front for TLS.
 
 ## Configuration
 
@@ -189,8 +210,7 @@ packages/
     src/main/java/…/integration/  Vulcan (reflection-only)
     src/main/java/…/task/         Staff alert + integration-settings polling
 deploy/
-  DEPLOYMENT.md
-  Caddyfile.example
+  repair-sessions.sql             One-off fix for sessions damaged by plugin 0.2.0
 ```
 
 ## Permissions
