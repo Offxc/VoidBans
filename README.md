@@ -228,9 +228,13 @@ Holding a role in Discord grants nothing on its own.
 
 Punishing is split per action, so a role can be allowed to mute but not ban: permanent ban,
 temporary ban, permanent mute, temporary mute and kick are each their own permission, and so is
-revoking bans, mutes and kick records. A role that can't issue something sees no button for it,
+revoking bans and mutes. A role that can't issue something sees no button for it,
 and the server refuses the request either way. `bans.request` lets a role ask for any action it
 can't issue itself.
+
+**Deleting a punishment from a player's history is owner only.** It isn't a permission and can't be
+given to a role. It removes the record for good, along with its appeal and any attachments on it,
+and the audit log keeps a note of what was deleted.
 
 **Every staff member, owner included, links their Minecraft account** at `/staff/link-account`
 before the dashboard works: checked on every load, not just first login. This is what lets the
@@ -252,6 +256,11 @@ A ban or mute is enforced by the plugin, not just recorded:
 - **Mute**: checked on every chat message; cancelled with `messages.mute`/`messages.temp-mute`.
 - Both hit the live `punishments` table on every attempt, no caching. A ban or unban from the
   dashboard takes effect on the next login or message, no restart.
+- **Kick**: the dashboard only allows it for a player who is online, and says so if they aren't.
+  The plugin checks for new kicks every couple of seconds and removes the player with
+  `messages.kick`. A kick is a one-off event, so it is recorded as inactive straight away.
+- A **ban** issued from the dashboard also removes the player if they are online at the time,
+  instead of waiting for their next login.
 
 **Bedrock (Geyser/Floodgate)** needs no separate code path. Floodgate substitutes its own UUID
 before the login event fires, and that's what everything here keys off. Their username carries

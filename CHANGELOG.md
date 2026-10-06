@@ -8,6 +8,22 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.4.0 / Plugin 0.3.0
+
+Site
+- A kick is refused with a clear message if the player isn't online.
+- Kicks are recorded as inactive straight away. They used to stay "Active, permanent" forever.
+- The owner can permanently delete a punishment from a player's history, from the profile or
+  the punishment list. It asks first, removes the appeal and attachments with it, and is
+  recorded in the audit log.
+- Removed `punish.unkick`, which had nothing left to revoke. A migration clears it from roles.
+- Webhook wording for mutes, bans and kicks is fixed ("muted", "banned", "kicked").
+
+Plugin
+- Acts on kicks and bans issued from the dashboard for players who are online, within about two
+  seconds. Before, a kick from the site did nothing, and a ban only applied at the next login.
+- Needs the site's migration first, since it adds a `deliveredAt` column.
+
 ## Site 0.3.0
 
 - Punishment permissions are now per action: permanent ban, temporary ban, permanent mute,

@@ -74,7 +74,8 @@ public final class PunishmentCommand implements CommandExecutor {
                 Player online = Bukkit.getPlayer(UUID.fromString(target.uuid));
                 if (online != null) {
                     Bukkit.getScheduler().runTask(plugin, () ->
-                            online.kick(Component.text(messages.render("ban", reason, publicBanId, null))));
+                            online.kick(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
+                                    .deserialize(messages.render("ban", reason, publicBanId, null))));
                 }
             } catch (SQLException e) {
                 plugin.getLogger().warning("/vban failed: " + e.getMessage());
@@ -142,8 +143,8 @@ public final class PunishmentCommand implements CommandExecutor {
     private void insertPunishment(java.sql.Connection conn, String uuid, String type, String reason,
                                    String staffName, String publicBanId) throws SQLException {
         String sql = """
-            INSERT INTO punishments (publicBanId, playerUuid, type, reason, staffUsername, issuedAt, active, appealable)
-            VALUES (?, ?, ?, ?, ?, NOW(), TRUE, TRUE)
+            INSERT INTO punishments (publicBanId, playerUuid, type, reason, staffUsername, issuedAt, active, appealable, deliveredAt)
+            VALUES (?, ?, ?, ?, ?, NOW(), TRUE, TRUE, NOW())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, publicBanId);

@@ -13,7 +13,6 @@ export const PERMISSION_KEYS = [
   "punish.kick",
   "punish.unban",
   "punish.unmute",
-  "punish.unkick",
   "bans.request",
   "appeals.view",
   "appeals.resolve",
@@ -46,7 +45,6 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   "punish.kick": "Issue kicks",
   "punish.unban": "Revoke bans and temp bans",
   "punish.unmute": "Revoke mutes and temp mutes",
-  "punish.unkick": "Remove kick and warn records",
   "bans.request": "Request a punishment they can't issue",
   "appeals.view": "View appeals",
   "appeals.resolve": "Accept or deny appeals",
@@ -74,7 +72,7 @@ export const PERMISSION_GROUPS: { title: string; keys: PermissionKey[] }[] = [
     title: "Issue punishments",
     keys: ["punish.ban", "punish.temp_ban", "punish.mute", "punish.temp_mute", "punish.kick", "bans.request"],
   },
-  { title: "Revoke punishments", keys: ["punish.unban", "punish.unmute", "punish.unkick"] },
+  { title: "Revoke punishments", keys: ["punish.unban", "punish.unmute"] },
   { title: "Punishment list and appeals", keys: ["bans.view", "appeals.view", "appeals.resolve"] },
   {
     title: "Players",
@@ -119,14 +117,18 @@ export function issueKeyFor(type: PunishmentType, hasDuration: boolean): Permiss
   return "punish.kick";
 }
 
-/** Which permission revoking an existing punishment of this type needs. */
-export function revokeKeyFor(type: PunishmentType): PermissionKey {
+/**
+ * Which permission revoking an existing punishment of this type needs, or
+ * null if that type can't be revoked at all. Kicks and warnings are one-off
+ * events that never stay in force, so there is nothing to lift.
+ */
+export function revokeKeyFor(type: PunishmentType): PermissionKey | null {
   if (type === "BAN") return "punish.unban";
   if (type === "MUTE") return "punish.unmute";
-  return "punish.unkick";
+  return null;
 }
 
-export const REVOKE_KEYS: PermissionKey[] = ["punish.unban", "punish.unmute", "punish.unkick"];
+export const REVOKE_KEYS: PermissionKey[] = ["punish.unban", "punish.unmute"];
 
 export function isPermissionKey(value: string): value is PermissionKey {
   return (PERMISSION_KEYS as readonly string[]).includes(value);

@@ -10,6 +10,7 @@ import { LocalTime } from "@/components/LocalTime";
 import { PunishmentPanel } from "@/components/PunishmentPanel";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
 import { RevokeButton } from "@/components/RevokeButton";
+import { DeletePunishmentButton } from "@/components/DeletePunishmentButton";
 import { PlayerNotes } from "@/components/PlayerNotes";
 import { PlayerAttachments } from "@/components/PlayerAttachments";
 import { ViolationHistory } from "@/components/ViolationHistory";
@@ -46,7 +47,10 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
     else if (canRequest) actionAccess[action] = "request";
   }
   const canPunish = Object.keys(actionAccess).length > 0;
-  const canRevokeType = (type: "BAN" | "MUTE" | "KICK" | "WARN") => hasPermission(principal, revokeKeyFor(type));
+  const canRevokeType = (type: "BAN" | "MUTE" | "KICK" | "WARN") => {
+    const key = revokeKeyFor(type);
+    return key !== null && hasPermission(principal, key);
+  }
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const vulcanEnabled = await isVulcanIntegrationEnabled();
@@ -251,9 +255,17 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                         Appeal: {p.appeal.status.toLowerCase()}
                       </span>
                     )}
-                    {canRevokeType(p.type) && p.active && (
-                      <span style={{ marginLeft: "auto" }}>
-                        <RevokeButton punishmentId={p.id.toString()} />
+                    {((canRevokeType(p.type) && p.active) || principal.isOwner) && (
+                      <span style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
+                        {canRevokeType(p.type) && p.active && <RevokeButton punishmentId={p.id.toString()} />}
+                        {principal.isOwner && (
+                          <DeletePunishmentButton
+                            punishmentId={p.id.toString()}
+                            banId={p.publicBanId}
+                            playerName={player.username}
+                            stillInForce={p.active}
+                          />
+                        )}
                       </span>
                     )}
                   </div>

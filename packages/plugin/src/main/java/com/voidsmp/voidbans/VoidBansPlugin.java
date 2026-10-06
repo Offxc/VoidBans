@@ -9,6 +9,7 @@ import com.voidsmp.voidbans.listener.SessionListener;
 import com.voidsmp.voidbans.message.MessageTemplate;
 import com.voidsmp.voidbans.task.HeartbeatTask;
 import com.voidsmp.voidbans.task.IntegrationSettingsPollTask;
+import com.voidsmp.voidbans.task.PunishmentDeliveryTask;
 import com.voidsmp.voidbans.task.StaffAlertTask;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,6 +21,7 @@ public final class VoidBansPlugin extends JavaPlugin {
     private VulcanIntegration vulcanIntegration;
     private IntegrationSettingsPollTask integrationSettingsPollTask;
     private HeartbeatTask heartbeatTask;
+    private PunishmentDeliveryTask deliveryTask;
 
     @Override
     public void onEnable() {
@@ -58,6 +60,10 @@ public final class VoidBansPlugin extends JavaPlugin {
         this.integrationSettingsPollTask = new IntegrationSettingsPollTask(this, database, vulcanIntegration);
         integrationSettingsPollTask.runTaskTimerAsynchronously(this, 0L, 20L * 20L);
 
+        // Kicks and bans issued from the site, applied to players already online.
+        this.deliveryTask = new PunishmentDeliveryTask(this, database, messages);
+        deliveryTask.runTaskTimerAsynchronously(this, 40L, 40L);
+
         // First beat right away so Settings > Plugin connection shows this
         // server as soon as it starts, then every 30s.
         this.heartbeatTask = new HeartbeatTask(this, database);
@@ -76,6 +82,9 @@ public final class VoidBansPlugin extends JavaPlugin {
         }
         if (heartbeatTask != null) {
             heartbeatTask.cancel();
+        }
+        if (deliveryTask != null) {
+            deliveryTask.cancel();
         }
         if (database != null) {
             // Players still online as the server stops never fire a quit

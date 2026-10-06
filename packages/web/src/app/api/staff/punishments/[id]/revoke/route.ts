@@ -36,6 +36,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!punishment.active) return NextResponse.json({ error: "Already inactive" }, { status: 409 });
 
   const needs = revokeKeyFor(punishment.type);
+  if (!needs) {
+    return NextResponse.json({ error: "This type of punishment can't be revoked." }, { status: 409 });
+  }
   if (!hasPermission(principal, needs)) {
     await recordAudit(principal, {
       action: "access.denied",

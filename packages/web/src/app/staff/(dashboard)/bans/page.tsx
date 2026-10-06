@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
 import { RevokeButton } from "@/components/RevokeButton";
+import { DeletePunishmentButton } from "@/components/DeletePunishmentButton";
 import { PageHeader } from "@/components/PageHeader";
 
 const PAGE_SIZE = 50;
@@ -23,6 +24,12 @@ export default async function PunishmentsListPage({
   }
 
   const canRevoke = REVOKE_KEYS.some((key) => hasPermission(principal, key));
+  const canRevokeRow = (type: "BAN" | "MUTE" | "KICK" | "WARN") => {
+    const key = revokeKeyFor(type);
+    return key !== null && hasPermission(principal, key);
+  };
+  const isOwner = principal.isOwner;
+  const showActions = canRevoke || isOwner;
 
   const page = Math.max(1, Number(searchParams.page) || 1);
 
@@ -52,7 +59,7 @@ export default async function PunishmentsListPage({
               <th>Reason</th>
               <th>Issued</th>
               <th>Status</th>
-              {canRevoke && <th></th>}
+              {showActions && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -72,14 +79,26 @@ export default async function PunishmentsListPage({
                 <td>
                   <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
                 </td>
-                {canRevoke && (
-                  <td>{p.active && hasPermission(principal, revokeKeyFor(p.type)) && <RevokeButton punishmentId={p.id.toString()} />}</td>
+                {showActions && (
+                  <td>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      {p.active && canRevokeRow(p.type) && <RevokeButton punishmentId={p.id.toString()} />}
+                      {isOwner && (
+                        <DeletePunishmentButton
+                          punishmentId={p.id.toString()}
+                          banId={p.publicBanId}
+                          playerName={p.player.username}
+                          stillInForce={p.active}
+                        />
+                      )}
+                    </div>
+                  </td>
                 )}
               </tr>
             ))}
             {punishments.length === 0 && (
               <tr>
-                <td colSpan={canRevoke ? 7 : 6} style={{ color: "var(--text-dim)" }}>
+                <td colSpan={showActions ? 7 : 6} style={{ color: "var(--text-dim)" }}>
                   No punishments yet.
                 </td>
               </tr>

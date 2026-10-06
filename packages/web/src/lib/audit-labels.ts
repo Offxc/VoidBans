@@ -11,6 +11,7 @@ export const ACTION_LABELS: Record<string, string> = {
   "ratelimit.exceeded": "Rate limit hit",
   "punishment.issue": "Punishment issued",
   "punishment.revoke": "Punishment revoked",
+  "punishment.delete": "Punishment deleted",
   "appeal.submit": "Appeal submitted",
   "appeal.accepted": "Appeal accepted",
   "appeal.denied": "Appeal denied",

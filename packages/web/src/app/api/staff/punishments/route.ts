@@ -18,6 +18,8 @@ const issueSchema = z.object({
   ipBanned: z.boolean().default(false),
 });
 
+const PAST_TENSE = { BAN: "banned", MUTE: "muted", KICK: "kicked", WARN: "warned" } as const;
+
 export async function POST(req: NextRequest) {
   const principal = await getStaffPrincipal();
   if (!principal) return denyAccess(principal, 401);
@@ -81,6 +83,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, requested: true }, { status: 202 });
   }
 
+  // A kick only means something to someone who is on the server right now.
+  // Say so instead of quietly recording a kick that did nothing.
+  if (input.type === "KICK") {
+    const target = await prisma.player.findUnique({
+      where: { uuid: input.playerUuid },
+      select: { username: true, isOnline: true },
+    });
+    if (!target?.isOnline) {
+      return NextResponse.json(
+        { error: `${target?.username ?? "That player"} isn't online right now, so they can't be kicked.` },
+        { status: 409 },
+      );
+    }
+  }
+
   const wantsIpBan = input.ipBanned && input.type === "BAN";
   if (wantsIpBan && !hasPermission(principal, "players.view_ip")) {
     // IP-banning requires resolving the player's IP, which is the same
@@ -117,6 +134,8 @@ export async function POST(req: NextRequest) {
       staffDiscordId: principal.discordId,
       staffUsername: principal.username,
       expiresAt,
+      // A kick happens once and is over. Only bans and mutes stay in force.
+      active: input.type !== "KICK",
       appealable: input.appealable,
       ipBanned: wantsIpBan && ipAddress !== null,
       ipAddress,
@@ -134,7 +153,7 @@ export async function POST(req: NextRequest) {
 
   notifyDiscordWebhook("punishment_issued", {
     title: `${punishment.type} issued`,
-    description: `**${punishment.player.username}** was ${punishment.type.toLowerCase()}ed by **${principal.username}**\nReason: ${punishment.reason}`,
+    description: `**${punishment.player.username}** was ${PAST_TENSE[punishment.type]} by **${principal.username}**\nReason: ${punishment.reason}`,
     color: 0xf87171,
     url: `${process.env.SITE_URL ?? ""}/${punishment.publicBanId}`,
   });

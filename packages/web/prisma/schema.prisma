@@ -173,6 +173,11 @@ model Punishment {
   appealable     Boolean        @default(false)
   ipAddress      String?        @db.VarChar(45)
   ipBanned       Boolean        @default(false)
+  // Set by the plugin once it has acted on a kick or ban for a player who
+  // was online (by kicking them). NULL means nothing has been done yet.
+  // A kick is an event, not an ongoing state, so kicks are created with
+  // active = false; this column is how the plugin knows which are pending.
+  deliveredAt    DateTime?
 
   player      Player                @relation(fields: [playerUuid], references: [uuid], onDelete: Cascade)
   template    PunishmentTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
