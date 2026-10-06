@@ -74,7 +74,7 @@ export default async function PunishmentsListPage({
                 <td>{p.type}</td>
                 <td style={{ maxWidth: 280 }}>{p.reason}</td>
                 <td>
-                  <LocalTime iso={p.issuedAt.toISOString()} />
+                  <LocalTime iso={p.issuedAt.toISOString()} smart />
                 </td>
                 <td>
                   <PunishmentStatus

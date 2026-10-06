@@ -9,7 +9,7 @@ import java.time.ZoneOffset;
 
 /**
  * Renders the owner-configurable messages in config.yml, substituting
- * {reason} {ban_id} {site_url} {duration} {expires_at} and translating
+ * {reason} {ban_id} {site_url} {site_host} {duration} {expires_at} and translating
  * '&' color codes. Kept independent of any specific event so both the
  * ban-time kick message and a later reconnect-attempt message can reuse it.
  */
@@ -26,6 +26,11 @@ public final class MessageTemplate {
 
     public String siteUrl() {
         return config.getString("site-url", "").replaceAll("/+$", "");
+    }
+
+    /** The site address without the scheme, for showing on a screen where it can't be clicked. */
+    public String siteHost() {
+        return siteUrl().replaceFirst("^https?://", "");
     }
 
     public String prefix() {
@@ -46,6 +51,7 @@ public final class MessageTemplate {
                 .replace("{reason}", reason == null ? "" : reason)
                 .replace("{ban_id}", banId == null ? "" : banId)
                 .replace("{site_url}", siteUrl())
+                .replace("{site_host}", siteHost())
                 .replace("{duration}", duration)
                 .replace("{expires_at}", expiresAt == null ? "permanent" : EXPIRY_FORMAT.format(expiresAt));
 

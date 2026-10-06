@@ -8,6 +8,21 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.6.0 / Plugin 0.5.0
+
+Site
+- New IDs are 6 characters with no `VB-` prefix, for example `7K2P9X`. Older `VB-` IDs keep
+  working everywhere, and the site still accepts either form.
+- The punishment list and a player's history show how long ago something happened ("6 hours
+  ago", "2 days ago") and switch to a date once it is a week old. Hovering shows the exact date
+  and time.
+
+Plugin
+- Ban, kick, mute and warning messages show the site address and the ID instead of a link,
+  because links aren't clickable on a disconnect screen. New `{site_host}` placeholder.
+- Generates the shorter IDs, and retries on the rare clash with an existing one.
+- Update your `messages:` block from the repo's config.yml to get the new wording.
+
 ## Site 0.5.0 / Plugin 0.4.0
 
 Site

@@ -66,16 +66,30 @@ public final class PunishmentCommand implements CommandExecutor {
                     return;
                 }
 
-                String publicBanId = BanIdGenerator.generate();
-                insertPunishment(conn, target.uuid, "BAN", reason, staffName, publicBanId);
+                // IDs are short, so on the rare clash with an existing one just draw another.
+                String publicBanId = null;
+                for (int attempt = 0; attempt < 5 && publicBanId == null; attempt++) {
+                    String candidate = BanIdGenerator.generate();
+                    try {
+                        insertPunishment(conn, target.uuid, "BAN", reason, staffName, candidate);
+                        publicBanId = candidate;
+                    } catch (java.sql.SQLIntegrityConstraintViolationException duplicate) {
+                        // try again with a new ID
+                    }
+                }
+                if (publicBanId == null) {
+                    sender.sendMessage(Component.text("Ban failed, couldn't create a unique ID. Try again."));
+                    return;
+                }
 
-                sender.sendMessage(Component.text("Banned " + target.username + " (" + publicBanId + ")."));
+                final String issuedId = publicBanId;
+                sender.sendMessage(Component.text("Banned " + target.username + " (" + issuedId + ")."));
 
                 Player online = Bukkit.getPlayer(UUID.fromString(target.uuid));
                 if (online != null) {
                     Bukkit.getScheduler().runTask(plugin, () ->
                             online.kick(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
-                                    .deserialize(messages.render("ban", reason, publicBanId, null))));
+                                    .deserialize(messages.render("ban", reason, issuedId, null))));
                 }
             } catch (SQLException e) {
                 plugin.getLogger().warning("/vban failed: " + e.getMessage());

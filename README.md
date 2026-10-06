@@ -30,7 +30,7 @@ never runs migrations.
 ## Features
 
 **Public site**
-- Punishment lookup by ID (`/VB-XXXXXXXX`), linked directly from the in-game ban, kick, mute and warning messages
+- Punishment lookup by a short ID (for example `/7K2P9X`), shown in the in-game ban, kick, mute and warning messages
 - Appeals: one per ban, owner-configurable questions, staff accept/deny with a response and
   optional auto-revoke
 - Optional `/rules` page: built from the same categories/rules staff pick from when punishing,
@@ -190,7 +190,7 @@ server can't write to your panel unless they have your database password. For th
 | `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` |
 | `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` |
 | `chat-prefix` | `packages/plugin/config.yml` | Prefix for messages the plugin sends in chat |
-| `messages.*` | `packages/plugin/config.yml` | Ban/mute/kick messages. `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}`. Only written on first run, so copy changes across when updating |
+| `messages.*` | `packages/plugin/config.yml` | Ban/mute/kick messages. `{reason}` `{ban_id}` `{site_host}` `{site_url}` `{duration}` `{expires_at}`. Only written on first run, so copy changes across when updating |
 | `staff-alerts.*` | `packages/plugin/config.yml` | In-game staff alert on punishment |
 
 Moving domains is a two-line change (`SITE_URL`, `site-url`). Nothing else hardcodes it.
@@ -332,7 +332,7 @@ as your proxy setup. Entries are kept indefinitely; there's no retention job.
 ## Security
 
 - Permissions checked server-side on every route, not just hidden in the UI
-- Public IDs (`VB-XXXXXXXX`) are non-sequential 8-char base32. Not enumerable. UUIDs and
+- Public IDs are random 6-character codes (older ones were `VB-` plus eight). Not sequential, lookups are rate limited, and a lookup shows only the reason and dates. UUIDs and
   internal IDs never leave an unauthenticated endpoint
 - OAuth CSRF protection via signed `state`
 - Session cookies: `httpOnly`, `Secure` in production, signed (`jose`)

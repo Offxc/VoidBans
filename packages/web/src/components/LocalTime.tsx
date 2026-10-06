@@ -1,17 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatSmartTime } from "@/lib/smart-time";
 
 /**
  * Renders a UTC ISO timestamp in the viewer's own local timezone. Server-
  * rendered with nothing (avoiding a hydration mismatch from SSR guessing
  * the wrong zone), then filled in client-side once mounted.
  */
-export function LocalTime({ iso, relative = false }: { iso: string; relative?: boolean }) {
+export function LocalTime({ iso, relative = false, smart = false }: { iso: string; relative?: boolean; smart?: boolean }) {
   const [text, setText] = useState<string | null>(null);
 
   useEffect(() => {
     const date = new Date(iso);
+    if (smart) {
+      // "6 hours ago" goes stale while the page stays open, so keep it fresh.
+      const update = () => setText(formatSmartTime(date));
+      update();
+      const timer = setInterval(update, 30_000);
+      return () => clearInterval(timer);
+    }
     if (relative) {
       setText(formatRelative(date));
     } else {
@@ -22,9 +30,16 @@ export function LocalTime({ iso, relative = false }: { iso: string; relative?: b
         }),
       );
     }
-  }, [iso, relative]);
+  }, [iso, relative, smart]);
 
-  return <span suppressHydrationWarning>{text ?? "…"}</span>;
+  // The exact date and time is always one hover away, whichever form is shown.
+  const exact = smart || relative ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : undefined;
+
+  return (
+    <span suppressHydrationWarning title={exact}>
+      {text ?? "…"}
+    </span>
+  );
 }
 
 function formatRelative(date: Date): string {

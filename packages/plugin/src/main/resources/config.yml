@@ -36,7 +36,10 @@ staff-alerts:
   message: "&e{staff} &7{type_verb} &e{player}&7: &f{reason}"
 
 # Shown to the player on the disconnect screen (bans, kicks) or in chat (mutes).
-# Placeholders: {reason} {ban_id} {site_url} {duration} {expires_at}
+# Placeholders: {reason} {ban_id} {site_host} {site_url} {duration} {expires_at}
+#   {site_host} is the site address without https://, e.g. bans.example.com
+#   {site_url} is the full address. Links aren't clickable on a disconnect screen,
+#   so the messages show the address and the ID for the player to type in.
 # Colors and formatting use '&' codes: &c red, &7 gray, &f white, &b aqua, &l bold.
 # This file is only written the first time the plugin runs. When you update the
 # plugin, copy any changed messages across from the repo's config.yml yourself.
@@ -47,8 +50,7 @@ messages:
     &7Reason: &f{reason}
     &7ID: &f{ban_id}
 
-    &7Appeal or view details:
-    &b{site_url}/{ban_id}
+    &7Appeal at: &b{site_host}
   temp-ban: |-
     &c&lYOU ARE TEMPORARILY BANNED
 
@@ -56,43 +58,39 @@ messages:
     &7Expires: &f{expires_at}
     &7ID: &f{ban_id}
 
-    &7Appeal or view details:
-    &b{site_url}/{ban_id}
+    &7Appeal at: &b{site_host}
   kick: |-
     &c&lYOU WERE KICKED
 
     &7Reason: &f{reason}
     &7ID: &f{ban_id}
 
-    &7Details:
-    &b{site_url}/{ban_id}
+    &7Details at: &b{site_host}
   ip-ban: |-
     &c&lTHIS NETWORK IS BANNED
 
     &7Reason: &f{reason}
     &7ID: &f{ban_id}
 
-    &7Appeal or view details:
-    &b{site_url}/{ban_id}
+    &7Appeal at: &b{site_host}
   mute: |-
     &c&lYOU ARE MUTED
     &7Reason: &f{reason}
     &7ID: &f{ban_id}
-    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Appeal at: &b{site_host}
   temp-mute: |-
     &c&lYOU ARE TEMPORARILY MUTED
     &7Reason: &f{reason}
     &7Expires: &f{expires_at}
     &7ID: &f{ban_id}
-    &7Appeal or view details: &b{site_url}/{ban_id}
+    &7Appeal at: &b{site_host}
   warn: |-
     &e&lWARNING
 
     &7Reason: &f{reason}
     &7ID: &f{ban_id}
 
-    &7Details:
-    &b{site_url}/{ban_id}
+    &7Details at: &b{site_host}
   # Shown on screen as well, so a warning isn't lost in busy chat.
   warn-title: "&e&lWARNING"
   warn-subtitle: "&f{reason}"

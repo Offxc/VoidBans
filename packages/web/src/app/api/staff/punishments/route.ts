@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStaffPrincipal } from "@/lib/auth";
 import { hasPermission, issueKeyFor } from "@/lib/permissions";
-import { generatePublicBanId } from "@/lib/ban-id";
+import { generateUniquePublicBanId } from "@/lib/ban-id";
 import { notifyDiscordWebhook } from "@/lib/discord-webhook";
 
 const issueSchema = z.object({
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
   const punishment = await prisma.punishment.create({
     data: {
-      publicBanId: generatePublicBanId(),
+      publicBanId: await generateUniquePublicBanId(),
       playerUuid: input.playerUuid,
       type: input.type,
       reason: input.reason,

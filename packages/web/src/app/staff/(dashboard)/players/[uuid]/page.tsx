@@ -247,7 +247,7 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                       delivered={p.deliveredAt !== null}
                     />
                     <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--text-dim)" }}>
-                      <LocalTime iso={p.issuedAt.toISOString()} />
+                      <LocalTime iso={p.issuedAt.toISOString()} smart />
                     </span>
                   </div>
                   <p style={{ fontSize: 13.5, margin: "8px 0 0" }}>{p.reason}</p>
