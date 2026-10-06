@@ -35,35 +35,53 @@ staff-alerts:
   # Placeholders: {reason} {ban_id} {type} {player} {staff} {duration}
   message: "&e{staff} &7{type_verb} &e{player}&7: &f{reason}"
 
+# Shown to the player on the disconnect screen (bans, kicks) or in chat (mutes).
 # Placeholders: {reason} {ban_id} {site_url} {duration} {expires_at}
-# Colors use '&' Minecraft color codes.
+# Colors and formatting use '&' codes: &c red, &7 gray, &f white, &b aqua, &l bold.
+# This file is only written the first time the plugin runs. When you update the
+# plugin, copy any changed messages across from the repo's config.yml yourself.
 messages:
-  ban: |
-    &cYou are banned from this server.
+  ban: |-
+    &c&lYOU ARE BANNED
+
     &7Reason: &f{reason}
-    &7Appeal or view details: &b{site_url}/{ban_id}
     &7Ban ID: &f{ban_id}
-  temp-ban: |
-    &cYou are temporarily banned from this server.
+
+    &7Appeal or view details:
+    &b{site_url}/{ban_id}
+  temp-ban: |-
+    &c&lYOU ARE TEMPORARILY BANNED
+
     &7Reason: &f{reason}
     &7Expires: &f{expires_at}
-    &7Appeal or view details: &b{site_url}/{ban_id}
     &7Ban ID: &f{ban_id}
-  kick: |
-    &cYou were kicked from this server.
+
+    &7Appeal or view details:
+    &b{site_url}/{ban_id}
+  kick: |-
+    &c&lYOU WERE KICKED
+
     &7Reason: &f{reason}
-  mute: |
-    &cYou are muted on this server.
-    &7Reason: &f{reason}
-    &7Appeal or view details: &b{site_url}/{ban_id}
     &7Ban ID: &f{ban_id}
-  temp-mute: |
-    &cYou are temporarily muted on this server.
+
+    &7Details:
+    &b{site_url}/{ban_id}
+  ip-ban: |-
+    &c&lTHIS NETWORK IS BANNED
+
+    &7Reason: &f{reason}
+    &7Ban ID: &f{ban_id}
+
+    &7Appeal or view details:
+    &b{site_url}/{ban_id}
+  mute: |-
+    &c&lYOU ARE MUTED
+    &7Reason: &f{reason}
+    &7Ban ID: &f{ban_id}
+    &7Appeal or view details: &b{site_url}/{ban_id}
+  temp-mute: |-
+    &c&lYOU ARE TEMPORARILY MUTED
     &7Reason: &f{reason}
     &7Expires: &f{expires_at}
-    &7Appeal or view details: &b{site_url}/{ban_id}
     &7Ban ID: &f{ban_id}
-  ip-ban: |
-    &cThis network is banned from this server.
-    &7Reason: &f{reason}
-    &7If you believe this is a mistake, contact staff via Discord.
+    &7Appeal or view details: &b{site_url}/{ban_id}

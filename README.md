@@ -190,7 +190,7 @@ server can't write to your panel unless they have your database password. For th
 | `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` |
 | `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` |
 | `chat-prefix` | `packages/plugin/config.yml` | Prefix for messages the plugin sends in chat |
-| `messages.*` | `packages/plugin/config.yml` | Ban/mute/kick messages. `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}` |
+| `messages.*` | `packages/plugin/config.yml` | Ban/mute/kick messages. `{reason}` `{ban_id}` `{site_url}` `{duration}` `{expires_at}`. Only written on first run, so copy changes across when updating |
 | `staff-alerts.*` | `packages/plugin/config.yml` | In-game staff alert on punishment |
 
 Moving domains is a two-line change (`SITE_URL`, `site-url`). Nothing else hardcodes it.

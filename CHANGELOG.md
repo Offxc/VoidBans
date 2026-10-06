@@ -8,6 +8,15 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Plugin 0.3.1
+
+- Kick screens now show the Ban ID and a link to the site. They had only a heading and the
+  reason. IP ban screens also gained the ID and link.
+- All ban, kick and mute messages are laid out more clearly: a bold heading, spacing between
+  the sections, and the link on its own line.
+- `config.yml` is only written the first time the plugin runs, so an existing server has to copy
+  the new `messages:` block across from the repo's config.yml. The plugin doesn't overwrite it.
+
 ## Site 0.4.0 / Plugin 0.3.0
 
 Site

@@ -65,10 +65,10 @@ public final class SessionListener implements Listener {
                 return;
             }
 
-            String ipBanReason = findActiveIpBanReason(conn, ip);
-            if (ipBanReason != null) {
+            ActiveBan ipBan = findActiveIpBan(conn, ip);
+            if (ipBan != null) {
                 event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
-                        messages.render("ip-ban", ipBanReason, "", null));
+                        messages.render("ip-ban", ipBan.reason, ipBan.publicBanId, null));
             }
         } catch (SQLException e) {
             plugin.getLogger().warning("Ban check failed for " + uuid + ": " + e.getMessage());
@@ -98,9 +98,9 @@ public final class SessionListener implements Listener {
         }
     }
 
-    private String findActiveIpBanReason(java.sql.Connection conn, String ip) throws SQLException {
+    private ActiveBan findActiveIpBan(java.sql.Connection conn, String ip) throws SQLException {
         String sql = """
-            SELECT reason FROM punishments
+            SELECT reason, publicBanId FROM punishments
             WHERE ipAddress = ? AND ipBanned = TRUE AND active = TRUE
               AND (expiresAt IS NULL OR expiresAt > NOW())
             LIMIT 1
@@ -108,7 +108,7 @@ public final class SessionListener implements Listener {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, ip);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getString("reason") : null;
+                return rs.next() ? new ActiveBan(rs.getString("reason"), rs.getString("publicBanId"), null) : null;
             }
         }
     }
