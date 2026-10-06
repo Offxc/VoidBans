@@ -240,7 +240,12 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
                       {p.type}
                       {p.ipBanned && <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> +IP</span>}
                     </strong>
-                    <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
+                    <PunishmentStatus
+                      active={p.active}
+                      expiresAt={p.expiresAt?.toISOString() ?? null}
+                      type={p.type}
+                      delivered={p.deliveredAt !== null}
+                    />
                     <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--text-dim)" }}>
                       <LocalTime iso={p.issuedAt.toISOString()} />
                     </span>

@@ -8,6 +8,25 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.5.0 / Plugin 0.4.0
+
+Site
+- Staff can warn players. It has its own permission (`punish.warn`), so tick "Issue warnings"
+  on the roles that should have it in Settings. It isn't granted automatically.
+- A warning doesn't need the player to be online. The punishment list and profile show whether the
+  player has seen it yet.
+- Kicks and warnings show as "Issued" or "Delivered" instead of "Inactive".
+- "Ban ID" is now just "ID" or "punishment ID" across the site, since kicks, mutes and warnings
+  have one too.
+
+Plugin
+- Shows a warning in chat and as an on-screen title. If the player is offline, it is shown the
+  next time they join.
+- The in-game label is now "ID" instead of "Ban ID".
+- A message added in a newer version now works on an older `config.yml` by falling back to the
+  default inside the jar, so warnings show up without editing the config. Messages already in
+  your config are left as they are.
+
 ## Plugin 0.3.1
 
 - Kick screens now show the Ban ID and a link to the site. They had only a heading and the

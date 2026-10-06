@@ -3,6 +3,10 @@ import { LocalTime } from "@/components/LocalTime";
 interface Props {
   active: boolean;
   expiresAt: string | null;
+  /** Kicks and warnings happen once, so "Inactive" would read as revoked. */
+  type?: "BAN" | "MUTE" | "KICK" | "WARN";
+  /** Set once the plugin has acted on a kick, ban or warning. */
+  delivered?: boolean;
 }
 
 /**
@@ -11,7 +15,20 @@ interface Props {
  * (permanent), or Active until <time>, so the expiry is never hidden
  * behind a bare "Active" pill.
  */
-export function PunishmentStatus({ active, expiresAt }: Props) {
+export function PunishmentStatus({ active, expiresAt, type, delivered }: Props) {
+  if (type === "KICK") {
+    return <span className="vb-pill vb-pill-neutral">Issued</span>;
+  }
+
+  if (type === "WARN") {
+    // A warning for someone who is offline waits until they next join.
+    return delivered ? (
+      <span className="vb-pill vb-pill-neutral">Delivered</span>
+    ) : (
+      <span className="vb-pill vb-pill-warn">Not seen yet</span>
+    );
+  }
+
   if (!active) {
     return <span className="vb-pill vb-pill-neutral">Inactive</span>;
   }

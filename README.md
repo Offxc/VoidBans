@@ -30,7 +30,7 @@ never runs migrations.
 ## Features
 
 **Public site**
-- Ban ID lookup (`/VB-XXXXXXXX`), linked directly from the in-game kick/mute message
+- Punishment lookup by ID (`/VB-XXXXXXXX`), linked directly from the in-game ban, kick, mute and warning messages
 - Appeals: one per ban, owner-configurable questions, staff accept/deny with a response and
   optional auto-revoke
 - Optional `/rules` page: built from the same categories/rules staff pick from when punishing,
@@ -230,7 +230,7 @@ Punishing is split per action, so a role can be allowed to mute but not ban: per
 temporary ban, permanent mute, temporary mute and kick are each their own permission, and so is
 revoking bans and mutes. A role that can't issue something sees no button for it,
 and the server refuses the request either way. `bans.request` lets a role ask for any action it
-can't issue itself.
+can't issue itself. Warnings are a separate permission from kicks and bans.
 
 **Deleting a punishment from a player's history is owner only.** It isn't a permission and can't be
 given to a role. It removes the record for good, along with its appeal and any attachments on it,
@@ -252,7 +252,7 @@ reconnection from a different account on the same network. Cover this in your pr
 A ban or mute is enforced by the plugin, not just recorded:
 
 - **Ban**: checked on `PlayerLoginEvent`, before the connection completes. Kick message renders
-  the real reason, ban ID, and `{site_url}/{ban_id}` from `messages.ban`/`messages.temp-ban`.
+  the real reason, ID, and `{site_url}/{ban_id}` from `messages.ban`/`messages.temp-ban`.
 - **Mute**: checked on every chat message; cancelled with `messages.mute`/`messages.temp-mute`.
 - Both hit the live `punishments` table on every attempt, no caching. A ban or unban from the
   dashboard takes effect on the next login or message, no restart.
@@ -261,6 +261,9 @@ A ban or mute is enforced by the plugin, not just recorded:
   `messages.kick`. A kick is a one-off event, so it is recorded as inactive straight away.
 - A **ban** issued from the dashboard also removes the player if they are online at the time,
   instead of waiting for their next login.
+- **Warn**: shown in chat and as an on-screen title (`messages.warn`, `warn-title`,
+  `warn-subtitle`). A warning for someone offline waits and is shown when they next join. Staff
+  can see on the profile whether it has been seen yet.
 
 **Bedrock (Geyser/Floodgate)** needs no separate code path. Floodgate substitutes its own UUID
 before the login event fires, and that's what everything here keys off. Their username carries
@@ -329,7 +332,7 @@ as your proxy setup. Entries are kept indefinitely; there's no retention job.
 ## Security
 
 - Permissions checked server-side on every route, not just hidden in the UI
-- Public ban IDs (`VB-XXXXXXXX`) are non-sequential 8-char base32. Not enumerable. UUIDs and
+- Public IDs (`VB-XXXXXXXX`) are non-sequential 8-char base32. Not enumerable. UUIDs and
   internal IDs never leave an unauthenticated endpoint
 - OAuth CSRF protection via signed `state`
 - Session cookies: `httpOnly`, `Secure` in production, signed (`jose`)

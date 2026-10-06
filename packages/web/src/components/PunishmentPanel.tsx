@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { MuteIcon, TempMuteIcon, KickIcon, HammerIcon, TempHammerIcon } from "@/components/PunishmentIcons";
+import { MuteIcon, TempMuteIcon, KickIcon, HammerIcon, TempHammerIcon, WarnIcon } from "@/components/PunishmentIcons";
 import { DurationInput } from "@/components/DurationInput";
 
 interface Template {
@@ -43,6 +43,7 @@ type Via = "rules" | "templates" | "manual";
 // the buttons read as an escalation at a glance rather than five
 // identical options.
 const ACTIONS: Action[] = [
+  { key: "warn", label: "Warn", type: "WARN", hasDuration: false, hasIpBan: false, icon: WarnIcon, buttonClass: "vb-btn-notice", accent: "var(--accent-text)", accentSoft: "var(--accent-soft)" },
   { key: "mute", label: "Mute", type: "MUTE", hasDuration: false, hasIpBan: false, icon: MuteIcon, buttonClass: "vb-btn-muted", accent: "var(--info)", accentSoft: "var(--info-soft)" },
   { key: "temp_mute", label: "Temp mute", type: "MUTE", hasDuration: true, hasIpBan: false, icon: TempMuteIcon, buttonClass: "vb-btn-muted", accent: "var(--info)", accentSoft: "var(--info-soft)" },
   { key: "kick", label: "Kick", type: "KICK", hasDuration: false, hasIpBan: false, icon: KickIcon, buttonClass: "vb-btn-warn", accent: "var(--warn)", accentSoft: "var(--warn-soft)" },
@@ -234,7 +235,7 @@ export function PunishmentPanel({
     // Reads like something a staff member would actually type, not a
     // generated log line, no category grouping or nested punctuation
     // baked in here, since the full rule text (with category) is already
-    // shown separately on the ban ID page. Stays short and flat no
+    // shown separately on the punishment page. Stays short and flat no
     // matter how many rules are picked: "Harassment (C1), Spam (C2)".
     setVia("rules");
     setTemplateId("");
@@ -631,10 +632,10 @@ export function PunishmentPanel({
                       <path d="m5 12.5 4.5 4.5L19 7.5" />
                     </svg>
                   </span>
-                  <h3>{issuedId ? `${active.label} issued` : "Request sent"}</h3>
+                  <h3>{issuedId ? `${active.type === "WARN" ? "Warning" : active.label} issued` : "Request sent"}</h3>
                   {issuedId ? (
                     <p>
-                      Ban ID <span className="vb-pill vb-pill-neutral" style={{ fontFamily: "ui-monospace, monospace" }}>{issuedId}</span>
+                      ID <span className="vb-pill vb-pill-neutral" style={{ fontFamily: "ui-monospace, monospace" }}>{issuedId}</span>
                     </p>
                   ) : (
                     <p>It&apos;s waiting for review.</p>
@@ -671,7 +672,7 @@ export function PunishmentPanel({
                 )}
                 {step === "details" && (
                   <button type="submit" className="vb-btn vb-btn-primary" disabled={submitting}>
-                    {submitting ? "Submitting…" : direct ? `Confirm ${active.label.toLowerCase()}` : "Send request"}
+                    {submitting ? "Submitting…" : direct ? (active.type === "WARN" ? "Send warning" : `Confirm ${active.label.toLowerCase()}`) : "Send request"}
                   </button>
                 )}
               </>

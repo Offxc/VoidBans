@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Acts on kicks and bans issued from the website for players who are online
- * right now. The login and chat checks only run when a player connects or
+ * Acts on kicks, bans and warnings issued from the website for players who are
+ * online right now. The login and chat checks only run when a player connects or
  * speaks, so on their own a kick from the dashboard did nothing and a ban
  * only took effect the next time the player tried to join.
  *
@@ -49,7 +49,7 @@ public final class PunishmentDeliveryTask extends BukkitRunnable {
         List<Pending> pending = new ArrayList<>();
         String sql = """
             SELECT id, playerUuid, type, reason, publicBanId, expiresAt FROM punishments
-            WHERE deliveredAt IS NULL AND type IN ('KICK', 'BAN')
+            WHERE deliveredAt IS NULL AND type IN ('KICK', 'BAN', 'WARN')
               AND issuedAt > NOW() - INTERVAL 2 MINUTE
             ORDER BY id ASC LIMIT 25
             """;
@@ -77,25 +77,18 @@ public final class PunishmentDeliveryTask extends BukkitRunnable {
                 Player player = plugin.getServer().getPlayer(p.uuid());
                 if (player == null) continue; // not on this server (yet)
 
-                String key = p.type().equals("KICK") ? "kick" : (p.expiresAt() != null ? "temp-ban" : "ban");
-                String message = messages.render(key, p.reason(), p.banId(), p.expiresAt());
-                player.kick(LegacyComponentSerializer.legacySection().deserialize(message));
+                if (p.type().equals("WARN")) {
+                    WarningDelivery.show(messages, player, p.reason(), p.banId());
+                } else {
+                    String key = p.type().equals("KICK") ? "kick" : (p.expiresAt() != null ? "temp-ban" : "ban");
+                    String message = messages.render(key, p.reason(), p.banId(), p.expiresAt());
+                    player.kick(LegacyComponentSerializer.legacySection().deserialize(message));
+                }
                 delivered.add(p.id());
             }
             if (!delivered.isEmpty()) {
-                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> markDelivered(delivered));
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> WarningDelivery.markDelivered(plugin, db, delivered));
             }
         });
-    }
-
-    private void markDelivered(List<Long> ids) {
-        String placeholders = String.join(",", ids.stream().map(i -> "?").toList());
-        String sql = "UPDATE punishments SET deliveredAt = NOW() WHERE deliveredAt IS NULL AND id IN (" + placeholders + ")";
-        try (var conn = db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < ids.size(); i++) ps.setLong(i + 1, ids.get(i));
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to mark punishments delivered: " + e.getMessage());
-        }
     }
 }

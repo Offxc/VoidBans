@@ -3,6 +3,7 @@ package com.voidsmp.voidbans.listener;
 import com.voidsmp.voidbans.VoidBansPlugin;
 import com.voidsmp.voidbans.db.Database;
 import com.voidsmp.voidbans.db.SessionCloser;
+import com.voidsmp.voidbans.task.WarningDelivery;
 import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.message.MessageTemplate;
 import org.bukkit.entity.Player;
@@ -131,6 +132,7 @@ public final class SessionListener implements Listener {
                     // abandoned, never closed with the current time.
                     SessionCloser.abandonOpen(conn, uuid, serverId);
                     insertSessionStart(conn, uuid, serverId, ip);
+                    WarningDelivery.deliverPendingOnJoin(plugin, db, messages, player);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record login for " + name + ": " + e.getMessage());
                 }

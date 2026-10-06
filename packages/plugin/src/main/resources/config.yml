@@ -45,7 +45,7 @@ messages:
     &c&lYOU ARE BANNED
 
     &7Reason: &f{reason}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
 
     &7Appeal or view details:
     &b{site_url}/{ban_id}
@@ -54,7 +54,7 @@ messages:
 
     &7Reason: &f{reason}
     &7Expires: &f{expires_at}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
 
     &7Appeal or view details:
     &b{site_url}/{ban_id}
@@ -62,7 +62,7 @@ messages:
     &c&lYOU WERE KICKED
 
     &7Reason: &f{reason}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
 
     &7Details:
     &b{site_url}/{ban_id}
@@ -70,18 +70,29 @@ messages:
     &c&lTHIS NETWORK IS BANNED
 
     &7Reason: &f{reason}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
 
     &7Appeal or view details:
     &b{site_url}/{ban_id}
   mute: |-
     &c&lYOU ARE MUTED
     &7Reason: &f{reason}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
     &7Appeal or view details: &b{site_url}/{ban_id}
   temp-mute: |-
     &c&lYOU ARE TEMPORARILY MUTED
     &7Reason: &f{reason}
     &7Expires: &f{expires_at}
-    &7Ban ID: &f{ban_id}
+    &7ID: &f{ban_id}
     &7Appeal or view details: &b{site_url}/{ban_id}
+  warn: |-
+    &e&lWARNING
+
+    &7Reason: &f{reason}
+    &7ID: &f{ban_id}
+
+    &7Details:
+    &b{site_url}/{ban_id}
+  # Shown on screen as well, so a warning isn't lost in busy chat.
+  warn-title: "&e&lWARNING"
+  warn-subtitle: "&f{reason}"

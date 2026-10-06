@@ -6,6 +6,7 @@
  */
 export const PERMISSION_KEYS = [
   "bans.view",
+  "punish.warn",
   "punish.ban",
   "punish.temp_ban",
   "punish.mute",
@@ -38,6 +39,7 @@ export type PermissionKey = (typeof PERMISSION_KEYS)[number];
 
 export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   "bans.view": "View the punishment list",
+  "punish.warn": "Issue warnings",
   "punish.ban": "Issue permanent bans",
   "punish.temp_ban": "Issue temporary bans",
   "punish.mute": "Issue permanent mutes",
@@ -70,7 +72,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
 export const PERMISSION_GROUPS: { title: string; keys: PermissionKey[] }[] = [
   {
     title: "Issue punishments",
-    keys: ["punish.ban", "punish.temp_ban", "punish.mute", "punish.temp_mute", "punish.kick", "bans.request"],
+    keys: ["punish.warn", "punish.ban", "punish.temp_ban", "punish.mute", "punish.temp_mute", "punish.kick", "bans.request"],
   },
   { title: "Revoke punishments", keys: ["punish.unban", "punish.unmute"] },
   { title: "Punishment list and appeals", keys: ["bans.view", "appeals.view", "appeals.resolve"] },
@@ -97,6 +99,7 @@ type PunishmentType = "BAN" | "MUTE" | "KICK" | "WARN";
 
 /** The panel's action buttons, keyed the way PunishmentPanel names them. */
 export const ISSUE_KEY_BY_ACTION = {
+  warn: "punish.warn",
   ban: "punish.ban",
   temp_ban: "punish.temp_ban",
   mute: "punish.mute",
@@ -114,6 +117,7 @@ export type PunishAction = keyof typeof ISSUE_KEY_BY_ACTION;
 export function issueKeyFor(type: PunishmentType, hasDuration: boolean): PermissionKey {
   if (type === "BAN") return hasDuration ? "punish.temp_ban" : "punish.ban";
   if (type === "MUTE") return hasDuration ? "punish.temp_mute" : "punish.mute";
+  if (type === "WARN") return "punish.warn";
   return "punish.kick";
 }
 

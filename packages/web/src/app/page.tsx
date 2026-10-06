@@ -9,9 +9,9 @@ export default function HomePage() {
   return (
     <SiteShell>
       <section className="vb-hero">
-        <h1 className="vb-hero-title">Ban lookup</h1>
+        <h1 className="vb-hero-title">Punishment lookup</h1>
         <BanLookupForm />
-        <p className="vb-hero-hint">Your ban ID is in your kick or mute message.</p>
+        <p className="vb-hero-hint">Your ID is in your ban, kick, mute or warning message.</p>
       </section>
     </SiteShell>
   );

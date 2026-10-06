@@ -33,7 +33,11 @@ public final class MessageTemplate {
     }
 
     public String render(String key, String reason, String banId, Instant expiresAt) {
-        String template = config.getString("messages." + key, "");
+        // No fallback argument here on purpose: getString(path) falls back to
+        // the default shipped inside the jar, so a message added in a newer
+        // version still works on a config.yml written by an older one.
+        String template = config.getString("messages." + key);
+        if (template == null) template = "";
 
         String duration = expiresAt == null ? "permanent"
                 : java.time.Duration.between(Instant.now(), expiresAt).toString();

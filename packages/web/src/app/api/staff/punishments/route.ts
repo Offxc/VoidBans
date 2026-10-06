@@ -134,8 +134,8 @@ export async function POST(req: NextRequest) {
       staffDiscordId: principal.discordId,
       staffUsername: principal.username,
       expiresAt,
-      // A kick happens once and is over. Only bans and mutes stay in force.
-      active: input.type !== "KICK",
+      // A kick or warning happens once and is over. Only bans and mutes stay in force.
+      active: input.type !== "KICK" && input.type !== "WARN",
       appealable: input.appealable,
       ipBanned: wantsIpBan && ipAddress !== null,
       ipAddress,

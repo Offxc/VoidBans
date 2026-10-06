@@ -248,6 +248,16 @@ label.vb-card:hover {
   border-color: rgba(56, 189, 248, 0.28);
 }
 
+.vb-btn-notice {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.vb-btn-notice:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.24);
+}
+
 .vb-btn-muted:hover:not(:disabled) {
   background: rgba(56, 189, 248, 0.2);
 }

@@ -22,7 +22,7 @@ export function BanLookupForm() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="VB-XXXXXXXX"
-        aria-label="Ban ID"
+        aria-label="Punishment ID"
         autoComplete="off"
         spellCheck={false}
       />

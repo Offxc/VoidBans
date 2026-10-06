@@ -22,9 +22,9 @@ export default function TermsPage() {
           enabled), and this site exists to make punishment records visible and appealable.
         </p>
 
-        <h2>Punishments and ban IDs</h2>
+        <h2>Punishments and IDs</h2>
         <p>
-          Every punishment issued gets a ban ID, which anyone can look up on this site to see the
+          Every punishment issued gets an ID, which anyone can look up on this site to see the
           reason, type, and status. Issuing, revoking, or editing a punishment is entirely at the
           discretion of the server&apos;s staff, based on the server&apos;s own rules. This site
           only records and displays that decision, it doesn&apos;t make it.
@@ -32,7 +32,7 @@ export default function TermsPage() {
 
         <h2>Appeals</h2>
         <p>
-          A punishment marked appealable can be appealed once from its ban ID page. Submitting an
+          A punishment marked appealable can be appealed once from its page. Submitting an
           appeal means giving a truthful, good-faith account. Appeals submitted in bad faith
           (false statements, spam, harassment of staff) may be denied without further review and
           can affect how a future appeal from the same account is handled. Staff decisions on

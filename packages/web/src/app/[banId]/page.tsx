@@ -33,7 +33,12 @@ export default async function BanPage({ params }: { params: { banId: string } })
           <span className="vb-pill" style={{ fontFamily: "ui-monospace, monospace" }}>
             {punishment.publicBanId}
           </span>
-          <PunishmentStatus active={punishment.active} expiresAt={punishment.expiresAt?.toISOString() ?? null} />
+          <PunishmentStatus
+            active={punishment.active}
+            expiresAt={punishment.expiresAt?.toISOString() ?? null}
+            type={punishment.type}
+            delivered={punishment.deliveredAt !== null}
+          />
         </div>
         <h1 className="vb-doc-title">{typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1).toLowerCase()}</h1>
         <p className="vb-doc-meta">

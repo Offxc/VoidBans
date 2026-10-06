@@ -77,7 +77,12 @@ export default async function PunishmentsListPage({
                   <LocalTime iso={p.issuedAt.toISOString()} />
                 </td>
                 <td>
-                  <PunishmentStatus active={p.active} expiresAt={p.expiresAt?.toISOString() ?? null} />
+                  <PunishmentStatus
+                    active={p.active}
+                    expiresAt={p.expiresAt?.toISOString() ?? null}
+                    type={p.type}
+                    delivered={p.deliveredAt !== null}
+                  />
                 </td>
                 {showActions && (
                   <td>
