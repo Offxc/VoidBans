@@ -89,10 +89,41 @@ export async function getStaffPrincipal(): Promise<StaffPrincipal | null> {
  * everywhere `StaffUser.username` is used (header, audit log, punishment
  * records, appeal resolutions).
  */
-export async function syncStaffUserOnLogin(discordId: string, globalUsername: string, avatarHash: string | null) {
+export async function syncStaffUserOnLogin(
+  discordId: string,
+  globalUsername: string,
+  avatarHash: string | null,
+): Promise<{ allowed: boolean }> {
   const member = await fetchGuildMember(discordId);
   const displayUsername = member.nick ?? globalUsername;
-  const ownerExists = await prisma.staffUser.findFirst({ where: { isOwner: true } });
+  const [ownerExists, existing] = await Promise.all([
+    prisma.staffUser.findFirst({ where: { isOwner: true } }),
+    prisma.staffUser.findUnique({ where: { discordId }, select: { isOwner: true } }),
+  ]);
+
+  // Who may sign in: the owner, whoever signs in first on a fresh install (they
+  // become the owner), or someone holding a role with at least one permission.
+  // Anyone else is refused here, before a session or a staff record exists.
+  let allowed = Boolean(existing?.isOwner) || !ownerExists;
+  if (!allowed && member.roles.length > 0) {
+    const grants = await prisma.staffPermission.findMany({
+      where: { role: { discordRoleId: { in: member.roles } } },
+      select: { permissionKey: true },
+    });
+    allowed = grants.some((grant) => isPermissionKey(grant.permissionKey));
+  }
+
+  if (!allowed) {
+    // If this person used to have access, record their current roles so it
+    // really is gone, rather than leaving their old roles in place.
+    if (existing) {
+      await prisma.staffUser.update({
+        where: { discordId },
+        data: { username: displayUsername, discordRoles: member.roles },
+      });
+    }
+    return { allowed: false };
+  }
 
   await prisma.staffUser.upsert({
     where: { discordId },
@@ -111,6 +142,7 @@ export async function syncStaffUserOnLogin(discordId: string, globalUsername: st
       lastLoginAt: new Date(),
     },
   });
+  return { allowed: true };
 }
 
 /**

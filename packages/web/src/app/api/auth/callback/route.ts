@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { exchangeCodeForToken, fetchDiscordUser } from "@/lib/discord";
 import { createSession } from "@/lib/session";
 import { syncStaffUserOnLogin } from "@/lib/auth";
+import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 
 const STATE_COOKIE = "voidbans_oauth_state";
 
@@ -33,7 +34,22 @@ export async function GET(req: NextRequest) {
     const discordUser = await fetchDiscordUser(token.access_token);
     attempted = { discordId: discordUser.id, username: discordUser.username };
 
-    await syncStaffUserOnLogin(discordUser.id, discordUser.username, discordUser.avatar);
+    const { allowed } = await syncStaffUserOnLogin(discordUser.id, discordUser.username, discordUser.avatar);
+    if (!allowed) {
+      // Not staff: no session, no staff record, just a refusal. The audit entry is
+      // rate limited per IP so strangers can't fill the log.
+      if (rateLimit(`login-denied:${clientIpFromHeaders(req.headers)}`, 10, 60_000).allowed) {
+        await recordAudit(attempted, {
+          action: "auth.login_denied",
+          targetType: "session",
+          targetId: discordUser.id,
+          outcome: "denied",
+          details: { reason: "no_staff_access" },
+        });
+      }
+      return NextResponse.redirect(siteUrl("/staff/login?error=no_access"));
+    }
+
     await createSession({ discordId: discordUser.id });
     await recordAudit(attempted, {
       action: "auth.login",

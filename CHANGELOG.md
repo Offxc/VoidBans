@@ -8,6 +8,16 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.7.1
+
+- People who sign in with Discord but aren't staff are now refused straight away with
+  "This Discord account doesn't have staff access." Before, they were bounced back to the
+  sign-in page with no message, a staff record was created for them, and the audit log said
+  they had signed in successfully.
+- A refused sign-in creates no session and no staff record, and is logged as "Sign-in refused
+  (not staff)". If someone who used to be staff signs in after losing their role, their stored
+  roles are cleared so access really ends.
+
 ## Site 0.7.0
 
 - The Discord bot now shows as online while the site is running, with a "Watching <your site>"

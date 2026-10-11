@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getStaffPrincipal } from "@/lib/auth";
+import { readSession } from "@/lib/session";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getSiteIconUrl } from "@/lib/site-icon";
@@ -11,7 +12,9 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
   const principal = await getStaffPrincipal();
 
   if (!principal) {
-    redirect("/staff/login");
+    // A valid session with no access (their role was removed) gets the refusal
+    // message; someone who simply isn't signed in gets the plain sign-in page.
+    redirect((await readSession()) ? "/staff/login?error=no_access" : "/staff/login");
   }
 
   // Enforced for every staff member, including one who logged in before

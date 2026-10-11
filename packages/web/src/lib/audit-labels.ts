@@ -6,6 +6,7 @@
 export const ACTION_LABELS: Record<string, string> = {
   "auth.login": "Signed in",
   "auth.login_failed": "Sign-in failed",
+  "auth.login_denied": "Sign-in refused (not staff)",
   "auth.logout": "Signed out",
   "access.denied": "Access denied",
   "ratelimit.exceeded": "Rate limit hit",
