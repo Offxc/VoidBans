@@ -53,6 +53,8 @@ services:
       DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      BOT_PRESENCE: ${BOT_PRESENCE:-}
+      BOT_ACTIVITY: ${BOT_ACTIVITY:-}
       NODE_ENV: production
     # Loopback only. Point your reverse proxy at 127.0.0.1:3300. To reach
     # `web` over a Docker network instead (for example from a proxy running

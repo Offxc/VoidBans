@@ -186,7 +186,8 @@ server can't write to your panel unless they have your database password. For th
 | `SITE_URL` | `packages/web/.env` | Public URL. Must match `site-url` in the plugin config |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | `packages/web/.env` | Discord OAuth app |
 | `DISCORD_REDIRECT_URI` | `packages/web/.env` | `${SITE_URL}/api/auth/callback` |
-| `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` | `packages/web/.env` | Reads a logging-in user's guild roles |
+| `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` | `packages/web/.env` | Reads a logging-in user's guild roles. The same token keeps the bot showing as online |
+| `BOT_PRESENCE` / `BOT_ACTIVITY` | `packages/web/.env` | Optional. `BOT_PRESENCE=false` stops the bot showing as online. `BOT_ACTIVITY` is the text after "Watching", default your site address |
 | `database.*` | `packages/plugin/config.yml` | Same DB as `DATABASE_URL` |
 | `site-url` | `packages/plugin/config.yml` | Must match `SITE_URL` |
 | `chat-prefix` | `packages/plugin/config.yml` | Prefix for messages the plugin sends in chat |

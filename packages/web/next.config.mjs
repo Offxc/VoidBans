@@ -9,6 +9,13 @@ const nextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: version },
   reactStrictMode: true,
   output: "standalone",
+  experimental: {
+    // Lets src/instrumentation.ts run at startup, which keeps the Discord bot online.
+    instrumentationHook: true,
+    // ws must be loaded from node_modules as-is. Bundling it breaks its optional
+    // native helpers ("t.mask is not a function") the first time it sends a frame.
+    serverComponentsExternalPackages: ["ws"],
+  },
   // Security headers (including a nonce-based CSP) are set in
   // src/middleware.ts instead of here, a static header set at build time
   // can't include a per-request nonce, which Next.js's own inline

@@ -8,6 +8,12 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.7.0
+
+- The Discord bot now shows as online while the site is running, with a "Watching <your site>"
+  status. It only holds the connection open and gives the bot no new abilities. Set
+  `BOT_PRESENCE=false` to turn it off, or `BOT_ACTIVITY` to change the text.
+
 ## Site 0.6.0 / Plugin 0.5.0
 
 Site
