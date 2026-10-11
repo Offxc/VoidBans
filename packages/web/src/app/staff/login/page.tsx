@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 const ERROR_MESSAGES: Record<string, string> = {
   state_mismatch: "Login expired or was tampered with. Try again.",
   oauth_failed: "Discord sign-in failed. Try again.",
-  no_access: "This Discord account doesn't have staff access.",
+  no_access: "Access denied.",
 };
 
 function DiscordIcon() {

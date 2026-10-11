@@ -8,10 +8,14 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.7.2
+
+- The refusal message on the sign-in page now just says "Access denied."
+
 ## Site 0.7.1
 
 - People who sign in with Discord but aren't staff are now refused straight away with
-  "This Discord account doesn't have staff access." Before, they were bounced back to the
+  "Access denied." Before, they were bounced back to the
   sign-in page with no message, a staff record was created for them, and the audit log said
   they had signed in successfully.
 - A refused sign-in creates no session and no staff record, and is logged as "Sign-in refused
