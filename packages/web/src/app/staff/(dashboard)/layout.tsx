@@ -5,6 +5,7 @@ import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { getPunishmentModes } from "@/lib/punishment-modes";
+import { getLockdown } from "@/lib/lockdown";
 import { StaffNav } from "@/components/StaffNav";
 import Link from "next/link";
 
@@ -32,9 +33,10 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
     redirect("/staff/link-account");
   }
 
-  const [iconUrl, punishmentModes] = await Promise.all([getSiteIconUrl(), getPunishmentModes()]);
+  const [iconUrl, punishmentModes, lockdown] = await Promise.all([getSiteIconUrl(), getPunishmentModes(), getLockdown()]);
 
   const nav = [
+    { href: "/staff/overview", label: "Overview", show: true },
     { href: "/staff/bans", label: "Punishments", show: hasPermission(principal, "bans.view") },
     { href: "/staff/appeals", label: "Appeals", show: hasPermission(principal, "appeals.view") },
     { href: "/staff/players", label: "Players", show: hasPermission(principal, "players.view_roster") },
@@ -68,6 +70,14 @@ export default async function StaffDashboardLayout({ children }: { children: Rea
         }}
       />
       <div className="vb-shell-main">
+        {lockdown.enabled && (
+          <div className="vb-banner">
+            <span>
+              The server is locked down{lockdown.by ? ` by ${lockdown.by}` : ""}. Only staff can be online.
+            </span>
+            <Link href="/staff/overview">Manage</Link>
+          </div>
+        )}
         {!staffUser?.minecraftUuid && (
           <div className="vb-banner">
             <span>Your Minecraft account isn&apos;t linked yet.</span>

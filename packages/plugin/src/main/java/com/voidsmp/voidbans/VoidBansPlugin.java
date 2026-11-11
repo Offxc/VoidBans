@@ -9,7 +9,10 @@ import com.voidsmp.voidbans.listener.SessionListener;
 import com.voidsmp.voidbans.message.MessageTemplate;
 import com.voidsmp.voidbans.task.HeartbeatTask;
 import com.voidsmp.voidbans.task.IntegrationSettingsPollTask;
+import com.voidsmp.voidbans.state.Lockdown;
+import com.voidsmp.voidbans.state.MuteCache;
 import com.voidsmp.voidbans.task.PunishmentDeliveryTask;
+import com.voidsmp.voidbans.task.StatePollTask;
 import com.voidsmp.voidbans.task.StaffAlertTask;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,13 +25,16 @@ public final class VoidBansPlugin extends JavaPlugin {
     private IntegrationSettingsPollTask integrationSettingsPollTask;
     private HeartbeatTask heartbeatTask;
     private PunishmentDeliveryTask deliveryTask;
+    private StatePollTask statePollTask;
+    private final Lockdown lockdown = new Lockdown();
+    private final MuteCache mutes = new MuteCache();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
 
         this.database = new Database(getConfig(), getLogger());
-        this.messages = new MessageTemplate(getConfig());
+        this.messages = new MessageTemplate(this);
 
         // Heal sessions a previous run left open. Has to happen before the
         // first heartbeat below overwrites the last-seen time it relies on.
@@ -37,16 +43,28 @@ public final class VoidBansPlugin extends JavaPlugin {
         } catch (java.sql.SQLException e) {
             getLogger().warning("Failed to close sessions left open by the last run: " + e.getMessage());
         }
+        // Read before anyone can join, so a lockdown that was on when the server
+        // stopped is still on when it comes back.
+        try (var conn = database.getConnection()) {
+            lockdown.refresh(conn);
+            if (lockdown.enabled()) getLogger().info("Lockdown is on. Only staff can join.");
+        } catch (java.sql.SQLException e) {
+            getLogger().warning("Couldn't read the lockdown state: " + e.getMessage());
+        }
+
         this.vulcanIntegration = new VulcanIntegration(this, database);
 
         getServer().getPluginManager().registerEvents(
-                new SessionListener(this, database, messages, vulcanIntegration), this);
+                new SessionListener(this, database, messages, vulcanIntegration, lockdown, mutes), this);
         getServer().getPluginManager().registerEvents(
-                new ChatListener(this, database, messages), this);
+                new ChatListener(this, messages, mutes), this);
 
-        PunishmentCommand punishmentCommand = new PunishmentCommand(this, database, messages);
-        getCommand("vban").setExecutor(punishmentCommand);
-        getCommand("vunban").setExecutor(punishmentCommand);
+        PunishmentCommand punishmentCommand = new PunishmentCommand(this, database, messages, mutes);
+        for (String name : java.util.List.of("vban", "vmute", "vkick", "vwarn", "vunban", "vunmute", "vhistory", "voidbans")) {
+            var command = getCommand(name);
+            command.setExecutor(punishmentCommand);
+            command.setTabCompleter(punishmentCommand);
+        }
 
         if (getConfig().getBoolean("staff-alerts.enabled", true)) {
             long intervalTicks = getConfig().getLong("staff-alerts.poll-interval-seconds", 5) * 20L;
@@ -66,6 +84,9 @@ public final class VoidBansPlugin extends JavaPlugin {
 
         // First beat right away so Settings > Plugin connection shows this
         // server as soon as it starts, then every 30s.
+        this.statePollTask = new StatePollTask(this, database, messages, lockdown, mutes);
+        statePollTask.runTaskTimerAsynchronously(this, 40L, 40L);
+
         this.heartbeatTask = new HeartbeatTask(this, database);
         heartbeatTask.runTaskTimerAsynchronously(this, 0L, 30L * 20L);
 
@@ -85,6 +106,9 @@ public final class VoidBansPlugin extends JavaPlugin {
         }
         if (deliveryTask != null) {
             deliveryTask.cancel();
+        }
+        if (statePollTask != null) {
+            statePollTask.cancel();
         }
         if (database != null) {
             // Players still online as the server stops never fire a quit

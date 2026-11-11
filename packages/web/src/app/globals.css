@@ -1612,3 +1612,185 @@ a.vb-pill {
     font-size: 16px;
   }
 }
+
+/* ── Staff overview ───────────────────────────────────────────────────── */
+.vb-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.vb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+}
+
+.vb-stat-value {
+  font-family: var(--font-sora), var(--font-inter), sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.vb-stat-label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ── List filters and tabs ────────────────────────────────────────────── */
+.vb-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.vb-filters .vb-input {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+.vb-filters .vb-select {
+  flex: 0 1 150px;
+  width: auto;
+}
+
+.vb-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.vb-tab {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vb-tab:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.vb-tab[aria-current="page"] {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+/* ── Home page ────────────────────────────────────────────────────────── */
+.vb-notice {
+  display: inline-block;
+  margin: 0 0 20px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  color: var(--warn);
+  font-size: 13.5px;
+}
+
+.vb-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 860px;
+  margin: 72px auto 0;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.vb-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.vb-step-num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vb-step-title {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+.vb-step-text {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  color: var(--text-dim);
+}
+
+.vb-home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  max-width: 860px;
+  margin: 36px auto 0;
+}
+
+.vb-home-card {
+  padding: 16px 18px;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.vb-home-card-link {
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+a.vb-home-card-link:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.vb-home-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.vb-home-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.vb-home-address {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .vb-steps {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 48px;
+  }
+}

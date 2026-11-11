@@ -6,6 +6,8 @@ import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { getPunishmentModes } from "@/lib/punishment-modes";
 import { getDiscordWebhookConfig } from "@/lib/discord-webhook";
+import { getServerInfo } from "@/lib/server-info";
+import { ServerInfoEditor } from "@/components/ServerInfoEditor";
 import { RolePermissionEditor } from "@/components/RolePermissionEditor";
 import { AppealQuestionEditor } from "@/components/AppealQuestionEditor";
 import { IntegrationsEditor } from "@/components/IntegrationsEditor";
@@ -26,7 +28,7 @@ export default async function SettingsPage() {
     redirect("/staff");
   }
 
-  const [roles, questions, vulcanEnabled, iconUrl, punishmentModes, webhookConfig] = await Promise.all([
+  const [roles, questions, vulcanEnabled, iconUrl, punishmentModes, webhookConfig, serverInfo] = await Promise.all([
     prisma.staffRole.findMany({
       include: { permissions: true },
       orderBy: { displayName: "asc" },
@@ -36,6 +38,7 @@ export default async function SettingsPage() {
     getSiteIconUrl(),
     getPunishmentModes(),
     getDiscordWebhookConfig(),
+    getServerInfo(),
   ]);
 
   return (
@@ -88,6 +91,10 @@ export default async function SettingsPage() {
 
       <SettingSection title="Integrations" desc="Turning one off hides it everywhere without deleting recorded data." bare>
         <IntegrationsEditor vulcanEnabled={vulcanEnabled} />
+      </SettingSection>
+
+      <SettingSection title="Home page" desc="Shown to players on the public home page. Leave a field blank to hide it.">
+        <ServerInfoEditor name={serverInfo.name} address={serverInfo.address} discordInvite={serverInfo.discordInvite} />
       </SettingSection>
 
       <SettingSection title="Site icon" desc="A direct i.postimg.cc image link, 256×256 preferred.">

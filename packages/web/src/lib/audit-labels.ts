@@ -41,6 +41,9 @@ export const ACTION_LABELS: Record<string, string> = {
   "settings.integrations.update": "Integrations changed",
   "settings.discord_webhook.update": "Discord webhook changed",
   "settings.icon.update": "Site icon changed",
+  "settings.server_info.update": "Server details changed",
+  "server.lockdown.enable": "Server locked down",
+  "server.lockdown.disable": "Lockdown ended",
   "audit.export": "Audit log exported",
 };
 
@@ -62,6 +65,7 @@ export const ACTION_AREAS = [
   "appeal_question",
   "role",
   "settings",
+  "server",
   "ratelimit",
   "audit",
 ] as const;

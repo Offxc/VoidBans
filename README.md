@@ -35,11 +35,18 @@ never runs migrations.
   optional auto-revoke
 - Optional `/rules` page: built from the same categories/rules staff pick from when punishing,
   not separately maintained
+- Home page with three short steps, plus optional server address (copy button), rules link and
+  Discord invite, all set in Settings and hidden when blank
+- Temporary punishments show a countdown, and the appeal status sits next to the punishment status
 
 **Staff dashboard**
 - Discord OAuth login; first account in becomes the owner
-- Punishment list, online/offline roster, per-player profile (sticky identity/status panel,
-  punishment history, sessions, IPs, notes, PNG attachments)
+- Overview page: players online, pending appeals, recent punishments, plugin connection
+- Lockdown button (`server.lockdown`): kicks everyone but staff and turns joiners away with a
+  maintenance message. Asks for confirmation both ways, and is audit-logged
+- Punishment list with search and type/status filters, appeals with Pending and Resolved tabs,
+  online/offline roster, per-player profile (sticky identity/status panel,
+  punishment history, sessions, IPs, other accounts on the same IPs, notes, PNG attachments)
 - Issue a ban/mute/kick/warn manually, from a template, or by selecting one or more rulebook
   entries: reason, duration, and appealability get filled in either way; templates and
   rule-based punishing are independent toggles and can both be on
@@ -52,10 +59,13 @@ never runs migrations.
   submitted/resolved), each event toggled independently
 
 **In-game (plugin)**
-- Bans and mutes are actually enforced: checked on login and on every chat message against the
-  live `punishments` table, no restart needed for a ban/unban to take effect
+- Bans and mutes are actually enforced: bans are checked off the main thread when a player logs
+  in, mutes on every chat message and on private-message commands, so a ban/unban takes effect
+  without a restart
 - IP bans block reconnection from the same network on a different account
-- `/vban` and `/vunban`
+- `/vban`, `/vmute` (with an optional duration like `7d`), `/vkick`, `/vwarn`, `/vunban`,
+  `/vunmute`, `/vhistory <player>` and `/voidbans reload`, with tab completion
+- Alert to staff when someone joins from the IP of a currently banned account
 - Chat alert to staff on any punishment, in-game or dashboard-issued
 - Bedrock (Geyser/Floodgate) players work the same as Java. Enforcement keys off UUID, which
   Floodgate already normalizes before the plugin sees it
@@ -208,9 +218,10 @@ packages/
     src/lib/                      Auth, permissions, session, rate limiting, integrations
   plugin/
     src/main/java/…/listener/     Sessions, ban/mute enforcement
-    src/main/java/…/command/      /vban, /vunban
+    src/main/java/…/command/      /vban, /vmute, /vkick, /vwarn, /vunban, /vunmute, /vhistory
     src/main/java/…/integration/  Vulcan (reflection-only)
-    src/main/java/…/task/         Staff alert + integration-settings polling
+    src/main/java/…/task/         Staff alert, delivery, lockdown/mute polling
+    src/main/java/…/state/        Lockdown and in-memory mute cache
 deploy/
   repair-sessions.sql             One-off fix for sessions damaged by plugin 0.2.0
 ```
@@ -252,11 +263,18 @@ reconnection from a different account on the same network. Cover this in your pr
 
 A ban or mute is enforced by the plugin, not just recorded:
 
-- **Ban**: checked on `PlayerLoginEvent`, before the connection completes. Kick message renders
+- **Ban**: checked on `AsyncPlayerPreLoginEvent`, before the connection completes. Kick message renders
   the real reason, ID, and `{site_url}/{ban_id}` from `messages.ban`/`messages.temp-ban`.
-- **Mute**: checked on every chat message; cancelled with `messages.mute`/`messages.temp-mute`.
-- Both hit the live `punishments` table on every attempt, no caching. A ban or unban from the
-  dashboard takes effect on the next login or message, no restart.
+- **Mute**: checked on every chat message and on the commands in `mute.blocked-commands`;
+  cancelled with `messages.mute`/`messages.temp-mute`. Online players' mutes are held in memory and
+  refreshed every couple of seconds, so a mute or unmute from the dashboard takes effect within
+  that time, no restart.
+- Bans hit the live `punishments` table on every login. If the database is down, `login.on-database-error`
+  decides whether players are let in unchecked (`allow`, the default) or turned away (`deny`).
+- **Lockdown**: switched on from the Overview page. Within a few seconds the plugin kicks everyone
+  who isn't staff, and refuses anyone else who joins, with `messages.lockdown`. Staff means a
+  player with a Minecraft account linked on the site, or the `voidbans.lockdown.bypass`
+  permission. It survives a server restart.
 - **Kick**: the dashboard only allows it for a player who is online, and says so if they aren't.
   The plugin checks for new kicks every couple of seconds and removes the player with
   `messages.kick`. A kick is a one-off event, so it is recorded as inactive straight away.

@@ -35,6 +35,37 @@ staff-alerts:
   # Placeholders: {reason} {ban_id} {type} {player} {staff} {duration}
   message: "&e{staff} &7{type_verb} &e{player}&7: &f{reason}"
 
+# Staff alert when someone joins from an IP that a currently banned account has
+# used. The IP itself is never shown. Grant the permission with LuckPerms.
+# Placeholders: {player} {accounts}
+alt-alerts:
+  enabled: true
+  permission: "voidbans.alerts.alts"
+  message: "&e{player} &7shares an IP with banned: &f{accounts}"
+
+# Muted players can't use public chat. They also can't use these commands.
+# Leave the leading slash off. Aliases have to be listed separately.
+mute:
+  blocked-commands:
+    - msg
+    - tell
+    - w
+    - whisper
+    - m
+    - pm
+    - t
+    - r
+    - reply
+    - me
+    - say
+    - mail
+
+# What to do when the database can't be reached and a player's ban can't be checked.
+#   allow: let them in unchecked (a banned player could get in during an outage)
+#   deny:  refuse every login, staff included, until the database is back
+login:
+  on-database-error: allow
+
 # Shown to the player on the disconnect screen (bans, kicks) or in chat (mutes).
 # Placeholders: {reason} {ban_id} {site_host} {site_url} {duration} {expires_at}
 #   {site_host} is the site address without https://, e.g. bans.example.com
@@ -94,3 +125,12 @@ messages:
   # Shown on screen as well, so a warning isn't lost in busy chat.
   warn-title: "&e&lWARNING"
   warn-subtitle: "&f{reason}"
+  # Shown to everyone who isn't staff while the server is locked down from the site.
+  lockdown: |-
+    &e&lMAINTENANCE
+    &7The server is in maintenance mode.
+    &7Please check back soon.
+  # Shown when login.on-database-error is "deny" and the database is down.
+  database-error: |-
+    &cWe can't check your account right now.
+    &7Please try again in a minute.

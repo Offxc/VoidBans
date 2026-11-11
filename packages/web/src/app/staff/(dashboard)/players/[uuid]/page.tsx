@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { isVulcanIntegrationEnabled } from "@/lib/integrations";
 import { getPunishmentModes } from "@/lib/punishment-modes";
 import { PlayerHead } from "@/components/PlayerHead";
+import Link from "next/link";
 import { LocalTime } from "@/components/LocalTime";
 import { PunishmentPanel } from "@/components/PunishmentPanel";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
@@ -123,6 +124,10 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
   const uniqueIpCount = canViewIp
     ? new Set(sessions.map((s) => s.ipAddress).filter((ip): ip is string => !!ip)).size
     : null;
+
+  // Other accounts seen on any IP this player has used. Needs the IP
+  // permission, since two names sharing a row says they share an address.
+  const sharedIpAccounts = canViewIp && canViewSessions ? await findSharedIpAccounts(player.uuid) : [];
 
   const activePunishment = punishments.find((p) => p.active && (!p.expiresAt || p.expiresAt.getTime() > Date.now()));
 
@@ -373,6 +378,44 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
           </div>
         )}
 
+        {sharedIpAccounts.length > 0 && (
+          <div className="vb-section">
+            <div className="vb-section-label">Shared IPs</div>
+            <div className="vb-panel" style={{ overflowX: "auto" }}>
+              <table className="vb-table vb-table-compact">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>IPs in common</th>
+                    <th style={{ textAlign: "right" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sharedIpAccounts.map((account) => (
+                    <tr key={account.uuid}>
+                      <td>
+                        <Link href={`/staff/players/${account.uuid}`} style={{ color: "inherit", fontWeight: 600, textDecoration: "none" }}>
+                          {account.username}
+                        </Link>
+                      </td>
+                      <td style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5, color: "var(--text-dim)" }}>
+                        {account.ips.join(", ")}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {account.banned ? (
+                          <span className="vb-pill vb-pill-danger">Banned</span>
+                        ) : (
+                          <span style={{ color: "var(--text-faint)" }}>-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {showViolations && (
           <div className="vb-section">
             <div className="vb-section-label">Anticheat violations</div>
@@ -394,6 +437,60 @@ export default async function PlayerProfilePage({ params }: { params: { uuid: st
       </div>
     </div>
   );
+}
+
+interface SharedIpAccount {
+  uuid: string;
+  username: string;
+  ips: string[];
+  banned: boolean;
+}
+
+async function findSharedIpAccounts(playerUuid: string): Promise<SharedIpAccount[]> {
+  const own = await prisma.session.findMany({
+    where: { playerUuid, ipAddress: { not: null } },
+    distinct: ["ipAddress"],
+    select: { ipAddress: true },
+    take: 50,
+  });
+  const ips = own.map((s) => s.ipAddress).filter((ip): ip is string => !!ip);
+  if (ips.length === 0) return [];
+
+  const now = new Date();
+  const others = await prisma.session.findMany({
+    where: { ipAddress: { in: ips }, playerUuid: { not: playerUuid } },
+    distinct: ["playerUuid", "ipAddress"],
+    select: {
+      playerUuid: true,
+      ipAddress: true,
+      player: {
+        select: {
+          username: true,
+          punishments: {
+            where: { type: "BAN", active: true, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      },
+    },
+    take: 200,
+  });
+
+  const accounts = new Map<string, SharedIpAccount>();
+  for (const row of others) {
+    if (!row.ipAddress) continue;
+    const account = accounts.get(row.playerUuid) ?? {
+      uuid: row.playerUuid,
+      username: row.player.username,
+      ips: [],
+      banned: row.player.punishments.length > 0,
+    };
+    account.ips.push(row.ipAddress);
+    accounts.set(row.playerUuid, account);
+  }
+  // Banned accounts first: those are the ones staff are looking for.
+  return [...accounts.values()].sort((x, y) => Number(y.banned) - Number(x.banned) || x.username.localeCompare(y.username));
 }
 
 function StatRow({ label, value }: { label: string; value: React.ReactNode }) {

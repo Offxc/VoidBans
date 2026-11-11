@@ -4,11 +4,18 @@ import { isValidBanIdFormat } from "@/lib/ban-id";
 import { AppealPanel } from "@/components/AppealPanel";
 import { PunishmentStatus } from "@/components/PunishmentStatus";
 import { LocalTime } from "@/components/LocalTime";
+import { TimeLeft } from "@/components/TimeLeft";
 import { SiteShell } from "@/components/SiteShell";
 
 export const dynamic = "force-dynamic";
 
 const TYPE_LABEL: Record<string, string> = { BAN: "Ban", MUTE: "Mute", KICK: "Kick", WARN: "Warning" };
+
+const APPEAL_PILL: Record<string, { label: string; pill: string }> = {
+  PENDING: { label: "Appeal pending", pill: "vb-pill-warn" },
+  ACCEPTED: { label: "Appeal accepted", pill: "vb-pill-success" },
+  DENIED: { label: "Appeal denied", pill: "vb-pill-danger" },
+};
 
 export default async function BanPage({ params }: { params: { banId: string } }) {
   const banId = params.banId.toUpperCase();
@@ -23,6 +30,10 @@ export default async function BanPage({ params }: { params: { banId: string } })
   });
 
   if (!punishment) notFound();
+
+  const appealPill = punishment.appeal ? APPEAL_PILL[punishment.appeal.status] : undefined;
+  // Still counting down: in force, with an end date that hasn't passed.
+  const endsLater = punishment.active && punishment.expiresAt !== null && punishment.expiresAt.getTime() > Date.now();
 
   const typeLabel = `${punishment.expiresAt ? "Temporary " : ""}${TYPE_LABEL[punishment.type] ?? punishment.type}`;
 
@@ -39,6 +50,7 @@ export default async function BanPage({ params }: { params: { banId: string } })
             type={punishment.type}
             delivered={punishment.deliveredAt !== null}
           />
+          {appealPill && <span className={`vb-pill ${appealPill.pill}`}>{appealPill.label}</span>}
         </div>
         <h1 className="vb-doc-title">{typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1).toLowerCase()}</h1>
         <p className="vb-doc-meta">
@@ -50,7 +62,14 @@ export default async function BanPage({ params }: { params: { banId: string } })
             <dt>Reason</dt>
             <dd>{punishment.reason}</dd>
             <dt>Ends</dt>
-            <dd>{punishment.expiresAt ? <LocalTime iso={punishment.expiresAt.toISOString()} /> : "Never"}</dd>
+            <dd>
+              {punishment.expiresAt ? <LocalTime iso={punishment.expiresAt.toISOString()} /> : "Never"}
+              {endsLater && punishment.expiresAt && (
+                <span style={{ color: "var(--text-dim)", marginLeft: 10 }}>
+                  <TimeLeft iso={punishment.expiresAt.toISOString()} />
+                </span>
+              )}
+            </dd>
             <dt>Appealable</dt>
             <dd>{punishment.appealable ? "Yes" : "No"}</dd>
           </dl>

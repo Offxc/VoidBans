@@ -6,10 +6,14 @@ import com.voidsmp.voidbans.db.SessionCloser;
 import com.voidsmp.voidbans.task.WarningDelivery;
 import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.message.MessageTemplate;
+import com.voidsmp.voidbans.state.Lockdown;
+import com.voidsmp.voidbans.state.MuteCache;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -20,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tracks players/sessions rows on join and quit. Runs DB work off the
@@ -27,53 +33,69 @@ import java.time.Instant;
  */
 public final class SessionListener implements Listener {
 
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
     private final VoidBansPlugin plugin;
     private final Database db;
     private final MessageTemplate messages;
     private final VulcanIntegration vulcanIntegration;
+    private final Lockdown lockdown;
+    private final MuteCache mutes;
 
-    public SessionListener(VoidBansPlugin plugin, Database db, MessageTemplate messages, VulcanIntegration vulcanIntegration) {
+    public SessionListener(VoidBansPlugin plugin, Database db, MessageTemplate messages, VulcanIntegration vulcanIntegration,
+                           Lockdown lockdown, MuteCache mutes) {
         this.plugin = plugin;
         this.db = db;
         this.messages = messages;
         this.vulcanIntegration = vulcanIntegration;
+        this.lockdown = lockdown;
+        this.mutes = mutes;
     }
 
     /**
-     * Blocks the connection if either the incoming IP matches an active
-     * IP-banned punishment (stops alt accounts, unlike a UUID-only ban) or
-     * the connecting UUID itself has an active BAN, the actual "you are
-     * banned" enforcement, previously entirely missing: punishments issued
-     * from the web dashboard or /vban were recorded but never stopped
-     * anyone from playing. Runs synchronously on PlayerLoginEvent (not
-     * PlayerJoinEvent) because the connection must be denied before the
-     * player is let in; a short synchronous DB check here is the accepted
-     * tradeoff for that. For Bedrock players, event.getPlayer().getUniqueId()
-     * is already the Floodgate-translated UUID by this point in the login
-     * pipeline, so this needs no Bedrock-specific branch.
+     * The ban check. Runs off the main thread, before the player exists on
+     * the server, so a slow database delays this one login and nothing else.
      */
     @EventHandler(priority = EventPriority.HIGH)
-    public void onLogin(PlayerLoginEvent event) {
-        String ip = event.getRealAddress().getHostAddress();
-        String uuid = event.getPlayer().getUniqueId().toString();
+    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+
+        String ip = event.getAddress().getHostAddress();
+        String uuid = event.getUniqueId().toString();
 
         try (var conn = db.getConnection()) {
             ActiveBan ban = findActiveBan(conn, uuid);
             if (ban != null) {
                 String key = ban.expiresAt != null ? "temp-ban" : "ban";
-                event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
-                        messages.render(key, ban.reason, ban.publicBanId, ban.expiresAt));
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
+                        LEGACY.deserialize(messages.render(key, ban.reason, ban.publicBanId, ban.expiresAt)));
                 return;
             }
 
             ActiveBan ipBan = findActiveIpBan(conn, ip);
             if (ipBan != null) {
-                event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
-                        messages.render("ip-ban", ipBan.reason, ipBan.publicBanId, null));
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
+                        LEGACY.deserialize(messages.render("ip-ban", ipBan.reason, ipBan.publicBanId, null)));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ban check failed for " + uuid + ": " + e.getMessage());
-            // Fail open, a DB hiccup should not lock out the whole server.
+            // Bans can't be checked. Either let people in unchecked or turn everyone
+            // away until the database is back: the owner picks which in config.yml.
+            boolean deny = "deny".equalsIgnoreCase(plugin.getConfig().getString("login.on-database-error", "allow"));
+            plugin.getLogger().warning("Ban check failed for " + uuid + (deny ? ", login refused: " : ", login allowed: ") + e.getMessage());
+            if (deny) {
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                        LEGACY.deserialize(messages.render("database-error", null, null, null)));
+            }
+        }
+    }
+
+    /** Lockdown. Needs the player's permissions, which only exist from this event on. */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLogin(PlayerLoginEvent event) {
+        if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) return;
+        if (lockdown.enabled() && !lockdown.allows(event.getPlayer())) {
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
+                    LEGACY.deserialize(messages.render("lockdown", null, null, null)));
         }
     }
 
@@ -132,7 +154,9 @@ public final class SessionListener implements Listener {
                     // abandoned, never closed with the current time.
                     SessionCloser.abandonOpen(conn, uuid, serverId);
                     insertSessionStart(conn, uuid, serverId, ip);
+                    mutes.refresh(conn, List.of(player.getUniqueId()));
                     WarningDelivery.deliverPendingOnJoin(plugin, db, messages, player);
+                    alertStaffToBannedAlts(conn, uuid, name, ip);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record login for " + name + ": " + e.getMessage());
                 }
@@ -191,6 +215,7 @@ public final class SessionListener implements Listener {
             @Override
             public void run() {
                 try (var conn = db.getConnection()) {
+                    mutes.remove(player.getUniqueId());
                     SessionCloser.closeOnQuit(conn, uuid, serverId);
                     markOffline(conn, uuid);
                 } catch (SQLException e) {
@@ -198,6 +223,42 @@ public final class SessionListener implements Listener {
                 }
             }
         }.runTaskAsynchronously(plugin);
+    }
+
+    /**
+     * Tells staff when the player who just joined has used the same IP as an
+     * account that is banned right now. The IP itself is never shown.
+     */
+    private void alertStaffToBannedAlts(java.sql.Connection conn, String uuid, String name, String ip) throws SQLException {
+        if (ip == null || !plugin.getConfig().getBoolean("alt-alerts.enabled", true)) return;
+
+        String permission = plugin.getConfig().getString("alt-alerts.permission", "voidbans.alerts.alts");
+        List<Player> listeners = new ArrayList<>();
+        for (Player online : plugin.getServer().getOnlinePlayers()) {
+            if (online.hasPermission(permission)) listeners.add(online);
+        }
+        if (listeners.isEmpty()) return;
+
+        String sql = """
+            SELECT DISTINCT pl.username FROM sessions s
+            JOIN players pl ON pl.uuid = s.playerUuid
+            JOIN punishments p ON p.playerUuid = s.playerUuid
+            WHERE s.ipAddress = ? AND s.playerUuid <> ?
+              AND p.type = 'BAN' AND p.active = TRUE AND (p.expiresAt IS NULL OR p.expiresAt > NOW())
+            LIMIT 5
+            """;
+        List<String> banned = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ip);
+            ps.setString(2, uuid);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) banned.add(rs.getString(1));
+            }
+        }
+        if (banned.isEmpty()) return;
+
+        String message = messages.format("alt-alerts.message", "player", name, "accounts", String.join(", ", banned));
+        for (Player listener : listeners) listener.sendMessage(LEGACY.deserialize(message));
     }
 
     private void upsertPlayerOnLogin(java.sql.Connection conn, String uuid, String name) throws SQLException {

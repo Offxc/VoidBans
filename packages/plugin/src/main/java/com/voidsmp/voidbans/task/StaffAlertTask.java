@@ -3,6 +3,7 @@ package com.voidsmp.voidbans.task;
 import com.voidsmp.voidbans.VoidBansPlugin;
 import com.voidsmp.voidbans.db.Database;
 import com.voidsmp.voidbans.message.MessageTemplate;
+import com.voidsmp.voidbans.util.Durations;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -95,7 +96,7 @@ public final class StaffAlertTask extends BukkitRunnable {
         };
 
         String duration = expiresAtTs == null ? "permanent"
-                : Duration.between(Instant.now(), expiresAtTs.toInstant()).toString();
+                : Durations.human(Duration.between(Instant.now(), expiresAtTs.toInstant()));
 
         String message = messages.renderStaffAlert(type, typeVerb, playerName, staffName, reason, banId, duration);
 

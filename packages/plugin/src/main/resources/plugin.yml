@@ -7,21 +7,79 @@ description: Punishment tracking, session logging, and ban-message integration w
 
 commands:
   vban:
-    description: Issue a ban.
-    usage: /vban <player> <reason>
-    permission: voidbans.staff
+    description: Ban a player, permanently or for a set time.
+    usage: /vban <player> [duration] <reason>
+    permission: voidbans.command.ban
+  vmute:
+    description: Mute a player, permanently or for a set time.
+    usage: /vmute <player> [duration] <reason>
+    permission: voidbans.command.mute
+  vkick:
+    description: Kick a player who is online.
+    usage: /vkick <player> <reason>
+    permission: voidbans.command.kick
+  vwarn:
+    description: Warn a player. Shown when they next join if they are offline.
+    usage: /vwarn <player> <reason>
+    permission: voidbans.command.warn
   vunban:
-    description: Revoke a ban.
+    description: Lift a ban.
     usage: /vunban <player>
-    permission: voidbans.staff
+    permission: voidbans.command.unban
+  vunmute:
+    description: Lift a mute.
+    usage: /vunmute <player>
+    permission: voidbans.command.unmute
+  vhistory:
+    description: Show a player's recent punishments.
+    usage: /vhistory <player>
+    permission: voidbans.command.history
+  voidbans:
+    description: Reload the plugin's config.
+    usage: /voidbans reload
+    permission: voidbans.admin
 
 permissions:
   voidbans.staff:
-    description: Allows issuing/revoking punishments in-game.
+    description: Every punishment command, and staying on the server during a lockdown.
+    default: op
+    children:
+      voidbans.command.ban: true
+      voidbans.command.mute: true
+      voidbans.command.kick: true
+      voidbans.command.warn: true
+      voidbans.command.unban: true
+      voidbans.command.unmute: true
+      voidbans.command.history: true
+      voidbans.lockdown.bypass: true
+  voidbans.command.ban:
+    default: op
+  voidbans.command.mute:
+    default: op
+  voidbans.command.kick:
+    default: op
+  voidbans.command.warn:
+    default: op
+  voidbans.command.unban:
+    default: op
+  voidbans.command.unmute:
+    default: op
+  voidbans.command.history:
+    default: op
+  voidbans.lockdown.bypass:
+    description: Stay on, and join, the server while it is locked down from the site.
+    default: op
+  voidbans.admin:
+    description: Reload the plugin's config with /voidbans reload.
     default: op
   voidbans.alerts.punishments:
     description: >
       Receive an in-game chat alert whenever a punishment is issued, from
-      /vban or the web dashboard. Intended to be granted per-rank via
+      a command or the web dashboard. Intended to be granted per-rank via
       LuckPerms rather than left at its Bukkit default, see the README.
+    default: op
+  voidbans.alerts.alts:
+    description: >
+      Receive an in-game chat alert when a player joins from an IP that a
+      currently banned account has used.
     default: op

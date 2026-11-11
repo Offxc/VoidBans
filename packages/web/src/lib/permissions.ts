@@ -33,6 +33,7 @@ export const PERMISSION_KEYS = [
   "rules.create",
   "rules.edit",
   "audit.view",
+  "server.lockdown",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];
@@ -66,6 +67,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   "rules.create": "Create rules",
   "rules.edit": "Edit and delete rules",
   "audit.view": "View the audit log",
+  "server.lockdown": "Lock the server down (kicks everyone but staff)",
 };
 
 /** How the role editor groups the keys above. Every key must appear exactly once. */
@@ -93,6 +95,7 @@ export const PERMISSION_GROUPS: { title: string; keys: PermissionKey[] }[] = [
   { title: "Templates", keys: ["templates.view", "templates.create", "templates.edit"] },
   { title: "Rules", keys: ["rules.view", "rules.create", "rules.edit"] },
   { title: "Audit", keys: ["audit.view"] },
+  { title: "Server", keys: ["server.lockdown"] },
 ];
 
 type PunishmentType = "BAN" | "MUTE" | "KICK" | "WARN";

@@ -19,6 +19,13 @@ interface NavUser {
 }
 
 const ICON_PATHS: Record<string, React.ReactNode> = {
+  "/staff/overview": (
+    <>
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <path d="M10 21v-6h4v6" />
+    </>
+  ),
   "/staff/bans": (
     <>
       <path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9" />

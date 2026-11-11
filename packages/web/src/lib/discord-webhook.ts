@@ -10,6 +10,7 @@ export const WEBHOOK_EVENT_KEYS = [
   "attachment_added",
   "appeal_submitted",
   "appeal_resolved",
+  "server_lockdown",
 ] as const;
 
 export type WebhookEventKey = (typeof WEBHOOK_EVENT_KEYS)[number];
@@ -21,6 +22,7 @@ export const WEBHOOK_EVENT_LABELS: Record<WebhookEventKey, string> = {
   attachment_added: "Attachment added to a player",
   appeal_submitted: "Appeal submitted",
   appeal_resolved: "Appeal resolved (accepted or denied)",
+  server_lockdown: "Server locked down or reopened",
 };
 
 export interface DiscordWebhookConfig {

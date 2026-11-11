@@ -32,6 +32,8 @@ public final class Database {
         hikariConfig.setUsername(config.getString("database.user", "voidbans"));
         hikariConfig.setPassword(config.getString("database.password", ""));
         hikariConfig.setMaximumPoolSize(6);
+        // The ban check holds a player's login open while it waits, so give up quickly.
+        hikariConfig.setConnectionTimeout(5_000);
         hikariConfig.setPoolName("VoidBans");
 
         this.pool = new HikariDataSource(hikariConfig);

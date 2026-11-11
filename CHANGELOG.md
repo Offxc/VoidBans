@@ -8,6 +8,47 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.8.0 / Plugin 0.6.0
+
+Site
+- Lockdown: a button on the new Overview page kicks everyone but staff and shows joiners a
+  maintenance message. It asks for confirmation both ways, needs the new `server.lockdown`
+  permission (owners always have it, tick it on other roles in Settings), posts to the Discord
+  webhook (new "Server locked down or reopened" event, on by default) and is audit-logged. A
+  banner shows on every staff page while it is on, and the public home page says so too.
+- New Overview page as the staff landing page: players online, pending appeals, punishments in
+  the last 24 hours, active bans, recent punishments and plugin connection status.
+- The punishment list can be searched (player, ID, reason, staff) and filtered by type and status,
+  and player names link to their profile.
+- Appeals has a Resolved tab showing past decisions, who made them and when.
+- Player profiles list other accounts seen on the same IPs, banned ones first. Needs the same
+  permissions as viewing IPs and sessions.
+- Public punishment page: a temporary punishment shows how long is left, and the appeal status
+  shows beside the punishment status.
+- New home page: three short steps, plus a server address with a copy button, a rules link and a
+  Discord invite. The address and invite are set in Settings > Home page and hidden when blank.
+
+Plugin
+- New commands: `/vmute`, `/vkick`, `/vwarn`, `/vunmute`, `/vhistory` and `/voidbans reload`.
+  `/vban` and `/vmute` take an optional duration (`/vban Steve 7d griefing`, `1d12h`, `perm`).
+  Names tab-complete. Staff can't punish linked staff from in game, same as the site.
+- Each command has its own permission (`voidbans.command.*`). `voidbans.staff` still grants them
+  all. **Anyone given `voidbans.staff` through LuckPerms now also bypasses lockdown.**
+- Muted players can no longer get around a mute with `/msg`, `/me` and similar. The blocked
+  commands are listed under `mute.blocked-commands`.
+- Bans are checked when the connection is made, off the main thread, so a slow database can no
+  longer stall the whole server at login. `login.on-database-error` chooses whether players are
+  let in or turned away if the database can't be reached.
+- Mute checks no longer query the database on every chat message.
+- A mute issued on the site is shown to the player straight away.
+- Staff with `voidbans.alerts.alts` get a message when a player joins from the IP of a banned
+  account (`alt-alerts` in config.yml).
+- Durations in staff alerts read "7d" or "2h 30m" instead of raw ISO text.
+- Lockdown (see above): the plugin picks it up within a few seconds and it survives a restart.
+- New config keys: `alt-alerts`, `mute`, `login`, and messages `lockdown` and `database-error`.
+  Copy them from the repo's config.yml. Plugin 0.6.0 reads them from the jar's defaults if they
+  are missing, so nothing breaks if you don't.
+
 ## Site 0.7.2
 
 - The refusal message on the sign-in page now just says "Access denied."
