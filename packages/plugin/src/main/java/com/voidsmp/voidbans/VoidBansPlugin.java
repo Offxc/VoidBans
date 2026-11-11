@@ -54,8 +54,10 @@ public final class VoidBansPlugin extends JavaPlugin {
 
         this.vulcanIntegration = new VulcanIntegration(this, database);
 
-        getServer().getPluginManager().registerEvents(
-                new SessionListener(this, database, messages, vulcanIntegration, lockdown, mutes), this);
+        SessionListener sessionListener = new SessionListener(this, database, messages, vulcanIntegration, lockdown, mutes);
+        getServer().getPluginManager().registerEvents(sessionListener, this);
+        // Anyone already connected (the plugin was loaded while the server was running).
+        for (org.bukkit.entity.Player online : getServer().getOnlinePlayers()) sessionListener.trackExisting(online);
         getServer().getPluginManager().registerEvents(
                 new ChatListener(this, messages, mutes), this);
 

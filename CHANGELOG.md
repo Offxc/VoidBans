@@ -8,6 +8,12 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Plugin 0.6.1
+
+- Loading the plugin while the server is running (PlugMan or similar) now picks up the players who
+  are already connected. Before, they showed as offline on the site until they reconnected,
+  because only a join event marked someone online.
+
 ## Site 0.8.0 / Plugin 0.6.0
 
 Site

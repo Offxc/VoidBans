@@ -139,6 +139,21 @@ public final class SessionListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        recordJoin(player, true);
+        scheduleClientBrandLookup(player);
+    }
+
+    /**
+     * For players already connected when the plugin loads (a hot reload with
+     * PlugMan or similar). They never fire a join event, so without this they
+     * would show as offline until they reconnected.
+     */
+    public void trackExisting(Player player) {
+        recordJoin(player, false);
+        scheduleClientBrandLookup(player);
+    }
+
+    private void recordJoin(Player player, boolean announce) {
         String uuid = player.getUniqueId().toString();
         String name = player.getName();
         String serverId = plugin.getConfig().getString("server-id", "default");
@@ -156,12 +171,17 @@ public final class SessionListener implements Listener {
                     insertSessionStart(conn, uuid, serverId, ip);
                     mutes.refresh(conn, List.of(player.getUniqueId()));
                     WarningDelivery.deliverPendingOnJoin(plugin, db, messages, player);
-                    alertStaffToBannedAlts(conn, uuid, name, ip);
+                    if (announce) alertStaffToBannedAlts(conn, uuid, name, ip);
                 } catch (SQLException e) {
                     plugin.getLogger().warning("Failed to record login for " + name + ": " + e.getMessage());
                 }
             }
         }.runTaskAsynchronously(plugin);
+    }
+
+    private void scheduleClientBrandLookup(Player player) {
+        String uuid = player.getUniqueId().toString();
+        String name = player.getName();
 
         if (vulcanIntegration.isActive()) {
             // Client brand is negotiated over a plugin message channel
