@@ -8,4 +8,6 @@ export async function register() {
   process.env.WS_NO_UTF_8_VALIDATE ??= "1";
   const { startBotPresence } = await import("@/lib/bot-presence");
   startBotPresence();
+  const { startStaffRefresh } = await import("@/lib/staff-refresh");
+  startStaffRefresh();
 }

@@ -101,7 +101,8 @@ public final class StaffAlertTask extends BukkitRunnable {
         String message = messages.renderStaffAlert(type, typeVerb, playerName, staffName, reason, banId, duration);
 
         for (Player online : plugin.getServer().getOnlinePlayers()) {
-            if (online.hasPermission(permission)) {
+            // staff who switched these alerts off in their staff menu carry this
+            if (online.hasPermission(permission) && !online.hasMetadata("voidbans_alerts_off")) {
                 online.sendMessage(message);
             }
         }

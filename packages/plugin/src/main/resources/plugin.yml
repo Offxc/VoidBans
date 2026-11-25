@@ -24,11 +24,11 @@ commands:
     permission: voidbans.command.warn
   vunban:
     description: Lift a ban.
-    usage: /vunban <player>
+    usage: /vunban <player> [reason]
     permission: voidbans.command.unban
   vunmute:
     description: Lift a mute.
-    usage: /vunmute <player>
+    usage: /vunmute <player> [reason]
     permission: voidbans.command.unmute
   vhistory:
     description: Show a player's recent punishments.

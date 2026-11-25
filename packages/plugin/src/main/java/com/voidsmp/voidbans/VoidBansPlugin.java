@@ -7,6 +7,7 @@ import com.voidsmp.voidbans.integration.VulcanIntegration;
 import com.voidsmp.voidbans.listener.ChatListener;
 import com.voidsmp.voidbans.listener.SessionListener;
 import com.voidsmp.voidbans.message.MessageTemplate;
+import com.voidsmp.voidbans.staff.StaffService;
 import com.voidsmp.voidbans.task.HeartbeatTask;
 import com.voidsmp.voidbans.task.IntegrationSettingsPollTask;
 import com.voidsmp.voidbans.state.Lockdown;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class VoidBansPlugin extends JavaPlugin {
 
     private Database database;
+    private StaffService staff;
     private MessageTemplate messages;
     private StaffAlertTask staffAlertTask;
     private VulcanIntegration vulcanIntegration;
@@ -61,7 +63,8 @@ public final class VoidBansPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new ChatListener(this, messages, mutes), this);
 
-        PunishmentCommand punishmentCommand = new PunishmentCommand(this, database, messages, mutes);
+        this.staff = new StaffService(this, database, messages, mutes);
+        PunishmentCommand punishmentCommand = new PunishmentCommand(this, database, messages);
         for (String name : java.util.List.of("vban", "vmute", "vkick", "vwarn", "vunban", "vunmute", "vhistory", "voidbans")) {
             var command = getCommand(name);
             command.setExecutor(punishmentCommand);
@@ -130,6 +133,11 @@ public final class VoidBansPlugin extends JavaPlugin {
             }
             database.close();
         }
+    }
+
+    /** Punishing as the website does it, for the commands here and for staff menus in other plugins. */
+    public StaffService staff() {
+        return staff;
     }
 
     public Database database() {

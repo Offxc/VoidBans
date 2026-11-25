@@ -8,6 +8,22 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Site 0.9.0 / Plugin 0.7.0
+
+Plugin
+- `/vban`, `/vmute`, `/vkick`, `/vwarn`, `/vunban`, `/vunmute` and `/vhistory` now follow the website's permissions:
+  the staff member's Discord roles, found through the Minecraft account linked on the site. Staff need that account
+  linked (the console is not restricted). The Bukkit command permissions are still needed as well.
+- Punishments issued or lifted in game are written to the audit log and posted to the Discord webhook, with the
+  staff member's site name. Rule links, templates, appealable and IP bans are supported for staff menus in other
+  plugins, through `VoidBansPlugin.staff()`.
+- `/vunban` and `/vunmute` accept an optional reason.
+- Staff who carry the `voidbans_alerts_off` metadata do not receive punishment alerts.
+
+Site
+- Staff roles are re-read from Discord every five minutes, so in-game permissions follow role changes without the
+  person having to open the site.
+
 ## Plugin 0.6.1
 
 - Loading the plugin while the server is running (PlugMan or similar) now picks up the players who
