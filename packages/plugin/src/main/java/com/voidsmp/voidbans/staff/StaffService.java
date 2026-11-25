@@ -434,7 +434,9 @@ public final class StaffService {
                 return Result.refused(problem != null ? problem : "You don't have permission on the punishment site to lift this.");
             }
             List<Long> ids = new ArrayList<>();
-            try (PreparedStatement ps = c.prepareStatement("SELECT id FROM punishments WHERE playerUuid = ? AND type = ? AND active = TRUE")) {
+            // expired punishments keep active = TRUE, so the expiry has to be checked too
+            try (PreparedStatement ps = c.prepareStatement("SELECT id FROM punishments WHERE playerUuid = ? AND type = ? "
+                    + "AND active = TRUE AND (expiresAt IS NULL OR expiresAt > NOW())")) {
                 ps.setString(1, target.toString());
                 ps.setString(2, type);
                 try (ResultSet rs = ps.executeQuery()) {

@@ -8,6 +8,11 @@ schema bumps the site, and the plugin too if it reads or writes the changed tabl
 The site shows its version in the footer, the staff sidebar and Settings. The plugin logs
 its version on startup and reports it to Settings > Plugin connection.
 
+## Plugin 0.7.1
+
+- `/vunban` and `/vunmute` only lift bans and mutes still in force. Expired ones are left as they are, with no
+  audit entry or Discord post.
+
 ## Site 0.9.0 / Plugin 0.7.0
 
 Plugin
